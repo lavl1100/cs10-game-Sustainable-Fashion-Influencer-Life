@@ -15,8 +15,8 @@ class ThriftItem:
         # Load random sprite
         textures = [
             "assets/shirt.png",
-            "assets/jacket.png",
-            "assets/shoes.png"
+            "assets/dress.png",
+            "assets/pants.png"
         ]
         texture_path = random.choice(textures)
 
