@@ -19,7 +19,7 @@ class ThriftItem:
         textures = [
             "assets/shirt.png",
             "assets/dress.png",
-            "assets/shoes.png"
+            "assets/pants.png"
         ]
 
         self.sprite = arcade.Sprite(random.choice(textures), scale=0.4)
