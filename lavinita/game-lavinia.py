@@ -3,11 +3,16 @@ import random
 
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 650
-SCREEN_TITLE = "Thrift Store Rack (Fixed + Polished)"
+SCREEN_TITLE = "Thrift & Fast Fashion Awareness Game"
 
 STARTING_MONEY = 100
 RACK_SIZE = 12
 SPACING = 120
+
+
+# Eco classification
+FAST_FASHION_FABRICS = ["polyester", "nylon", "rayon", "acrylic"]
+ECO_FABRICS = ["cotton", "linen", "wool", "hemp"]
 
 
 class ThriftItem:
@@ -20,15 +25,27 @@ class ThriftItem:
 
         self.sprite = arcade.Sprite(random.choice(textures), scale=0.4)
 
-        self.price = random.randint(5, 30)
-        self.value = random.randint(0, 60)
-
-        if self.value > 45:
-            self.sprite.color = (255, 220, 140)
-        elif self.value > 25:
-            self.sprite.color = (220, 220, 220)
+        # Fabric type
+        if random.random() < 0.5:
+            self.fabric = random.choice(FAST_FASHION_FABRICS)
+            self.eco = False
         else:
-            self.sprite.color = (255, 255, 255)
+            self.fabric = random.choice(ECO_FABRICS)
+            self.eco = True
+
+        # Pricing system
+        if self.eco:
+            self.price = random.randint(15, 35)  # more expensive
+            self.value = random.randint(30, 70)  # higher value
+        else:
+            self.price = random.randint(5, 20)   # cheap fast fashion
+            self.value = random.randint(0, 50)
+
+        # Visual hint
+        if self.eco:
+            self.sprite.color = (180, 255, 200)  # green tint
+        else:
+            self.sprite.color = (255, 220, 220)  # red tint
 
 
 class ThriftGame(arcade.Window):
@@ -88,31 +105,42 @@ class ThriftGame(arcade.Window):
     def on_draw(self):
         self.clear()
 
-        # WALL
+        # Background
         arcade.draw_lbwh_rectangle_filled(
             0, 0,
             SCREEN_WIDTH, SCREEN_HEIGHT,
             (245, 240, 230)
         )
 
-        # FLOOR
+        # Floor
         arcade.draw_lbwh_rectangle_filled(
             0, 0,
             SCREEN_WIDTH, 200,
             (220, 210, 190)
         )
 
-        # RACK BAR
+        # Rack bar
         arcade.draw_line(
             100, SCREEN_HEIGHT // 2 + 120,
             800, SCREEN_HEIGHT // 2 + 120,
             (120, 80, 40), 6
         )
 
-        # CLOTHES
+        # Clothes
         self.sprite_list.draw()
 
-        # CENTER PANEL
+        # Labels + fabric info
+        for i, item in enumerate(self.rack):
+            if i == self.current_index:
+                arcade.draw_text(
+                    item.fabric.upper(),
+                    item.sprite.center_x - 40,
+                    item.sprite.center_y - 70,
+                    arcade.color.BLACK,
+                    12
+                )
+
+        # Center panel
         if self.rack:
             item = self.rack[self.current_index]
 
@@ -120,36 +148,54 @@ class ThriftGame(arcade.Window):
                 SCREEN_WIDTH // 2 - 130,
                 120,
                 260,
-                80,
+                100,
                 (255, 255, 255)
             )
+
+            eco_text = "ECO-FRIENDLY 🌱" if item.eco else "FAST FASHION ❌"
 
             arcade.draw_text(
                 f"Price: ${item.price}",
                 SCREEN_WIDTH // 2 - 50,
-                150,
+                170,
                 arcade.color.BLACK,
                 16
             )
 
-        # UI PANEL
+            arcade.draw_text(
+                item.fabric,
+                SCREEN_WIDTH // 2 - 50,
+                150,
+                arcade.color.DARK_GRAY,
+                14
+            )
+
+            arcade.draw_text(
+                eco_text,
+                SCREEN_WIDTH // 2 - 80,
+                130,
+                arcade.color.GREEN if item.eco else arcade.color.RED,
+                12
+            )
+
+        # UI
         arcade.draw_lbwh_rectangle_filled(
             20, 20,
-            280, 80,
+            320, 90,
             (255, 255, 255)
         )
 
-        arcade.draw_text(f"Money: ${self.money}", 40, 60, arcade.color.BLACK, 16)
-        arcade.draw_text(f"Profit: {self.score}", 40, 30, arcade.color.BLACK, 16)
+        arcade.draw_text(f"Money: ${self.money}", 40, 70, arcade.color.BLACK, 16)
+        arcade.draw_text(f"Score: {self.score}", 40, 45, arcade.color.BLACK, 16)
 
         arcade.draw_text(
             "← → browse   SPACE buy",
-            320, 30,
+            360, 30,
             arcade.color.DARK_GRAY,
             14
         )
 
-        arcade.draw_text(self.message, 320, 60, arcade.color.RED, 16)
+        arcade.draw_text(self.message, 360, 70, arcade.color.RED, 16)
 
     def on_update(self, delta_time):
         speed = 8
@@ -176,10 +222,16 @@ class ThriftGame(arcade.Window):
                 return
 
             self.money -= item.price
-            profit = item.value - item.price
-            self.score += profit
 
-            self.message = f"Profit: {profit}"
+            # ECO BONUS SYSTEM 🌱
+            if item.eco:
+                profit = (item.value - item.price) * 2  # bonus multiplier
+                self.message = f"ECO BUY! +{profit}"
+            else:
+                profit = item.value - item.price
+                self.message = f"Profit: {profit}"
+
+            self.score += profit
 
             self.sprite_list.remove(item.sprite)
             self.rack.pop(self.current_index)
