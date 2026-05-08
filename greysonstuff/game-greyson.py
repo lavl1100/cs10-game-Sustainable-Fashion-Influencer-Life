@@ -463,7 +463,7 @@ class SocialSim(arcade.Window):
 
     def _draw_compose(self):
         # Dim the background
-        arcade.draw_rectangle_filled(W // 2, H // 2, W, H, (0, 0, 0, 170))
+        arcade.draw_lbwh_rectangle_filled(0, 0, W, H, (0, 0, 0, 170))
 
         mw, mh = 640, 440
         mx = W // 2 - mw // 2
