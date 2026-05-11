@@ -20,7 +20,7 @@ import arcade
 
 # ── Window ────────────────────────────────────────────────────────────────────
 W, H  = 1100, 720
-TITLE = "FASHIONISTA ♡"
+TITLE = "FASHIONISTAS ♡"
 SB_W  = 285
 FX    = SB_W + 14
 FW    = W - SB_W - 22
@@ -150,19 +150,21 @@ def polka_dots():
 
 # ── Post Types ────────────────────────────────────────────────────────────────
 class PT(Enum):
-    MEME     = ("MEME",     BAR_PINK,  0.30, 0.18,  90, "High viral shot, short shelf life")
-    VIDEO    = ("VIDEO",    BAR_BLUE,  0.20, 0.25, 120, "High effort, great growth if it lands")
-    ARTICLE  = ("ARTICLE",  BAR_MINT,  0.08, 0.12, 150, "Slow burn, longest lasting")
-    OOTD     = ("OOTD",     BAR_LAV,   0.12, 0.20,  80, "Reliable likes, rarely viral")
-    HOT_TAKE = ("HOT TAKE", BAR_PEACH, 0.45, 0.08,  60, "Chaos mode — highest viral chance")
+    #                label        bar        viral  growth  age   desc                                          eco_pts
+    OOTD     = ("OOTD",     BAR_LAV,   0.15, 0.20,  80, "Thrifted look — reliable reach, steady growth",    1)
+    HAUL     = ("HAUL",     BAR_BLUE,  0.18, 0.25, 120, "Thrift haul video — high effort, great if it lands", 2)
+    TUTORIAL = ("TUTORIAL", BAR_MINT,  0.10, 0.18, 110, "Upcycle guide — builds trust over time",            4)
+    ARTICLE  = ("ARTICLE",  BAR_PINK,  0.06, 0.12, 150, "Deep dive on fast fashion — slow burn, lasts longest", 5)
+    REVIEW   = ("REVIEW",   BAR_PEACH, 0.20, 0.15,  90, "Sustainable brand spotlight — mid effort, good reach", 2)
 
-    def __init__(self, label, bar, viral_chance, base_growth, max_age, desc):
+    def __init__(self, label, bar, viral_chance, base_growth, max_age, desc, eco_pts):
         self.label        = label
         self.bar          = bar          # (fill, border, dot) tuple
         self.viral_chance = viral_chance
         self.base_growth  = base_growth
         self.max_age      = max_age
         self.desc         = desc
+        self.eco_pts      = eco_pts      # how much this post type raises eco impact
 
     @property
     def color(self):   return self.bar[0]
@@ -171,56 +173,56 @@ class PT(Enum):
 
 
 TEMPLATES: dict = {
-    PT.MEME:     [
-        "me: i don't need more clothes. also me: *adds to cart*",
-        "the fit is giving EVERYTHING today",
-        "not me crying over a sample sale",
-        "slay or nay? no wrong answers",
-        "outfit of the day: chaotic neutral",
-        "found this gem thrifting and i'm OBSESSED",
-        "no thoughts, head full of fashion week",
+    PT.OOTD:     [
+        "thrifted this whole look for $12 and i'm obsessed ♡",
+        "op-shop haul → today's outfit, styled three ways",
+        "got complimented on this coat... it's thrifted ♡",
+        "slow fashion OOTD: quality over quantity always",
+        "vintage blazer find and i will never shut up about it",
+        "capsule wardrobe moment — one base, five fits",
+        "she who thrifts well, lives well ♡",
     ],
-    PT.VIDEO:    [
-        "come thrifting with me! (haul inside)",
-        "styling one piece 5 different ways",
-        "my entire wardrobe, ranked honestly",
-        "get ready with me: editorial era",
-        "trying every Y2K trend so you don't have to",
-        "honest review: that viral skirt everyone has",
+    PT.HAUL:     [
+        "come thrifting with me! everything under $20",
+        "full op-shop haul: 8 pieces, $35 total",
+        "charity shop finds → styled looks (no fast fashion!)",
+        "thrift flip: before and after this charity shop jacket",
+        "slow fashion haul — only secondhand, only sustainable",
+        "weekend thrift run: what i found and what i left behind",
+    ],
+    PT.TUTORIAL: [
+        "how i turned an old men's shirt into a crop top",
+        "upcycling jeans: 5 diy ideas that actually work",
+        "mending 101: make your clothes last way longer",
+        "no-sew clothing repair tutorial (beginner friendly!)",
+        "transforming a thrifted piece with simple embroidery",
+        "dyeing faded clothes back to life — step by step",
     ],
     PT.ARTICLE:  [
-        "why quiet luxury is dominating right now",
-        "the return of Y2K: a full deep dive",
-        "buy less, choose better — my journey",
-        "what your wardrobe says about you",
-        "the real cost of fast fashion (thread)",
-        "how to build a capsule wardrobe from scratch",
+        "the real cost of a $5 t-shirt (it's not $5)",
+        "why fast fashion is a climate crisis — the numbers",
+        "building a capsule wardrobe on a real budget",
+        "what 'sustainable fashion' actually means (and what it doesn't)",
+        "how to shop secondhand like a pro: a full guide",
+        "the true environmental cost of textile waste",
     ],
-    PT.OOTD:     [
-        "OOTD: thrift flip era",
-        "golden hour fits are UNDEFEATED",
-        "new jacket, new chapter",
-        "summer girl era commencing",
-        "pressed flowers + coquette = my aesthetic",
-        "she who dresses well, lives well",
-    ],
-    PT.HOT_TAKE: [
-        "ugg boots are back and i'm not mad about it",
-        "fast fashion is a crisis and we all know it",
-        "skinny jeans are coming back. controversial.",
-        "your aesthetic doesn't have to be consistent",
-        "designer labels don't equal style. i said it.",
-        "thrifting is an art form, not a personality",
+    PT.REVIEW:   [
+        "honest review: is this ethical denim brand worth it?",
+        "i investigated that 'eco' label — here's what i found",
+        "thrift vs. fast fashion: a real side-by-side comparison",
+        "tried a clothing rental service for a month — thoughts",
+        "five sustainable brands actually worth your money ♡",
+        "greenwashing exposed: what to look out for when shopping",
     ],
 }
 
 MILESTONES = [
-    (500,     "Micro-Creator",   "your journey starts here ♡"),
-    (1_000,   "Nano-Influencer", "four figures — keep going ♡"),
-    (5_000,   "Rising Star",     "brands are watching now ♡"),
-    (10_000,  "Content Queen",   "you've made it to 10K ♡"),
-    (50_000,  "Fashion Icon",    "the industry knows your name ♡"),
-    (100_000, "IT GIRL STATUS",  "hall of fame. legendary. ♡"),
+    (500,     "New Voice",        "your sustainability journey starts here ♡"),
+    (1_000,   "Eco Starter",      "people are listening — keep going ♡"),
+    (5_000,   "Conscious Creator","your message is spreading ♡"),
+    (10_000,  "Thrift Queen",     "10K people choose slower fashion ♡"),
+    (50_000,  "Sustainability Icon", "the industry is paying attention ♡"),
+    (100_000, "CHANGE MAKER",     "you shifted the conversation. legendary. ♡"),
 ]
 
 
@@ -268,7 +270,8 @@ class Fashionista(arcade.Window):
         self.day_timer = 0.0;  self.day_len = 60.0
         self.energy = 10;      self.max_energy = 10
         self.posts_made = 0;   self.viral_count = 0
-        self.total_likes = 0;  self.milestone_idx = 0
+        self.eco_impact = 0;   self.total_likes = 0
+        self.milestone_idx = 0
         self._fol_frac = 0.0
         self.posts: List[Post] = []
         self.notifs: List[Notif] = []
@@ -327,7 +330,8 @@ class Fashionista(arcade.Window):
         post = Post(ptype=ptype, text=random.choice(TEMPLATES[ptype]), quality=quality)
         self.posts.insert(0, post); self.posts = self.posts[:20]
         self.posts_made += 1; self.energy -= 1; self.scroll = 0
-        qlabel = "serving looks ♡" if quality > 0.70 else "pretty decent ♡" if quality > 0.40 else "a little weak..."
+        self.eco_impact += ptype.eco_pts
+        qlabel = "serving sustainability ♡" if quality > 0.70 else "pretty decent ♡" if quality > 0.40 else "a little weak..."
         self._notif(f"Posted  |  {qlabel}  ({quality:.0%})",
                     BAR_MINT[0] if quality > 0.70 else GOLD if quality > 0.40 else BAR_PEACH[1])
         self.composing = False
@@ -354,7 +358,7 @@ class Fashionista(arcade.Window):
 
         S = "sb"
         # Title in bar
-        txt(S, "♡  FASHIONISTA  ♡", SB_W // 2, H - 8 - self.SB_BAR // 2,
+        txt(S, "♡ FASHIONISTAS ♡", SB_W // 2, H - 8 - self.SB_BAR // 2,
             TEXT_DARK, 11, bold=True, ax="center", ay="center")
 
         y = H - 16 - self.SB_BAR - 18
@@ -409,7 +413,7 @@ class Fashionista(arcade.Window):
         # Stats
         for label, val in [
             ("posts made",   str(self.posts_made)),
-            ("gone viral",   str(self.viral_count)),
+            ("eco impact",   str(self.eco_impact)),
             ("active posts", str(len(self.posts))),
             ("total likes",  f"{self.total_likes:,}"),
         ]:
@@ -432,8 +436,8 @@ class Fashionista(arcade.Window):
         hline(FX, W - 10, H - 28, TEXT_LITE)
 
         if not self.posts:
-            txt("feed", "no posts yet ♡",                       FX + FW//2, H//2+18, TEXT_MED, 15, ax="center")
-            txt("feed", "press Space to publish your first post", FX + FW//2, H//2-4,  TEXT_MED, 11, ax="center")
+            txt("feed", "nothing posted yet ♡",                        FX + FW//2, H//2+18, TEXT_MED, 15, ax="center")
+            txt("feed", "press Space to share your first sustainable post", FX + FW//2, H//2-4, TEXT_MED, 11, ax="center")
             return
 
         y = H - 44 + self.scroll
@@ -511,7 +515,7 @@ class Fashionista(arcade.Window):
         # Dialog window
         kawaii_window(mx, my, mw, mh, BAR_PINK[0], BAR_PINK[1], BAR_PINK[2], 28)
 
-        txt("cmp", "♡  choose your vibe  ♡",
+        txt("cmp", "♡  what are you creating today?  ♡",
             W // 2, my + mh - 14, TEXT_DARK, 13, bold=True, ax="center", ay="center")
         txt("cmp", "click a button  or  press 1–5  ♡  ESC to cancel",
             W // 2, my + mh - 40, TEXT_MED, 9, ax="center")
