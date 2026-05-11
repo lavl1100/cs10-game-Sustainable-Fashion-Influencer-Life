@@ -15,8 +15,6 @@ SCREEN_TITLE = "Fashionidísimitas"
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 BACKGROUND_IMAGE = ASSETS_DIR / "home_background.png"
-BACKGROUND_WIDTH = int(SCREEN_WIDTH * 0.92)
-BACKGROUND_HEIGHT = int(SCREEN_HEIGHT * 0.92)
 
 BUTTON_IMAGE_PATHS = {
     "settings": ASSETS_DIR / "settings_button.png",
@@ -42,8 +40,8 @@ CONTENT_CARD_Y = 275
 CONTENT_CARD_WIDTH = 382
 CONTENT_CARD_HEIGHT = 316
 
-HOME_BUTTON_WIDTH = 64
-HOME_BUTTON_HEIGHT = 64
+HOME_BUTTON_WIDTH = 52
+HOME_BUTTON_HEIGHT = 52
 HOME_BUTTON_LEFT = 40
 HOME_BUTTON_TOP = 452
 HOME_BUTTON_GAP = 12
@@ -347,8 +345,8 @@ class HomeView(arcade.View):
             BACKGROUND_IMAGE,
             SCREEN_WIDTH / 2,
             SCREEN_HEIGHT / 2,
-            BACKGROUND_WIDTH,
-            BACKGROUND_HEIGHT,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
             arcade.color.DARK_SLATE_GRAY,
         )
 
