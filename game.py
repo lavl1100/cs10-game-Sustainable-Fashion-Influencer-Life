@@ -371,9 +371,15 @@ class ComputerWindowView(arcade.View):
 
     def on_draw(self) -> None:
         self.clear()
-        arcade.draw_rectangle_filled(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT, arcade.color.BLACK)
-        arcade.draw_rectangle_filled(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH - 38, SCREEN_HEIGHT - 38, arcade.color.DARK_SLATE_GRAY)
-        arcade.draw_rectangle_filled(self.window_x, self.window_y, self.window_width, self.window_height, arcade.color.BEIGE)
+        arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, arcade.color.BLACK)
+        arcade.draw_lrbt_rectangle_filled(19, SCREEN_WIDTH - 19, 19, SCREEN_HEIGHT - 19, arcade.color.DARK_SLATE_GRAY)
+        arcade.draw_lrbt_rectangle_filled(
+            self.window_x - self.window_width / 2,
+            self.window_x + self.window_width / 2,
+            self.window_y - self.window_height / 2,
+            self.window_y + self.window_height / 2,
+            arcade.color.BEIGE,
+        )
         arcade.draw_lrbt_rectangle_outline(
             self.window_x - self.window_width / 2,
             self.window_x + self.window_width / 2,
@@ -382,7 +388,13 @@ class ComputerWindowView(arcade.View):
             arcade.color.WHITE,
             3,
         )
-        arcade.draw_rectangle_filled(self.window_x, self.window_y + self.window_height / 2 - 28, self.window_width, 44, arcade.color.BLACK_OLIVE)
+        arcade.draw_lrbt_rectangle_filled(
+            self.window_x - self.window_width / 2,
+            self.window_x + self.window_width / 2,
+            self.window_y + self.window_height / 2 - 50,
+            self.window_y + self.window_height / 2 - 6,
+            arcade.color.BLACK_OLIVE,
+        )
         arcade.draw_text(
             self.title,
             self.window_x - self.window_width / 2 + 18,
@@ -391,7 +403,13 @@ class ComputerWindowView(arcade.View):
             18,
             anchor_y="center",
         )
-        arcade.draw_rectangle_filled(self.close_button_x, self.close_button_y, 26, 26, arcade.color.RED_ORANGE)
+        arcade.draw_lrbt_rectangle_filled(
+            self.close_button_x - 13,
+            self.close_button_x + 13,
+            self.close_button_y - 13,
+            self.close_button_y + 13,
+            arcade.color.RED_ORANGE,
+        )
         arcade.draw_text(
             "x",
             self.close_button_x,
