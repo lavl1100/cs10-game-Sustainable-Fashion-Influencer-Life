@@ -97,6 +97,75 @@ def _make_panel(
     return sprite
 
 
+class DrawableSprite:
+    """Small wrapper that renders a single sprite through a SpriteList."""
+
+    def __init__(self, sprite: arcade.Sprite) -> None:
+        self._sprite = sprite
+        self._sprite_list = arcade.SpriteList()
+        self._sprite_list.append(sprite)
+
+    def draw(self) -> None:
+        self._sprite_list.draw()
+
+    @property
+    def sprite(self) -> arcade.Sprite:
+        return self._sprite
+
+    @property
+    def center_x(self) -> float:
+        return self._sprite.center_x
+
+    @center_x.setter
+    def center_x(self, value: float) -> None:
+        self._sprite.center_x = value
+
+    @property
+    def center_y(self) -> float:
+        return self._sprite.center_y
+
+    @center_y.setter
+    def center_y(self, value: float) -> None:
+        self._sprite.center_y = value
+
+    @property
+    def width(self) -> float:
+        return self._sprite.width
+
+    @width.setter
+    def width(self, value: float) -> None:
+        self._sprite.width = value
+
+    @property
+    def height(self) -> float:
+        return self._sprite.height
+
+    @height.setter
+    def height(self, value: float) -> None:
+        self._sprite.height = value
+
+    @property
+    def scale(self) -> float:
+        return self._sprite.scale
+
+    @scale.setter
+    def scale(self, value: float) -> None:
+        self._sprite.scale = value
+
+    @property
+    def alpha(self) -> int:
+        return self._sprite.alpha
+
+    @alpha.setter
+    def alpha(self, value: int) -> None:
+        self._sprite.alpha = value
+
+    def replace(self, sprite: arcade.Sprite) -> None:
+        self._sprite = sprite
+        self._sprite_list.clear()
+        self._sprite_list.append(sprite)
+
+
 @dataclass
 class StatusBox:
     """Small HUD block for money, energy, or level."""
@@ -112,10 +181,10 @@ class StatusBox:
     accent_color: arcade.Color = arcade.color.DARK_SEA_GREEN
 
     def __post_init__(self) -> None:
-        self.shadow = _make_panel(self.center_x + 3, self.center_y - 3, self.width, self.height, arcade.color.BLACK, 110)
-        self.border = _make_panel(self.center_x, self.center_y, self.width + 4, self.height + 4, self.border_color, 255)
-        self.panel = _make_panel(self.center_x, self.center_y, self.width, self.height, self.fill_color, 220)
-        self.accent = _make_panel(self.center_x - self.width * 0.36, self.center_y, 4, self.height - 10, self.accent_color, 255)
+        self.shadow = DrawableSprite(_make_panel(self.center_x + 3, self.center_y - 3, self.width, self.height, arcade.color.BLACK, 110))
+        self.border = DrawableSprite(_make_panel(self.center_x, self.center_y, self.width + 4, self.height + 4, self.border_color, 255))
+        self.panel = DrawableSprite(_make_panel(self.center_x, self.center_y, self.width, self.height, self.fill_color, 220))
+        self.accent = DrawableSprite(_make_panel(self.center_x - self.width * 0.36, self.center_y, 4, self.height - 10, self.accent_color, 255))
         self.label_text = arcade.Text(
             self.label.upper(),
             self.center_x - self.width * 0.24,
@@ -162,8 +231,8 @@ class HomeButton:
         self.press_started_at: Optional[float] = None
         self.pending_activation = False
         self.current_scale = 1.0
-        self.normal_sprite = self._build_sprite(active=False)
-        self.active_sprite = self._build_sprite(active=True)
+        self.normal_sprite = DrawableSprite(self._build_sprite(active=False))
+        self.active_sprite = DrawableSprite(self._build_sprite(active=True))
         self.sprite = self.active_sprite if active else self.normal_sprite
         self.show_label = not _path_exists(BUTTON_IMAGE_PATHS[self.label])
         self.text = arcade.Text(
@@ -232,11 +301,11 @@ class HomeView(arcade.View):
     def __init__(self) -> None:
         super().__init__()
         self.background_color = arcade.color.BLACK
-        self.background_sprite = self._build_background_sprite()
-        self.top_bar = _make_panel(SCREEN_WIDTH / 2, TOP_BAR_Y, SCREEN_WIDTH, 92, arcade.color.BLACK, 100)
-        self.side_bar = _make_panel(SIDE_BAR_X, SIDE_BAR_Y, SIDE_BAR_WIDTH, SIDE_BAR_HEIGHT, arcade.color.DARK_SLATE_GRAY, 205)
-        self.content_card = _make_panel(CONTENT_CARD_X, CONTENT_CARD_Y, CONTENT_CARD_WIDTH, CONTENT_CARD_HEIGHT, arcade.color.BLACK_OLIVE, 180)
-        self.content_border = _make_panel(CONTENT_CARD_X, CONTENT_CARD_Y, CONTENT_CARD_WIDTH + 4, CONTENT_CARD_HEIGHT + 4, arcade.color.WHITE, 255)
+        self.background_sprite = DrawableSprite(self._build_background_sprite())
+        self.top_bar = DrawableSprite(_make_panel(SCREEN_WIDTH / 2, TOP_BAR_Y, SCREEN_WIDTH, 92, arcade.color.BLACK, 100))
+        self.side_bar = DrawableSprite(_make_panel(SIDE_BAR_X, SIDE_BAR_Y, SIDE_BAR_WIDTH, SIDE_BAR_HEIGHT, arcade.color.DARK_SLATE_GRAY, 205))
+        self.content_card = DrawableSprite(_make_panel(CONTENT_CARD_X, CONTENT_CARD_Y, CONTENT_CARD_WIDTH, CONTENT_CARD_HEIGHT, arcade.color.BLACK_OLIVE, 180))
+        self.content_border = DrawableSprite(_make_panel(CONTENT_CARD_X, CONTENT_CARD_Y, CONTENT_CARD_WIDTH + 4, CONTENT_CARD_HEIGHT + 4, arcade.color.WHITE, 255))
         self.money_box = StatusBox("Money", "$120", 410, TOP_BAR_Y)
         self.energy_box = StatusBox("Energy", "85%", 558, TOP_BAR_Y)
         self.level_box = StatusBox("Level", "1", 699, TOP_BAR_Y, width=108, accent_color=arcade.color.TAN)
