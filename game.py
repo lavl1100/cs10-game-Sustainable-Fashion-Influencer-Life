@@ -684,7 +684,6 @@ class HomeView(arcade.View):
 
     def __init__(self) -> None:
         super().__init__()
-<<<<<<< HEAD
         self.music = BackgroundMusicPlaylist(ASSETS_DIR)
         self.layout = GameLayout(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
         self.background_color = THEME_DEEP_PURPLE
@@ -1130,15 +1129,6 @@ class ComputerWindowOverlay:
             top - self.layout.sy(16),
             THEME_TEXT_PURPLE,
             title_size,
-=======
-        self.background_color = arcade.csscolor.DARK_SLATE_BLUE
-        self.title_text = arcade.Text(
-            "CS10 Arcade Starter",
-            SCREEN_WIDTH / 2,
-            SCREEN_HEIGHT / 2 + 24,
-            arcade.color.WHITE,
-            28,
->>>>>>> Mon, May 11, 2026, 10:25 AM -07:00
             anchor_x="center",
             anchor_y="top",
         )
@@ -1160,7 +1150,6 @@ class ComputerWindowOverlay:
             min(self.layout.ss(18), (button_top - button_bottom) * 0.28),
             THEME_LAVENDER,
         )
-<<<<<<< HEAD
         self._draw_window_text(
             "Thrifting",
             (button_left + button_right) / 2 + self.layout.sx(14),
@@ -1313,14 +1302,6 @@ class ComputerWindowOverlay:
             (button_bottom + button_top) / 2,
             THEME_TEXT_PURPLE,
             body_size,
-=======
-        self.subtitle_text = arcade.Text(
-            "Edit game.py (owner) or your game-yourname.py file",
-            SCREEN_WIDTH / 2,
-            SCREEN_HEIGHT / 2 - 20,
-            arcade.color.LIGHT_GRAY,
-            14,
->>>>>>> Mon, May 11, 2026, 10:25 AM -07:00
             anchor_x="center",
         )
         back_left, back_right, back_bottom, back_top = self._thrift_back_button_bounds()
