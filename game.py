@@ -206,8 +206,8 @@ class StatusBox:
     value: str
     center_x: float
     center_y: float
-    width: float = 132
-    height: float = 42
+    width: float = _ss(132)
+    height: float = _ss(42)
     fill_color: arcade.Color = arcade.color.DARK_SLATE_GRAY
     border_color: arcade.Color = arcade.color.WHITE
     accent_color: arcade.Color = arcade.color.DARK_SEA_GREEN
@@ -215,14 +215,14 @@ class StatusBox:
     value_size: float = STATUS_VALUE_FONT_SIZE
 
     def __post_init__(self) -> None:
-        self.shadow = DrawableSprite(_make_panel(self.center_x + 3, self.center_y - 3, self.width, self.height, arcade.color.BLACK, 110))
-        self.border = DrawableSprite(_make_panel(self.center_x, self.center_y, self.width + 4, self.height + 4, self.border_color, 255))
+        self.shadow = DrawableSprite(_make_panel(self.center_x + _ss(3), self.center_y - _ss(3), self.width, self.height, arcade.color.BLACK, 110))
+        self.border = DrawableSprite(_make_panel(self.center_x, self.center_y, self.width + _ss(4), self.height + _ss(4), self.border_color, 255))
         self.panel = DrawableSprite(_make_panel(self.center_x, self.center_y, self.width, self.height, self.fill_color, 220))
-        self.accent = DrawableSprite(_make_panel(self.center_x - self.width * 0.36, self.center_y, 4, self.height - 10, self.accent_color, 255))
+        self.accent = DrawableSprite(_make_panel(self.center_x - self.width * 0.36, self.center_y, _ss(4), self.height - _ss(10), self.accent_color, 255))
         self.label_text = arcade.Text(
             self.label.upper(),
             self.center_x - self.width * 0.24,
-            self.center_y + 9,
+            self.center_y + _sy(9),
             arcade.color.LIGHT_GRAY,
             self.label_size,
             anchor_x="left",
@@ -231,7 +231,7 @@ class StatusBox:
         self.value_text = arcade.Text(
             self.value,
             self.center_x - self.width * 0.24,
-            self.center_y - 8,
+            self.center_y - _sy(8),
             arcade.color.WHITE,
             self.value_size,
             anchor_x="left",
@@ -325,7 +325,7 @@ class HomeButton:
     def draw(self) -> None:
         self.sprite.draw()
         if self.show_label:
-            self.text.font_size = max(11, int(15 * self.current_scale))
+            self.text.font_size = max(11, int(BUTTON_LABEL_FONT_SIZE * self.current_scale))
             self.text.draw()
 
 
@@ -340,13 +340,13 @@ class HomeView(arcade.View):
         self.side_bar = DrawableSprite(_make_panel(SIDE_BAR_X, SIDE_BAR_Y, SIDE_BAR_WIDTH, SIDE_BAR_HEIGHT, arcade.color.DARK_SLATE_GRAY, 205))
         self.content_card = DrawableSprite(_make_panel(CONTENT_CARD_X, CONTENT_CARD_Y, CONTENT_CARD_WIDTH, CONTENT_CARD_HEIGHT, arcade.color.BLACK_OLIVE, 180))
         self.content_border = DrawableSprite(_make_panel(CONTENT_CARD_X, CONTENT_CARD_Y, CONTENT_CARD_WIDTH + 4, CONTENT_CARD_HEIGHT + 4, arcade.color.WHITE, 255))
-        self.money_box = StatusBox("Money", "$120", 410, TOP_BAR_Y)
-        self.energy_box = StatusBox("Energy", "85%", 558, TOP_BAR_Y)
-        self.level_box = StatusBox("Level", "1", 699, TOP_BAR_Y, width=108, accent_color=arcade.color.TAN)
+        self.money_box = StatusBox("Money", "$120", _sx(410), TOP_BAR_Y)
+        self.energy_box = StatusBox("Energy", "85%", _sx(558), TOP_BAR_Y)
+        self.level_box = StatusBox("Level", "1", _sx(699), TOP_BAR_Y, width=_ss(108), accent_color=arcade.color.TAN)
         self.title_text = arcade.Text(
             "Fashionidísimitas",
-            456,
-            520,
+            _sx(456),
+            _sy(520),
             arcade.color.WHITE,
             _ss(28),
             anchor_x="center",
@@ -354,8 +354,8 @@ class HomeView(arcade.View):
         )
         self.subtitle_text = arcade.Text(
             "Choose a computer window to manage your influencer life.",
-            456,
-            486,
+            _sx(456),
+            _sy(486),
             arcade.color.LIGHT_GRAY,
             _ss(13),
             anchor_x="center",
@@ -363,8 +363,8 @@ class HomeView(arcade.View):
         )
         self.note_text = arcade.Text(
             "This MVP starts with empty screens so the team can build them later.",
-            456,
-            452,
+            _sx(456),
+            _sy(452),
             arcade.color.LIGHT_GRAY,
             _ss(11),
             anchor_x="center",
@@ -472,8 +472,8 @@ class ComputerWindowView(arcade.View):
         self.title = title
         self.home_view = home_view
         self.on_close = on_close
-        self.window_width = 560
-        self.window_height = 390
+        self.window_width = _sx(560)
+        self.window_height = _sy(390)
         self.window_x = SCREEN_WIDTH / 2
         self.window_y = SCREEN_HEIGHT / 2 - _sy(8)
         self.close_button_x = self.window_x + self.window_width / 2 - WINDOW_CLOSE_OFFSET_X
