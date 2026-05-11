@@ -371,6 +371,7 @@ class HomeView(arcade.View):
             anchor_y="center",
         )
         self.buttons: list[HomeButton] = []
+        self.active_window: Optional[ComputerWindowOverlay] = None
         self._pending_action: Optional[Callable[[], None]] = None
         self._build_buttons()
 
@@ -399,18 +400,19 @@ class HomeView(arcade.View):
 
     def _make_open_action(self, label: str) -> Callable[[], None]:
         def open_window() -> None:
-            def show_window() -> None:
-                self.window.show_view(
-                    ComputerWindowView(
-                        title=label.title(),
-                        home_view=self,
-                        on_close=lambda: self._close_window(label),
-                    )
-                )
-
-            self._pending_action = show_window
+            self._pending_action = lambda: self._open_window(label)
 
         return open_window
+
+    def _open_window(self, label: str) -> None:
+        if self.active_window is not None and self.active_window.title == "Social Media" and label != "social media":
+            self._set_button_active("social media", False)
+        if label == "social media":
+            self._set_button_active(label, True)
+        self.active_window = ComputerWindowOverlay(
+            title=label.title(),
+            on_close=lambda: self._close_window(label),
+        )
 
     def _set_button_active(self, label: str, is_active: bool) -> None:
         for button in self.buttons:
@@ -419,6 +421,7 @@ class HomeView(arcade.View):
                 break
 
     def _close_window(self, label: str) -> None:
+        self.active_window = None
         if label == "social media":
             self._set_button_active(label, False)
 
@@ -440,9 +443,14 @@ class HomeView(arcade.View):
         self.note_text.draw()
         for button in self.buttons:
             button.draw()
+        if self.active_window is not None:
+            self.active_window.draw()
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
+            return
+
+        if self.active_window is not None and self.active_window.on_mouse_press(x, y, button, modifiers):
             return
 
         now = _current_time()
@@ -463,21 +471,40 @@ class HomeView(arcade.View):
             self._pending_action = None
             action()
 
+    def on_mouse_drag(
+        self,
+        x: float,
+        y: float,
+        dx: float,
+        dy: float,
+        buttons: int,
+        modifiers: int,
+    ) -> None:
+        if self.active_window is not None:
+            self.active_window.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
 
-class ComputerWindowView(arcade.View):
-    """An empty computer-style window for the game sections."""
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
+        if self.active_window is not None:
+            self.active_window.on_mouse_release(x, y, button, modifiers)
 
-    def __init__(self, title: str, home_view: HomeView, on_close: Callable[[], None]) -> None:
-        super().__init__()
+    def on_key_press(self, key: int, modifiers: int) -> None:
+        if key == arcade.key.ESCAPE and self.active_window is not None:
+            self.active_window.close()
+
+
+class ComputerWindowOverlay:
+    """A draggable computer-style window drawn on top of the home screen."""
+
+    def __init__(self, title: str, on_close: Callable[[], None]) -> None:
         self.title = title
-        self.home_view = home_view
         self.on_close = on_close
         self.window_width = _sx(560)
         self.window_height = _sy(390)
         self.window_x = SCREEN_WIDTH / 2
         self.window_y = SCREEN_HEIGHT / 2 - _sy(8)
-        self.close_button_x = self.window_x + self.window_width / 2 - WINDOW_CLOSE_OFFSET_X
-        self.close_button_y = self.window_y + self.window_height / 2 - WINDOW_CLOSE_OFFSET_Y
+        self.is_dragging = False
+        self.drag_offset_x = 0.0
+        self.drag_offset_y = 0.0
         self.title_text = arcade.Text(
             self.title,
             self.window_x - self.window_width / 2 + WINDOW_TITLE_LEFT_PADDING,
@@ -489,70 +516,151 @@ class ComputerWindowView(arcade.View):
         )
         self.close_text = arcade.Text(
             "x",
-            self.close_button_x,
-            self.close_button_y - WINDOW_CLOSE_TEXT_OFFSET_Y,
+            self.window_x + self.window_width / 2 - WINDOW_CLOSE_OFFSET_X,
+            self.window_y + self.window_height / 2 - WINDOW_CLOSE_OFFSET_Y - WINDOW_CLOSE_TEXT_OFFSET_Y,
             arcade.color.WHITE,
             WINDOW_CLOSE_FONT_SIZE,
             anchor_x="center",
             anchor_y="center",
         )
-
-    def on_show_view(self) -> None:
-        arcade.set_background_color(arcade.color.BLACK)
+        self._sync_text_positions()
 
     def _close(self) -> None:
         self.on_close()
-        self.window.show_view(self.home_view)
+
+    def _bounds(self) -> tuple[float, float, float, float]:
+        left = self.window_x - self.window_width / 2
+        right = self.window_x + self.window_width / 2
+        bottom = self.window_y - self.window_height / 2
+        top = self.window_y + self.window_height / 2
+        return left, right, bottom, top
+
+    def _header_bounds(self) -> tuple[float, float, float, float]:
+        left, right, _, top = self._bounds()
+        return left, right, top - WINDOW_HEADER_HEIGHT, top - WINDOW_HEADER_TOP_PADDING
+
+    def _close_bounds(self) -> tuple[float, float, float, float]:
+        _, right, _, top = self._bounds()
+        center_x = right - WINDOW_CLOSE_OFFSET_X
+        center_y = top - WINDOW_CLOSE_OFFSET_Y
+        return (
+            center_x - WINDOW_CLOSE_HALF_SIZE,
+            center_x + WINDOW_CLOSE_HALF_SIZE,
+            center_y - WINDOW_CLOSE_HALF_SIZE,
+            center_y + WINDOW_CLOSE_HALF_SIZE,
+        )
+
+    def _sync_text_positions(self) -> None:
+        left, right, _, top = self._bounds()
+        close_left, close_right, close_bottom, close_top = self._close_bounds()
+        self.title_text.x = left + WINDOW_TITLE_LEFT_PADDING
+        self.title_text.y = top - _sy(38)
+        self.close_text.x = (close_left + close_right) / 2
+        self.close_text.y = (close_bottom + close_top) / 2 - WINDOW_CLOSE_TEXT_OFFSET_Y
+
+    def _clamp_position(self, center_x: float, center_y: float) -> tuple[float, float]:
+        half_width = self.window_width / 2
+        half_height = self.window_height / 2
+        min_x = half_width + WINDOW_MARGIN
+        max_x = SCREEN_WIDTH - half_width - WINDOW_MARGIN
+        min_y = half_height + WINDOW_MARGIN
+        max_y = SCREEN_HEIGHT - half_height - WINDOW_MARGIN
+        return (
+            max(min_x, min(center_x, max_x)),
+            max(min_y, min(center_y, max_y)),
+        )
+
+    def _set_center(self, center_x: float, center_y: float) -> None:
+        self.window_x, self.window_y = self._clamp_position(center_x, center_y)
+        self._sync_text_positions()
 
     def on_draw(self) -> None:
-        self.clear()
-        arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, arcade.color.BLACK)
-        arcade.draw_lrbt_rectangle_filled(WINDOW_MARGIN, SCREEN_WIDTH - WINDOW_MARGIN, WINDOW_MARGIN, SCREEN_HEIGHT - WINDOW_MARGIN, arcade.color.DARK_SLATE_GRAY)
+        left, right, bottom, top = self._bounds()
+        header_left, header_right, header_bottom, header_top = self._header_bounds()
+        close_left, close_right, close_bottom, close_top = self._close_bounds()
+        shadow_offset = _ss(5)
         arcade.draw_lrbt_rectangle_filled(
-            self.window_x - self.window_width / 2,
-            self.window_x + self.window_width / 2,
-            self.window_y - self.window_height / 2,
-            self.window_y + self.window_height / 2,
+            left + shadow_offset,
+            right + shadow_offset,
+            bottom - shadow_offset,
+            top - shadow_offset,
+            arcade.color.BLACK,
+        )
+        arcade.draw_lrbt_rectangle_filled(
+            left,
+            right,
+            bottom,
+            top,
             arcade.color.BEIGE,
         )
         arcade.draw_lrbt_rectangle_outline(
-            self.window_x - self.window_width / 2,
-            self.window_x + self.window_width / 2,
-            self.window_y - self.window_height / 2,
-            self.window_y + self.window_height / 2,
+            left,
+            right,
+            bottom,
+            top,
             arcade.color.WHITE,
             3,
         )
         arcade.draw_lrbt_rectangle_filled(
-            self.window_x - self.window_width / 2,
-            self.window_x + self.window_width / 2,
-            self.window_y + self.window_height / 2 - WINDOW_HEADER_HEIGHT,
-            self.window_y + self.window_height / 2 - WINDOW_HEADER_TOP_PADDING,
+            header_left,
+            header_right,
+            header_bottom,
+            header_top,
             arcade.color.BLACK_OLIVE,
         )
         self.title_text.draw()
         arcade.draw_lrbt_rectangle_filled(
-            self.close_button_x - WINDOW_CLOSE_HALF_SIZE,
-            self.close_button_x + WINDOW_CLOSE_HALF_SIZE,
-            self.close_button_y - WINDOW_CLOSE_HALF_SIZE,
-            self.close_button_y + WINDOW_CLOSE_HALF_SIZE,
+            close_left,
+            close_right,
+            close_bottom,
+            close_top,
             arcade.color.RED_ORANGE,
         )
         self.close_text.draw()
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
-            return
+            return False
 
-        if (
-            abs(x - self.close_button_x) <= WINDOW_CLOSE_HALF_SIZE
-            and abs(y - self.close_button_y) <= WINDOW_CLOSE_HALF_SIZE
-        ):
+        close_left, close_right, close_bottom, close_top = self._close_bounds()
+        if close_left <= x <= close_right and close_bottom <= y <= close_top:
             self._close()
+            return True
+
+        left, right, _, top = self._bounds()
+        header_left, header_right, header_bottom, header_top = self._header_bounds()
+        bottom = self.window_y - self.window_height / 2
+        if left <= x <= right and bottom <= y <= top:
+            if header_left <= x <= header_right and header_bottom <= y <= header_top:
+                self.is_dragging = True
+                self.drag_offset_x = x - self.window_x
+                self.drag_offset_y = y - self.window_y
+                return True
+            return True
+        return False
+
+    def on_mouse_drag(
+        self,
+        x: float,
+        y: float,
+        dx: float,
+        dy: float,
+        buttons: int,
+        modifiers: int,
+    ) -> None:
+        if self.is_dragging and buttons & arcade.MOUSE_BUTTON_LEFT:
+            self._set_center(x - self.drag_offset_x, y - self.drag_offset_y)
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
+        if button == arcade.MOUSE_BUTTON_LEFT:
+            self.is_dragging = False
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
             self._close()
+
+    def close(self) -> None:
+        self._close()
 
 
 def main() -> None:
