@@ -9,8 +9,10 @@ from typing import Callable, Optional
 
 import arcade
 
-SCREEN_WIDTH = 1500
-SCREEN_HEIGHT = 900
+BASE_SCREEN_WIDTH = 1500
+BASE_SCREEN_HEIGHT = 900
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
 SCREEN_TITLE = "Fashionidísimitas"
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
@@ -28,23 +30,35 @@ BUTTON_ACTIVE_IMAGE_PATHS = {
     "social media": ASSETS_DIR / "social_media_button_active.png",
 }
 
-SIDE_BAR_X = 166
-SIDE_BAR_Y = 300
-SIDE_BAR_WIDTH = 282
-SIDE_BAR_HEIGHT = 410
+def _sx(value: float) -> float:
+    return value * SCREEN_WIDTH / BASE_SCREEN_WIDTH
 
-TOP_BAR_Y = SCREEN_HEIGHT - 34
 
-CONTENT_CARD_X = 585
-CONTENT_CARD_Y = 275
-CONTENT_CARD_WIDTH = 382
-CONTENT_CARD_HEIGHT = 316
+def _sy(value: float) -> float:
+    return value * SCREEN_HEIGHT / BASE_SCREEN_HEIGHT
 
-HOME_BUTTON_WIDTH = 60
-HOME_BUTTON_HEIGHT = 60
-HOME_BUTTON_LEFT = 60
-HOME_BUTTON_TOP = 452
-HOME_BUTTON_GAP = 12
+
+def _s(value: float) -> float:
+    return value * min(SCREEN_WIDTH / BASE_SCREEN_WIDTH, SCREEN_HEIGHT / BASE_SCREEN_HEIGHT)
+
+
+SIDE_BAR_X = _sx(166)
+SIDE_BAR_Y = _sy(300)
+SIDE_BAR_WIDTH = _sx(282)
+SIDE_BAR_HEIGHT = _sy(410)
+
+TOP_BAR_Y = SCREEN_HEIGHT - _sy(34)
+
+CONTENT_CARD_X = _sx(585)
+CONTENT_CARD_Y = _sy(275)
+CONTENT_CARD_WIDTH = _sx(382)
+CONTENT_CARD_HEIGHT = _sy(316)
+
+HOME_BUTTON_WIDTH = _s(60)
+HOME_BUTTON_HEIGHT = _s(60)
+HOME_BUTTON_LEFT = _sx(60)
+HOME_BUTTON_TOP = _sy(452)
+HOME_BUTTON_GAP = _sy(12)
 
 PRESS_ANIMATION_TIME = 0.18
 PRESS_SHRINK_SCALE = 0.86
@@ -302,37 +316,37 @@ class HomeView(arcade.View):
         super().__init__()
         self.background_color = arcade.color.BLACK
         self.background_sprite = DrawableSprite(self._build_background_sprite())
-        self.top_bar = DrawableSprite(_make_panel(SCREEN_WIDTH / 2, TOP_BAR_Y, SCREEN_WIDTH, 92, arcade.color.BLACK, 100))
+        self.top_bar = DrawableSprite(_make_panel(SCREEN_WIDTH / 2, TOP_BAR_Y, SCREEN_WIDTH, _sy(92), arcade.color.BLACK, 100))
         self.side_bar = DrawableSprite(_make_panel(SIDE_BAR_X, SIDE_BAR_Y, SIDE_BAR_WIDTH, SIDE_BAR_HEIGHT, arcade.color.DARK_SLATE_GRAY, 205))
         self.content_card = DrawableSprite(_make_panel(CONTENT_CARD_X, CONTENT_CARD_Y, CONTENT_CARD_WIDTH, CONTENT_CARD_HEIGHT, arcade.color.BLACK_OLIVE, 180))
         self.content_border = DrawableSprite(_make_panel(CONTENT_CARD_X, CONTENT_CARD_Y, CONTENT_CARD_WIDTH + 4, CONTENT_CARD_HEIGHT + 4, arcade.color.WHITE, 255))
-        self.money_box = StatusBox("Money", "$120", 410, TOP_BAR_Y)
-        self.energy_box = StatusBox("Energy", "85%", 558, TOP_BAR_Y)
-        self.level_box = StatusBox("Level", "1", 699, TOP_BAR_Y, width=108, accent_color=arcade.color.TAN)
+        self.money_box = StatusBox("Money", "$120", _sx(410), TOP_BAR_Y)
+        self.energy_box = StatusBox("Energy", "85%", _sx(558), TOP_BAR_Y)
+        self.level_box = StatusBox("Level", "1", _sx(699), TOP_BAR_Y, width=_sx(108), accent_color=arcade.color.TAN)
         self.title_text = arcade.Text(
             "Fashionidísimitas",
-            456,
-            520,
+            _sx(456),
+            _sy(520),
             arcade.color.WHITE,
-            28,
+            int(_s(28)),
             anchor_x="center",
             anchor_y="center",
         )
         self.subtitle_text = arcade.Text(
             "Choose a computer window to manage your influencer life.",
-            456,
-            486,
+            _sx(456),
+            _sy(486),
             arcade.color.LIGHT_GRAY,
-            13,
+            int(_s(13)),
             anchor_x="center",
             anchor_y="center",
         )
         self.note_text = arcade.Text(
             "This MVP starts with empty screens so the team can build them later.",
-            456,
-            452,
+            _sx(456),
+            _sy(452),
             arcade.color.LIGHT_GRAY,
-            11,
+            int(_s(11)),
             anchor_x="center",
             anchor_y="center",
         )
@@ -441,9 +455,9 @@ class ComputerWindowView(arcade.View):
         self.window_width = 560
         self.window_height = 390
         self.window_x = SCREEN_WIDTH / 2
-        self.window_y = SCREEN_HEIGHT / 2 - 8
-        self.close_button_x = self.window_x + self.window_width / 2 - 24
-        self.close_button_y = self.window_y + self.window_height / 2 - 21
+        self.window_y = SCREEN_HEIGHT / 2 - _sy(8)
+        self.close_button_x = self.window_x + self.window_width / 2 - _sx(24)
+        self.close_button_y = self.window_y + self.window_height / 2 - _sy(21)
 
     def on_show_view(self) -> None:
         arcade.set_background_color(arcade.color.BLACK)
@@ -455,7 +469,7 @@ class ComputerWindowView(arcade.View):
     def on_draw(self) -> None:
         self.clear()
         arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, arcade.color.BLACK)
-        arcade.draw_lrbt_rectangle_filled(19, SCREEN_WIDTH - 19, 19, SCREEN_HEIGHT - 19, arcade.color.DARK_SLATE_GRAY)
+        arcade.draw_lrbt_rectangle_filled(_sx(19), SCREEN_WIDTH - _sx(19), _sy(19), SCREEN_HEIGHT - _sy(19), arcade.color.DARK_SLATE_GRAY)
         arcade.draw_lrbt_rectangle_filled(
             self.window_x - self.window_width / 2,
             self.window_x + self.window_width / 2,
@@ -475,22 +489,22 @@ class ComputerWindowView(arcade.View):
             self.window_x - self.window_width / 2,
             self.window_x + self.window_width / 2,
             self.window_y + self.window_height / 2 - 50,
-            self.window_y + self.window_height / 2 - 6,
+            self.window_y + self.window_height / 2 - _sy(6),
             arcade.color.BLACK_OLIVE,
         )
         arcade.draw_text(
             self.title,
-            self.window_x - self.window_width / 2 + 18,
-            self.window_y + self.window_height / 2 - 38,
+            self.window_x - self.window_width / 2 + _sx(18),
+            self.window_y + self.window_height / 2 - _sy(38),
             arcade.color.WHITE,
-            18,
+            int(_s(18)),
             anchor_y="center",
         )
         arcade.draw_lrbt_rectangle_filled(
-            self.close_button_x - 13,
-            self.close_button_x + 13,
-            self.close_button_y - 13,
-            self.close_button_y + 13,
+            self.close_button_x - _sx(13),
+            self.close_button_x + _sx(13),
+            self.close_button_y - _sy(13),
+            self.close_button_y + _sy(13),
             arcade.color.RED_ORANGE,
         )
         arcade.draw_text(
@@ -498,7 +512,7 @@ class ComputerWindowView(arcade.View):
             self.close_button_x,
             self.close_button_y - 1,
             arcade.color.WHITE,
-            18,
+            int(_s(18)),
             anchor_x="center",
             anchor_y="center",
         )
@@ -508,8 +522,8 @@ class ComputerWindowView(arcade.View):
             return
 
         if (
-            abs(x - self.close_button_x) <= 13
-            and abs(y - self.close_button_y) <= 13
+            abs(x - self.close_button_x) <= _sx(13)
+            and abs(y - self.close_button_y) <= _sy(13)
         ):
             self._close()
 
