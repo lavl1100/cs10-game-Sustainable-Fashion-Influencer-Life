@@ -61,20 +61,78 @@ class ThriftGame(arcade.Window):
         self.message = ""
 
         # Reusable text objects avoid the slow draw_text helper warnings.
-        self.selected_fabric_text = arcade.Text("", 0, 0, arcade.color.BLACK, 12)
-        self.eco_status_text = arcade.Text("", 0, 0, arcade.color.BLACK, 12)
-        self.price_text = arcade.Text("", 0, 0, arcade.color.BLACK, 16)
-        self.detail_fabric_text = arcade.Text("", 0, 0, arcade.color.DARK_GRAY, 14)
-        self.money_text = arcade.Text("", 40, 70, arcade.color.BLACK, 16)
-        self.score_text = arcade.Text("", 40, 45, arcade.color.BLACK, 16)
-        self.instructions_text = arcade.Text(
-            "← → browse   SPACE buy",
-            380,
-            30,
+        self.selected_fabric_text = arcade.Text(
+            "",
+            0,
+            0,
+            arcade.color.BLACK,
+            12,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.eco_status_text = arcade.Text(
+            "",
+            SCREEN_WIDTH // 2,
+            130,
+            arcade.color.BLACK,
+            12,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.price_text = arcade.Text(
+            "",
+            SCREEN_WIDTH // 2,
+            170,
+            arcade.color.BLACK,
+            16,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.detail_fabric_text = arcade.Text(
+            "",
+            SCREEN_WIDTH // 2,
+            148,
             arcade.color.DARK_GRAY,
             14,
+            anchor_x="center",
+            anchor_y="center",
         )
-        self.message_text = arcade.Text("", 380, 70, arcade.color.RED, 16)
+        self.money_text = arcade.Text(
+            "",
+            40,
+            84,
+            arcade.color.BLACK,
+            16,
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.score_text = arcade.Text(
+            "",
+            40,
+            58,
+            arcade.color.BLACK,
+            16,
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.instructions_text = arcade.Text(
+            "← → browse   SPACE buy",
+            40,
+            34,
+            arcade.color.DARK_GRAY,
+            14,
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.message_text = arcade.Text(
+            "",
+            380,
+            58,
+            arcade.color.RED,
+            16,
+            anchor_x="left",
+            anchor_y="center",
+        )
 
     def setup(self):
         self.rack.clear()
@@ -141,15 +199,12 @@ class ThriftGame(arcade.Window):
             item = self.rack[self.current_index]
 
             self.selected_fabric_text.text = item.fabric.upper()
-            self.selected_fabric_text.x = item.sprite.center_x - 40
-            self.selected_fabric_text.y = item.sprite.center_y - 70
-            self.selected_fabric_text.color = arcade.color.BLACK
+            self.selected_fabric_text.x = item.sprite.center_x
+            self.selected_fabric_text.y = item.sprite.center_y - 68
             self.selected_fabric_text.draw()
 
             eco_text = "ECO 🌱 + BONUS" if item.eco else "FAST FASHION ❌ PENALTY"
             self.eco_status_text.text = eco_text
-            self.eco_status_text.x = SCREEN_WIDTH // 2 - 90
-            self.eco_status_text.y = 130
             self.eco_status_text.color = arcade.color.GREEN if item.eco else arcade.color.RED
             self.eco_status_text.draw()
 
@@ -166,15 +221,9 @@ class ThriftGame(arcade.Window):
             )
 
             self.price_text.text = f"Price: ${item.price}"
-            self.price_text.x = SCREEN_WIDTH // 2 - 50
-            self.price_text.y = 170
-            self.price_text.color = arcade.color.BLACK
             self.price_text.draw()
 
             self.detail_fabric_text.text = item.fabric
-            self.detail_fabric_text.x = SCREEN_WIDTH // 2 - 50
-            self.detail_fabric_text.y = 150
-            self.detail_fabric_text.color = arcade.color.DARK_GRAY
             self.detail_fabric_text.draw()
 
         # UI
