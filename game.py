@@ -228,7 +228,7 @@ class StatusBox:
     value_size: float = STATUS_VALUE_FONT_SIZE
 
     def __post_init__(self) -> None:
-        self.shadow = DrawableSprite(_make_panel(self.center_x + _ss(3), self.center_y - _ss(3), self.width, self.height, arcade.color.BLACK, 110))
+        self.shadow = DrawableSprite(_make_panel(self.center_x + _ss(3), self.center_y - _ss(3), self.width, self.height, THEME_DEEP_PURPLE, 110))
         self.border = DrawableSprite(_make_panel(self.center_x, self.center_y, self.width + _ss(4), self.height + _ss(4), self.border_color, 255))
         self.panel = DrawableSprite(_make_panel(self.center_x, self.center_y, self.width, self.height, self.fill_color, 220))
         self.accent = DrawableSprite(_make_panel(self.center_x - self.width * 0.36, self.center_y, _ss(4), self.height - _ss(10), self.accent_color, 255))
@@ -347,18 +347,19 @@ class HomeView(arcade.View):
 
     def __init__(self) -> None:
         super().__init__()
-        self.background_color = arcade.color.BLACK
+        self.background_color = THEME_DEEP_PURPLE
         self.background_sprite = DrawableSprite(self._build_background_sprite())
-        self.top_bar = DrawableSprite(_make_panel(SCREEN_WIDTH / 2, TOP_BAR_Y, SCREEN_WIDTH, _sy(92), arcade.color.BLACK, 100))
-        self.side_bar = DrawableSprite(_make_panel(SIDE_BAR_X, SIDE_BAR_Y, SIDE_BAR_WIDTH, SIDE_BAR_HEIGHT, arcade.color.DARK_SLATE_GRAY, 205))
+        self.theme_overlay = DrawableSprite(_make_panel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT, THEME_SOFT_LILAC, THEME_OVERLAY_ALPHA))
+        self.top_bar = DrawableSprite(_make_panel(SCREEN_WIDTH / 2, TOP_BAR_Y, SCREEN_WIDTH, _sy(92), THEME_LAVENDER, 120))
+        self.side_bar = DrawableSprite(_make_panel(SIDE_BAR_X, SIDE_BAR_Y, SIDE_BAR_WIDTH, SIDE_BAR_HEIGHT, THEME_LAVENDER, 220))
         self.money_box = StatusBox("Money", "$120", TOP_HUD_LEFT, TOP_BAR_Y)
         self.energy_box = StatusBox("Energy", "85%", TOP_HUD_LEFT + TOP_HUD_GAP, TOP_BAR_Y)
-        self.level_box = StatusBox("Level", "1", TOP_HUD_LEFT + TOP_HUD_GAP * 2, TOP_BAR_Y, width=_ss(108), accent_color=arcade.color.TAN)
+        self.level_box = StatusBox("Level", "1", TOP_HUD_LEFT + TOP_HUD_GAP * 2, TOP_BAR_Y, width=_ss(108), accent_color=THEME_DEEP_PURPLE)
         self.date_text = arcade.Text(
             "",
             TOP_CLOCK_RIGHT,
             TOP_CLOCK_DATE_Y,
-            arcade.color.LIGHT_GRAY,
+            THEME_TEXT_PURPLE,
             _ss(14),
             font_name=UI_FONT_NAME,
             anchor_x="right",
@@ -368,7 +369,7 @@ class HomeView(arcade.View):
             "",
             TOP_CLOCK_RIGHT,
             TOP_CLOCK_TIME_Y,
-            arcade.color.WHITE,
+            THEME_TEXT_PURPLE,
             _ss(18),
             font_name=UI_FONT_NAME,
             anchor_x="right",
@@ -387,7 +388,7 @@ class HomeView(arcade.View):
             SCREEN_HEIGHT / 2,
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            arcade.color.DARK_SLATE_GRAY,
+            THEME_DEEP_PURPLE,
         )
 
     def _sync_clock_text(self) -> None:
@@ -445,6 +446,7 @@ class HomeView(arcade.View):
     def on_draw(self) -> None:
         self.clear()
         self.background_sprite.draw()
+        self.theme_overlay.draw()
         self.top_bar.draw()
         self.side_bar.draw()
         self.money_box.draw()
@@ -521,7 +523,7 @@ class ComputerWindowOverlay:
             self.title,
             self.window_x - self.window_width / 2 + WINDOW_TITLE_LEFT_PADDING,
             self.window_y + self.window_height / 2 - _sy(38),
-            arcade.color.WHITE,
+            THEME_TEXT_PURPLE,
             WINDOW_TITLE_FONT_SIZE,
             font_name=UI_FONT_NAME,
             anchor_x="left",
@@ -531,7 +533,7 @@ class ComputerWindowOverlay:
             "x",
             self.window_x + self.window_width / 2 - WINDOW_CLOSE_OFFSET_X,
             self.window_y + self.window_height / 2 - WINDOW_CLOSE_OFFSET_Y - WINDOW_CLOSE_TEXT_OFFSET_Y,
-            arcade.color.WHITE,
+            THEME_TEXT_PURPLE,
             WINDOW_CLOSE_FONT_SIZE,
             font_name=UI_FONT_NAME,
             anchor_x="center",
@@ -598,21 +600,21 @@ class ComputerWindowOverlay:
             right + shadow_offset,
             bottom - shadow_offset,
             top - shadow_offset,
-            arcade.color.BLACK,
+            THEME_DEEP_PURPLE,
         )
         arcade.draw_lrbt_rectangle_filled(
             left,
             right,
             bottom,
             top,
-            arcade.color.BEIGE,
+            THEME_PALE_PINK,
         )
         arcade.draw_lrbt_rectangle_outline(
             left,
             right,
             bottom,
             top,
-            arcade.color.WHITE,
+            THEME_DEEP_PURPLE,
             3,
         )
         arcade.draw_lrbt_rectangle_filled(
@@ -620,7 +622,7 @@ class ComputerWindowOverlay:
             header_right,
             header_bottom,
             header_top,
-            arcade.color.BLACK_OLIVE,
+            THEME_LAVENDER,
         )
         self.title_text.draw()
         arcade.draw_lrbt_rectangle_filled(
@@ -628,7 +630,7 @@ class ComputerWindowOverlay:
             close_right,
             close_bottom,
             close_top,
-            arcade.color.RED_ORANGE,
+            THEME_SOFT_LILAC,
         )
         self.close_text.draw()
 
