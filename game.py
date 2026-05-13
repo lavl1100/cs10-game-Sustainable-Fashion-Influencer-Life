@@ -352,24 +352,6 @@ class HomeView(arcade.View):
             anchor_x="center",
             anchor_y="center",
         )
-        self.subtitle_text = arcade.Text(
-            "Choose a computer window to manage your influencer life.",
-            _sx(456),
-            _sy(486),
-            arcade.color.LIGHT_GRAY,
-            _ss(13),
-            anchor_x="center",
-            anchor_y="center",
-        )
-        self.note_text = arcade.Text(
-            "This MVP starts with empty screens so the team can build them later.",
-            _sx(456),
-            _sy(452),
-            arcade.color.LIGHT_GRAY,
-            _ss(11),
-            anchor_x="center",
-            anchor_y="center",
-        )
         self.buttons: list[HomeButton] = []
         self.active_window: Optional[ComputerWindowOverlay] = None
         self._pending_action: Optional[Callable[[], None]] = None
@@ -443,8 +425,6 @@ class HomeView(arcade.View):
         self.energy_box.draw()
         self.level_box.draw()
         self.title_text.draw()
-        self.subtitle_text.draw()
-        self.note_text.draw()
         for button in self.buttons:
             button.draw()
         if self.active_window is not None:
