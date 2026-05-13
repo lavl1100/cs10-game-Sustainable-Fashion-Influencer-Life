@@ -361,6 +361,15 @@ class HomeView(arcade.View):
             anchor_x="center",
             anchor_y="center",
         )
+        self.note_text = arcade.Text(
+            "This MVP starts with empty screens so the team can build them later.",
+            _sx(456),
+            _sy(452),
+            arcade.color.LIGHT_GRAY,
+            _ss(11),
+            anchor_x="center",
+            anchor_y="center",
+        )
         self.buttons: list[HomeButton] = []
         self.active_window: Optional[ComputerWindowOverlay] = None
         self._pending_action: Optional[Callable[[], None]] = None
