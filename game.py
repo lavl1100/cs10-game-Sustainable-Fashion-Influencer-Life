@@ -1,5 +1,3 @@
-"""Fashionidísimitas home screen and window-style navigation."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,7 +11,7 @@ BASE_SCREEN_WIDTH = 800
 BASE_SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 1500
 SCREEN_HEIGHT = 900
-SCREEN_TITLE = "Fashionidísimitas"
+SCREEN_TITLE = "Fashion Influencer Life"
 
 SCALE_X = SCREEN_WIDTH / BASE_SCREEN_WIDTH
 SCALE_Y = SCREEN_HEIGHT / BASE_SCREEN_HEIGHT
