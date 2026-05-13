@@ -344,7 +344,7 @@ class HomeView(arcade.View):
         self.energy_box = StatusBox("Energy", "85%", _sx(558), TOP_BAR_Y)
         self.level_box = StatusBox("Level", "1", _sx(699), TOP_BAR_Y, width=_ss(108), accent_color=arcade.color.TAN)
         self.title_text = arcade.Text(
-            "Fashion Influencer",
+            "The Life of a Fashion Influencer",
             _sx(456),
             _sy(520),
             arcade.color.WHITE,
