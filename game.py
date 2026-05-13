@@ -76,7 +76,9 @@ WINDOW_CLOSE_HALF_SIZE = _ss(13)
 WINDOW_CLOSE_OFFSET_X = _sx(24)
 WINDOW_CLOSE_OFFSET_Y = _sy(21)
 WINDOW_CLOSE_TEXT_OFFSET_Y = _sy(1)
-UI_FONT_NAME = ("Kenny Future Square", "calibri", "arial")
+UI_FONT_NAME = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
+
+arcade.load_font(UI_FONT_NAME)
 
 PRESS_ANIMATION_TIME = 0.18
 PRESS_SHRINK_SCALE = 0.86
