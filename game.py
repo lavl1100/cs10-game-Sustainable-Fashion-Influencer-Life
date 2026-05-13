@@ -343,15 +343,6 @@ class HomeView(arcade.View):
         self.money_box = StatusBox("Money", "$120", _sx(410), TOP_BAR_Y)
         self.energy_box = StatusBox("Energy", "85%", _sx(558), TOP_BAR_Y)
         self.level_box = StatusBox("Level", "1", _sx(699), TOP_BAR_Y, width=_ss(108), accent_color=arcade.color.TAN)
-        self.title_text = arcade.Text(
-            "Fashionidísimitas",
-            _sx(456),
-            _sy(520),
-            arcade.color.WHITE,
-            _ss(28),
-            anchor_x="center",
-            anchor_y="center",
-        )
         self.buttons: list[HomeButton] = []
         self.active_window: Optional[ComputerWindowOverlay] = None
         self._pending_action: Optional[Callable[[], None]] = None
@@ -424,7 +415,6 @@ class HomeView(arcade.View):
         self.money_box.draw()
         self.energy_box.draw()
         self.level_box.draw()
-        self.title_text.draw()
         for button in self.buttons:
             button.draw()
         if self.active_window is not None:
