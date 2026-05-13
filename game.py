@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 import time
 from typing import Callable, Optional
@@ -52,6 +53,9 @@ SIDE_BAR_HEIGHT = _sy(410)
 TOP_BAR_Y = SCREEN_HEIGHT - _sy(34)
 TOP_HUD_LEFT = _sx(60)
 TOP_HUD_GAP = _sx(150)
+TOP_CLOCK_RIGHT = SCREEN_WIDTH - _sx(34)
+TOP_CLOCK_DATE_Y = TOP_BAR_Y + _sy(10)
+TOP_CLOCK_TIME_Y = TOP_BAR_Y - _sy(12)
 
 HOME_BUTTON_WIDTH = _ss(60)
 HOME_BUTTON_HEIGHT = _ss(60)
@@ -336,10 +340,29 @@ class HomeView(arcade.View):
         self.money_box = StatusBox("Money", "$120", TOP_HUD_LEFT, TOP_BAR_Y)
         self.energy_box = StatusBox("Energy", "85%", TOP_HUD_LEFT + TOP_HUD_GAP, TOP_BAR_Y)
         self.level_box = StatusBox("Level", "1", TOP_HUD_LEFT + TOP_HUD_GAP * 2, TOP_BAR_Y, width=_ss(108), accent_color=arcade.color.TAN)
+        self.date_text = arcade.Text(
+            "",
+            TOP_CLOCK_RIGHT,
+            TOP_CLOCK_DATE_Y,
+            arcade.color.LIGHT_GRAY,
+            _ss(14),
+            anchor_x="right",
+            anchor_y="center",
+        )
+        self.time_text = arcade.Text(
+            "",
+            TOP_CLOCK_RIGHT,
+            TOP_CLOCK_TIME_Y,
+            arcade.color.WHITE,
+            _ss(18),
+            anchor_x="right",
+            anchor_y="center",
+        )
         self.buttons: list[HomeButton] = []
         self.active_window: Optional[ComputerWindowOverlay] = None
         self._pending_action: Optional[Callable[[], None]] = None
         self._build_buttons()
+        self._sync_clock_text()
 
     def _build_background_sprite(self) -> arcade.Sprite:
         return _make_sprite(
@@ -350,6 +373,11 @@ class HomeView(arcade.View):
             SCREEN_HEIGHT,
             arcade.color.DARK_SLATE_GRAY,
         )
+
+    def _sync_clock_text(self) -> None:
+        now = datetime.now()
+        self.date_text.text = now.strftime("%b %d, %Y")
+        self.time_text.text = now.strftime("%I:%M %p").lstrip("0")
 
     def _build_buttons(self) -> None:
         labels = [
@@ -406,6 +434,8 @@ class HomeView(arcade.View):
         self.money_box.draw()
         self.energy_box.draw()
         self.level_box.draw()
+        self.date_text.draw()
+        self.time_text.draw()
         for button in self.buttons:
             button.draw()
         if self.active_window is not None:
@@ -428,6 +458,7 @@ class HomeView(arcade.View):
 
     def on_update(self, delta_time: float) -> None:
         now = _current_time()
+        self._sync_clock_text()
         for nav_button in self.buttons:
             nav_button.update(delta_time, now)
 
