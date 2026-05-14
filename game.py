@@ -1019,6 +1019,8 @@ class ComputerWindowOverlay:
         self._set_center(layout.width / 2, layout.height / 2 - layout.sy(8))
         self.title_text.font_size = layout.window_title_font_size
         self.close_text.font_size = layout.window_close_font_size
+        self.settings_label_text.font_size = layout.ss(SETTINGS_SLIDER_LABEL_SIZE)
+        self.settings_value_text.font_size = layout.ss(SETTINGS_SLIDER_VALUE_SIZE)
 
     def _clamp_position(self, center_x: float, center_y: float) -> tuple[float, float]:
         half_width = self.window_width / 2
@@ -1082,9 +1084,54 @@ class ComputerWindowOverlay:
             THEME_SOFT_LILAC,
         )
         self.close_text.draw()
+        if self.title == "Settings":
+            slider_left, slider_right, slider_bottom, slider_top = self._slider_bounds()
+            knob_x = self._slider_knob_center_x()
+            knob_y = (slider_bottom + slider_top) / 2
+            arcade.draw_lrbt_rectangle_filled(
+                slider_left,
+                slider_right,
+                slider_bottom,
+                slider_top,
+                THEME_LAVENDER,
+            )
+            arcade.draw_lrbt_rectangle_outline(
+                slider_left,
+                slider_right,
+                slider_bottom,
+                slider_top,
+                THEME_DEEP_PURPLE,
+                2,
+            )
+            arcade.draw_circle_filled(
+                knob_x,
+                knob_y,
+                self.layout.ss(SETTINGS_SLIDER_KNOB_RADIUS),
+                THEME_DEEP_PURPLE,
+            )
+            arcade.draw_circle_outline(
+                knob_x,
+                knob_y,
+                self.layout.ss(SETTINGS_SLIDER_KNOB_RADIUS),
+                THEME_PALE_PINK,
+                2,
+            )
+            self.settings_label_text.draw()
+            self.settings_value_text.draw()
 
     def draw(self) -> None:
         self.on_draw()
+
+    def _hit_test_slider(self, x: float, y: float) -> bool:
+        if self.title != "Settings":
+            return False
+        left, right, bottom, top = self._slider_bounds()
+        if left <= x <= right and bottom <= y <= top:
+            return True
+        knob_x = self._slider_knob_center_x()
+        knob_y = (bottom + top) / 2
+        knob_radius = self.layout.ss(SETTINGS_SLIDER_KNOB_RADIUS) * 1.3
+        return (x - knob_x) ** 2 + (y - knob_y) ** 2 <= knob_radius**2
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
@@ -1104,6 +1151,10 @@ class ComputerWindowOverlay:
                 self.drag_offset_x = x - self.window_x
                 self.drag_offset_y = y - self.window_y
                 return True
+            if self._hit_test_slider(x, y):
+                self.is_adjusting_volume = True
+                self._set_music_volume_from_x(x)
+                return True
             return True
         return False
 
@@ -1118,10 +1169,13 @@ class ComputerWindowOverlay:
     ) -> None:
         if self.is_dragging and buttons & arcade.MOUSE_BUTTON_LEFT:
             self._set_center(x - self.drag_offset_x, y - self.drag_offset_y)
+        elif self.is_adjusting_volume and buttons & arcade.MOUSE_BUTTON_LEFT:
+            self._set_music_volume_from_x(x)
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.is_dragging = False
+            self.is_adjusting_volume = False
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
