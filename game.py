@@ -7,6 +7,7 @@ import time
 from typing import Callable, Optional
 
 import arcade
+import pygame
 
 BASE_SCREEN_WIDTH = 800
 BASE_SCREEN_HEIGHT = 600
@@ -75,6 +76,70 @@ THEME_OVERLAY_ALPHA = 70
 
 PRESS_ANIMATION_TIME = 0.18
 PRESS_SHRINK_SCALE = 0.86
+
+
+class BackgroundMusicPlaylist:
+    """Play the asset folder's songs back-to-back and loop them forever."""
+
+    def __init__(self, music_dir: Path) -> None:
+        self.track_paths = sorted(
+            path for path in music_dir.glob("*.mp3") if path.is_file()
+        )
+        self._sounds: list[pygame.mixer.Sound] = []
+        self._channel: Optional[pygame.mixer.Channel] = None
+        self._current_sound: Optional[pygame.mixer.Sound] = None
+        self._started = False
+        self._available = bool(self.track_paths)
+
+    def start(self) -> None:
+        if self._started or not self._available:
+            return
+
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            pygame.mixer.set_reserved(1)
+            self._sounds = []
+            for path in self.track_paths:
+                try:
+                    self._sounds.append(pygame.mixer.Sound(str(path)))
+                except pygame.error:
+                    continue
+            if not self._sounds:
+                raise pygame.error("No playable music tracks were found.")
+            self._channel = pygame.mixer.Channel(0)
+            self._current_sound = self._sounds[0]
+            self._channel.play(self._current_sound)
+            self._queue_next_track()
+            self._started = True
+        except pygame.error:
+            self._available = False
+            self._sounds = []
+            self._channel = None
+            self._current_sound = None
+
+    def update(self) -> None:
+        if not self._started or self._channel is None:
+            return
+
+        current_sound = self._channel.get_sound()
+        if current_sound is None or current_sound is self._current_sound:
+            return
+
+        self._current_sound = current_sound
+        self._queue_next_track()
+
+    def _queue_next_track(self) -> None:
+        if self._channel is None or not self._sounds or self._current_sound is None:
+            return
+
+        try:
+            current_index = self._sounds.index(self._current_sound)
+        except ValueError:
+            return
+
+        next_index = (current_index + 1) % len(self._sounds)
+        self._channel.queue(self._sounds[next_index])
 
 
 @dataclass(frozen=True)
@@ -557,6 +622,7 @@ class HomeView(arcade.View):
 
     def __init__(self) -> None:
         super().__init__()
+        self.music = BackgroundMusicPlaylist(ASSETS_DIR)
         self.layout = GameLayout(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
         self.background_color = THEME_DEEP_PURPLE
         self.background_sprite = DrawableSprite(self._build_background_sprite(self.layout))
@@ -719,6 +785,7 @@ class HomeView(arcade.View):
 
     def on_show_view(self) -> None:
         arcade.set_background_color(self.background_color)
+        self.music.start()
         if self.window is not None:
             self._apply_layout(GameLayout(self.window.width, self.window.height))
 
@@ -755,6 +822,7 @@ class HomeView(arcade.View):
 
     def on_update(self, delta_time: float) -> None:
         now = _current_time()
+        self.music.update()
         self._sync_clock_text()
         for nav_button in self.buttons:
             nav_button.update(delta_time, now)
