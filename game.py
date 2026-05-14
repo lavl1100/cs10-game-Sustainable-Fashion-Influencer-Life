@@ -4,7 +4,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 import time
+import warnings
 from typing import Callable, Optional
+
+warnings.filterwarnings(
+    "ignore",
+    message=r"pkg_resources is deprecated as an API\.",
+    module=r"pygame\.pkgdata",
+)
 
 import arcade
 import pygame
