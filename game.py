@@ -1026,16 +1026,16 @@ class HomeView(arcade.View):
         if button != arcade.MOUSE_BUTTON_LEFT:
             return
 
-        if self.active_window is not None and self.active_window.on_mouse_press(x, y, button, modifiers):
-            return
-
         now = _current_time()
         for nav_button in self.buttons:
             if nav_button.hit_test(x, y):
                 if nav_button.label == "social media":
                     nav_button.set_active(True)
                 nav_button.press(now)
-                break
+                return
+
+        if self.active_window is not None and self.active_window.on_mouse_press(x, y, button, modifiers):
+            return
 
     def on_update(self, delta_time: float) -> None:
         now = _current_time()
