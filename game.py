@@ -1808,6 +1808,314 @@ class ActivityWindowOverlay(ComputerWindowOverlay):
         self.update_layout(GameLayout(width, height))
 
 
+@dataclass
+class ThriftItem:
+    texture_path: Path
+    sprite: arcade.Sprite
+    price: int
+    value: int
+    fabric: str
+    eco: bool
+
+    @classmethod
+    def create(cls) -> "ThriftItem":
+        texture_path = random.choice(THRIFTING_CLOTHING_IMAGE_PATHS)
+        sprite = arcade.Sprite(texture_path)
+        if random.random() < 0.5:
+            fabric = random.choice(FAST_FASHION_FABRICS)
+            eco = False
+            price = random.randint(5, 20)
+            value = random.randint(10, 40)
+            sprite.color = (255, 220, 220)
+        else:
+            fabric = random.choice(ECO_FABRICS)
+            eco = True
+            price = random.randint(15, 35)
+            value = random.randint(30, 70)
+            sprite.color = (180, 255, 200)
+        sprite.alpha = 255
+        return cls(texture_path, sprite, price, value, fabric, eco)
+
+
+class ThriftingGameOverlay(ComputerWindowOverlay):
+    """A windowed thrift browsing game with buy-and-score mechanics."""
+
+    def __init__(
+        self,
+        layout: GameLayout,
+        on_close: Callable[[], None],
+        music: Optional[BackgroundMusicPlaylist] = None,
+    ) -> None:
+        self._game_ready = False
+        self.rack: list[ThriftItem] = []
+        self.sprite_list = arcade.SpriteList()
+        self.current_index = 0
+        self.target_offset = 0.0
+        self.current_offset = 0.0
+        self.money = THRIFTING_STARTING_MONEY
+        self.score = 0
+        self.message = ""
+        self._layout_ready = layout
+        self.selected_fabric_text = arcade.Text(
+            "",
+            0,
+            0,
+            arcade.color.BLACK,
+            layout.ss(12),
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.eco_status_text = arcade.Text(
+            "",
+            0,
+            0,
+            arcade.color.BLACK,
+            layout.ss(12),
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.price_text = arcade.Text(
+            "",
+            0,
+            0,
+            arcade.color.BLACK,
+            layout.ss(16),
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.detail_fabric_text = arcade.Text(
+            "",
+            0,
+            0,
+            arcade.color.DARK_GRAY,
+            layout.ss(14),
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.money_text = arcade.Text(
+            "",
+            0,
+            0,
+            arcade.color.BLACK,
+            layout.ss(16),
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.score_text = arcade.Text(
+            "",
+            0,
+            0,
+            arcade.color.BLACK,
+            layout.ss(16),
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.instructions_text = arcade.Text(
+            "Left/Right browse   Space buy   Esc back",
+            0,
+            0,
+            arcade.color.DARK_GRAY,
+            layout.ss(14),
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.message_text = arcade.Text(
+            "",
+            0,
+            0,
+            arcade.color.RED,
+            layout.ss(16),
+            anchor_x="center",
+            anchor_y="center",
+        )
+        super().__init__(layout, "Thrifting", on_close, music)
+        self._game_ready = True
+        self.setup()
+        self.update_layout(layout)
+
+    def setup(self) -> None:
+        self.rack.clear()
+        self.sprite_list = arcade.SpriteList()
+        self.current_index = 0
+        self.target_offset = 0.0
+        self.current_offset = 0.0
+        self.money = THRIFTING_STARTING_MONEY
+        self.score = 0
+        self.message = ""
+        for _ in range(THRIFTING_RACK_SIZE):
+            item = ThriftItem.create()
+            self.rack.append(item)
+            self.sprite_list.append(item.sprite)
+        self._update_positions()
+        self._sync_text()
+
+    def _content_bounds(self) -> tuple[float, float, float, float]:
+        left, right, bottom, top = self._bounds()
+        return (
+            left + self.layout.sx(18),
+            right - self.layout.sx(18),
+            bottom + self.layout.sy(18),
+            top - self.layout.window_header_height - self.layout.sy(16),
+        )
+
+    def _update_positions(self) -> None:
+        content_left, content_right, content_bottom, content_top = self._content_bounds()
+        center_x = (content_left + content_right) / 2
+        rack_y = content_bottom + (content_top - content_bottom) * 0.54
+        for index, item in enumerate(self.rack):
+            offset = (index * THRIFTING_SPACING) - self.current_offset
+            item.sprite.center_x = center_x + offset
+            dist = abs(index - self.current_index)
+            scale = max(0.24, 0.46 - dist * 0.05)
+            item.sprite.scale = scale
+            item.sprite.alpha = max(120, 255 - dist * 35)
+            item.sprite.center_y = rack_y + 48 - dist * 8
+        self._sync_text()
+
+    def _sync_text(self) -> None:
+        content_left, content_right, content_bottom, content_top = self._content_bounds()
+        self.money_text.text = f"Money: ${self.money}"
+        self.score_text.text = f"Score: {self.score}"
+        self.instructions_text.x = content_left
+        self.instructions_text.y = content_bottom + self.layout.sy(18)
+        self.money_text.x = content_left
+        self.money_text.y = content_bottom + self.layout.sy(52)
+        self.score_text.x = content_left
+        self.score_text.y = content_bottom + self.layout.sy(30)
+        self.message_text.x = (content_left + content_right) / 2
+        self.message_text.y = content_bottom + self.layout.sy(80)
+        self.message_text.text = self.message
+        self.selected_fabric_text.font_size = self.layout.ss(12)
+        self.eco_status_text.font_size = self.layout.ss(12)
+        self.price_text.font_size = self.layout.ss(16)
+        self.detail_fabric_text.font_size = self.layout.ss(14)
+
+        if self.rack:
+            item = self.rack[self.current_index]
+            selected_sprite = item.sprite
+            self.selected_fabric_text.text = item.fabric.upper()
+            self.selected_fabric_text.x = selected_sprite.center_x
+            self.selected_fabric_text.y = selected_sprite.center_y - self.layout.sy(66)
+            self.eco_status_text.text = "ECO + BONUS" if item.eco else "FAST FASHION PENALTY"
+            self.eco_status_text.color = arcade.color.GREEN if item.eco else arcade.color.RED
+            self.eco_status_text.x = selected_sprite.center_x
+            self.eco_status_text.y = selected_sprite.center_y - self.layout.sy(82)
+            self.price_text.text = f"Price: ${item.price}"
+            self.price_text.x = (content_left + content_right) / 2
+            self.price_text.y = content_bottom + self.layout.sy(124)
+            self.detail_fabric_text.text = item.fabric
+            self.detail_fabric_text.x = (content_left + content_right) / 2
+            self.detail_fabric_text.y = content_bottom + self.layout.sy(104)
+
+    def _select_next(self, direction: int) -> None:
+        if not self.rack:
+            return
+        self.current_index = (self.current_index + direction) % len(self.rack)
+        self.target_offset = self.current_index * THRIFTING_SPACING
+
+    def _buy_current_item(self) -> None:
+        if not self.rack:
+            return
+        item = self.rack[self.current_index]
+        if item.price > self.money:
+            self.message = "Not enough money!"
+            self.message_text.color = arcade.color.RED
+            return
+        self.money -= item.price
+        if item.eco:
+            delta = (item.value - item.price) * 2
+            self.score += delta
+            self.message = f"Eco buy +{delta}"
+            self.message_text.color = arcade.color.GREEN
+        else:
+            delta = -(item.price + 10)
+            self.score += delta
+            self.message = f"Fast fashion {delta}"
+            self.message_text.color = arcade.color.RED
+
+        self.sprite_list.remove(item.sprite)
+        self.rack.pop(self.current_index)
+        replacement = ThriftItem.create()
+        self.rack.append(replacement)
+        self.sprite_list.append(replacement.sprite)
+        if self.current_index >= len(self.rack):
+            self.current_index = 0
+        self.target_offset = self.current_index * THRIFTING_SPACING
+        self._sync_text()
+
+    def update_layout(self, layout: GameLayout) -> None:
+        super().update_layout(layout)
+        if not self._game_ready:
+            return
+        self.selected_fabric_text.font_size = layout.ss(12)
+        self.eco_status_text.font_size = layout.ss(12)
+        self.price_text.font_size = layout.ss(16)
+        self.detail_fabric_text.font_size = layout.ss(14)
+        self.money_text.font_size = layout.ss(16)
+        self.score_text.font_size = layout.ss(16)
+        self.instructions_text.font_size = layout.ss(14)
+        self.message_text.font_size = layout.ss(16)
+        self._update_positions()
+
+    def on_update(self, delta_time: float) -> None:
+        if not self._game_ready:
+            return
+        self.current_offset += (self.target_offset - self.current_offset) / 7
+        self._update_positions()
+
+    def on_draw(self) -> None:
+        super().on_draw()
+        left, right, bottom, top = self._bounds()
+        content_left, content_right, content_bottom, content_top = self._content_bounds()
+        arcade.draw_lrbt_rectangle_filled(
+            content_left,
+            content_right,
+            content_bottom,
+            content_top,
+            (247, 241, 234),
+        )
+        arcade.draw_lrbt_rectangle_outline(
+            content_left,
+            content_right,
+            content_bottom,
+            content_top,
+            THEME_LAVENDER,
+            2,
+        )
+        arcade.draw_line(
+            content_left + self.layout.sx(20),
+            content_bottom + (content_top - content_bottom) * 0.54 + self.layout.sy(88),
+            content_right - self.layout.sx(20),
+            content_bottom + (content_top - content_bottom) * 0.54 + self.layout.sy(88),
+            (120, 80, 40),
+            4,
+        )
+        self.sprite_list.draw()
+        if self.rack:
+            self.selected_fabric_text.draw()
+            self.eco_status_text.draw()
+            self.price_text.draw()
+            self.detail_fabric_text.draw()
+        self.money_text.draw()
+        self.score_text.draw()
+        self.instructions_text.draw()
+        self.message_text.draw()
+
+    def on_key_press(self, key: int, modifiers: int) -> None:
+        if key == arcade.key.ESCAPE:
+            self._close()
+            return
+        if key == arcade.key.LEFT:
+            self._select_next(-1)
+        elif key == arcade.key.RIGHT:
+            self._select_next(1)
+        elif key == arcade.key.SPACE:
+            self._buy_current_item()
+
+    def on_resize(self, width: float, height: float) -> None:
+        self.update_layout(GameLayout(width, height))
+
+
 def main() -> None:
     """Start the game window."""
     display_width, display_height = arcade.get_display_size()
