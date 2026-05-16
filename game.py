@@ -659,7 +659,8 @@ class HomeButton:
 
     def press(self, now: float) -> None:
         self.press_started_at = now
-        self.pending_activation = True
+        self.pending_activation = False
+        self.on_activate()
 
     def update(self, dt: float, now: float) -> None:
         if self.press_started_at is None:
@@ -675,9 +676,6 @@ class HomeButton:
             else:
                 self.current_scale = 1.0
                 self.press_started_at = None
-                if self.pending_activation:
-                    self.pending_activation = False
-                    self.on_activate()
 
         for sprite in (self.normal_sprite, self.active_sprite):
             sprite.scale = self.current_scale
@@ -946,24 +944,14 @@ class HomeView(arcade.View):
     def _make_open_action(self, label: str) -> Callable[[], None]:
         def open_window() -> None:
             if label == "activity center":
-                self._pending_action = self._open_activity_menu
+                self._open_activity_menu()
                 return
             if self.active_window is not None and self.active_window.title == label.title():
-                window = self.active_window
-                self._pending_action = window.close
+                self.active_window.close()
                 return
-            self._pending_action = lambda: self._open_window(label)
+            self._open_window(label)
 
         return open_window
-
-    def _activate_button(self, label: str) -> None:
-        if label == "activity center":
-            self._open_activity_menu()
-            return
-        if self.active_window is not None and self.active_window.title == label.title():
-            self.active_window.close()
-            return
-        self._open_window(label)
 
     def _open_activity_menu(self) -> None:
         self.active_window = ActivityWindowOverlay(
@@ -1041,8 +1029,6 @@ class HomeView(arcade.View):
                 if nav_button.label == "social media":
                     nav_button.set_active(True)
                 nav_button.press(now)
-                self._activate_button(nav_button.label)
-                nav_button.pending_activation = False
                 return
 
         if self.active_window is not None and self.active_window.on_mouse_press(x, y, button, modifiers):
