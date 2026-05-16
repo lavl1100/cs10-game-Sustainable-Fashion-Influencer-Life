@@ -1205,15 +1205,25 @@ class ActivityMenuView(arcade.View):
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
         if self.left_button is not None and self.left_button.hit_test(x, y):
-            self.left_button.activate()
+            self.left_button.press()
             return True
         if self.right_button is not None and self.right_button.hit_test(x, y):
-            self.right_button.activate()
+            self.right_button.press()
             return True
         if self.home_button is not None and self.home_button.hit_test(x, y):
-            self.home_button.activate()
+            self.home_button.press()
             return True
         return False
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
+        if button != arcade.MOUSE_BUTTON_LEFT:
+            return
+        if self.left_button is not None and self.left_button.release(x, y):
+            return
+        if self.right_button is not None and self.right_button.release(x, y):
+            return
+        if self.home_button is not None and self.home_button.release(x, y):
+            return
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
@@ -1360,12 +1370,20 @@ class ActivityDetailView(arcade.View):
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
         if self.back_button is not None and self.back_button.hit_test(x, y):
-            self.back_button.activate()
+            self.back_button.press()
             return True
         if self.home_button is not None and self.home_button.hit_test(x, y):
-            self.home_button.activate()
+            self.home_button.press()
             return True
         return False
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
+        if button != arcade.MOUSE_BUTTON_LEFT:
+            return
+        if self.back_button is not None and self.back_button.release(x, y):
+            return
+        if self.home_button is not None and self.home_button.release(x, y):
+            return
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
@@ -1823,12 +1841,21 @@ class ActivityWindowOverlay(ComputerWindowOverlay):
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
         if self.upcycling_button is not None and self.upcycling_button.hit_test(x, y):
-            self.upcycling_button.activate()
+            self.upcycling_button.press()
             return True
         if self.thrifting_button is not None and self.thrifting_button.hit_test(x, y):
-            self.thrifting_button.activate()
+            self.thrifting_button.press()
             return True
         return super().on_mouse_press(x, y, button, modifiers)
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
+        if button != arcade.MOUSE_BUTTON_LEFT:
+            return
+        if self.upcycling_button is not None and self.upcycling_button.release(x, y):
+            return
+        if self.thrifting_button is not None and self.thrifting_button.release(x, y):
+            return
+        super().on_mouse_release(x, y, button, modifiers)
 
     def on_resize(self, width: float, height: float) -> None:
         self.update_layout(GameLayout(width, height))
