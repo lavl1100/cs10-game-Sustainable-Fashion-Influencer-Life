@@ -658,6 +658,13 @@ class HomeButton:
             self.text.font_size = max(11, int(self.layout.button_label_font_size * self.current_scale))
             self.text.draw()
 
+    def reset(self) -> None:
+        self.press_started_at = None
+        self.pending_activation = False
+        self.current_scale = 1.0
+        for sprite in (self.normal_sprite, self.active_sprite):
+            sprite.scale = 1.0
+
 
 class SpriteButtonPanel:
     """A sprite-backed rectangular button with centered text."""
@@ -929,6 +936,9 @@ class HomeView(arcade.View):
     def on_show_view(self) -> None:
         arcade.set_background_color(self.background_color)
         self.music.start()
+        self._pending_action = None
+        for button in self.buttons:
+            button.reset()
         if self.window is not None:
             self._apply_layout(GameLayout(self.window.width, self.window.height))
 
