@@ -91,6 +91,8 @@ THRIFTING_CLOTHING_IMAGE_PATHS = [
 THRIFTING_RACK_SIZE = 12
 THRIFTING_SPACING = 120
 THRIFTING_STARTING_MONEY = 100
+FAST_FASHION_FABRICS = ["polyester", "nylon", "rayon", "acrylic"]
+ECO_FABRICS = ["cotton", "linen", "wool", "hemp"]
 UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
 UI_FONT_NAME = "Kenney Future Narrow"
 
@@ -1613,6 +1615,9 @@ class ComputerWindowOverlay:
 
     def draw(self) -> None:
         self.on_draw()
+
+    def on_update(self, delta_time: float) -> None:
+        pass
 
     def _hit_test_slider(self, x: float, y: float) -> bool:
         if self.title != "Settings":
