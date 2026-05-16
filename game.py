@@ -956,6 +956,15 @@ class HomeView(arcade.View):
 
         return open_window
 
+    def _activate_button(self, label: str) -> None:
+        if label == "activity center":
+            self._open_activity_menu()
+            return
+        if self.active_window is not None and self.active_window.title == label.title():
+            self.active_window.close()
+            return
+        self._open_window(label)
+
     def _open_activity_menu(self) -> None:
         self.active_window = ActivityWindowOverlay(
             self.layout,
@@ -1032,7 +1041,8 @@ class HomeView(arcade.View):
                 if nav_button.label == "social media":
                     nav_button.set_active(True)
                 nav_button.press(now)
-                nav_button.on_activate()
+                self._activate_button(nav_button.label)
+                nav_button.pending_activation = False
                 return
 
         if self.active_window is not None and self.active_window.on_mouse_press(x, y, button, modifiers):
