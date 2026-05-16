@@ -76,6 +76,9 @@ SETTINGS_SLIDER_BAR_HEIGHT = 10
 SETTINGS_SLIDER_KNOB_RADIUS = 13
 SETTINGS_SLIDER_LABEL_SIZE = 18
 SETTINGS_SLIDER_VALUE_SIZE = 16
+ACTIVITY_MENU_BACK_BUTTON_WIDTH = 150
+ACTIVITY_MENU_BACK_BUTTON_HEIGHT = 52
+ACTIVITY_MENU_BACK_BUTTON_MARGIN = 24
 UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
 UI_FONT_NAME = "Kenney Future Narrow"
 
@@ -655,6 +658,90 @@ class HomeButton:
             self.text.draw()
 
 
+class SpriteButtonPanel:
+    """A sprite-backed rectangular button with centered text."""
+
+    def __init__(
+        self,
+        layout: GameLayout,
+        label: str,
+        center_x: float,
+        center_y: float,
+        width: float,
+        height: float,
+        fill_color: tuple[int, int, int],
+        on_activate: Callable[[], None],
+        text_color: tuple[int, int, int] = THEME_TEXT_PURPLE,
+        text_size: Optional[float] = None,
+    ) -> None:
+        self.layout = layout
+        self.label = label
+        self.center_x = center_x
+        self.center_y = center_y
+        self.width = width
+        self.height = height
+        self.fill_color = fill_color
+        self.on_activate = on_activate
+        self.sprite = DrawableSprite(_make_panel(center_x, center_y, width, height, fill_color, 255))
+        self.text = arcade.Text(
+            label,
+            center_x,
+            center_y,
+            text_color,
+            text_size if text_size is not None else self._default_text_size(layout),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
+
+    def _default_text_size(self, layout: GameLayout) -> float:
+        return max(layout.ss(28), 20)
+
+    def update_layout(
+        self,
+        layout: GameLayout,
+        center_x: float,
+        center_y: float,
+        width: float,
+        height: float,
+        text_size: Optional[float] = None,
+    ) -> None:
+        self.layout = layout
+        self.center_x = center_x
+        self.center_y = center_y
+        self.width = width
+        self.height = height
+        self.sprite.sprite.center_x = center_x
+        self.sprite.sprite.center_y = center_y
+        self.sprite.sprite.width = width
+        self.sprite.sprite.height = height
+        self.text.x = center_x
+        self.text.y = center_y
+        self.text.font_size = text_size if text_size is not None else self._default_text_size(layout)
+
+    def hit_test(self, x: float, y: float) -> bool:
+        left = self.center_x - self.width / 2
+        right = self.center_x + self.width / 2
+        bottom = self.center_y - self.height / 2
+        top = self.center_y + self.height / 2
+        return left <= x <= right and bottom <= y <= top
+
+    def activate(self) -> None:
+        self.on_activate()
+
+    def draw(self) -> None:
+        self.sprite.draw()
+        arcade.draw_lrbt_rectangle_outline(
+            self.center_x - self.width / 2,
+            self.center_x + self.width / 2,
+            self.center_y - self.height / 2,
+            self.center_y + self.height / 2,
+            THEME_DEEP_PURPLE,
+            3,
+        )
+        self.text.draw()
+
+
 class HomeView(arcade.View):
     """Main dashboard with button sprites and top status boxes."""
 
@@ -791,6 +878,9 @@ class HomeView(arcade.View):
 
     def _make_open_action(self, label: str) -> Callable[[], None]:
         def open_window() -> None:
+            if label == "activity center":
+                self._pending_action = self._open_activity_menu
+                return
             if self.active_window is not None and self.active_window.title == label.title():
                 window = self.active_window
                 self._pending_action = window.close
@@ -798,6 +888,11 @@ class HomeView(arcade.View):
             self._pending_action = lambda: self._open_window(label)
 
         return open_window
+
+    def _open_activity_menu(self) -> None:
+        self.active_window = None
+        if self.window is not None:
+            self.window.show_view(ActivityMenuView(self, self.music))
 
     def _open_window(self, label: str) -> None:
         if self.active_window is not None and self.active_window.title == "Social Media" and label != "social media":
@@ -893,6 +988,305 @@ class HomeView(arcade.View):
 
     def on_resize(self, width: float, height: float) -> None:
         self._apply_layout(GameLayout(width, height))
+
+
+class ActivityMenuView(arcade.View):
+    """Full-screen activity choices for the activity center."""
+
+    def __init__(self, home_view: HomeView, music: BackgroundMusicPlaylist) -> None:
+        super().__init__()
+        self.home_view = home_view
+        self.music = music
+        self.layout = GameLayout(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
+        self.background_color = THEME_PALE_PINK
+        self.left_button: Optional[SpriteButtonPanel] = None
+        self.right_button: Optional[SpriteButtonPanel] = None
+        self.home_button: Optional[SpriteButtonPanel] = None
+        self._apply_layout(self.layout)
+
+    def _show_home(self) -> None:
+        if self.window is not None:
+            self.window.show_view(self.home_view)
+
+    def _open_upcycling(self) -> None:
+        if self.window is not None:
+            self.window.show_view(UpcyclingStationView(self.home_view, self, self.music))
+
+    def _open_thrfifting(self) -> None:
+        if self.window is not None:
+            self.window.show_view(ThrfiftingView(self.home_view, self, self.music))
+
+    def _apply_layout(self, layout: GameLayout) -> None:
+        self.layout = layout
+        half_width = layout.width / 2
+        full_height = layout.height
+        left_center_x = half_width / 2
+        right_center_x = half_width + half_width / 2
+        button_height = full_height
+        button_width = half_width
+        if self.left_button is None:
+            self.left_button = SpriteButtonPanel(
+                layout,
+                "Upcycling Station",
+                left_center_x,
+                full_height / 2,
+                button_width,
+                button_height,
+                (248, 214, 233),
+                self._open_upcycling,
+                text_size=layout.ss(34),
+            )
+        else:
+            self.left_button.update_layout(layout, left_center_x, full_height / 2, button_width, button_height, layout.ss(34))
+        if self.right_button is None:
+            self.right_button = SpriteButtonPanel(
+                layout,
+                "Thrfifting",
+                right_center_x,
+                full_height / 2,
+                button_width,
+                button_height,
+                (214, 238, 222),
+                self._open_thrfifting,
+                text_size=layout.ss(38),
+            )
+        else:
+            self.right_button.update_layout(layout, right_center_x, full_height / 2, button_width, button_height, layout.ss(38))
+        if self.home_button is None:
+            self.home_button = SpriteButtonPanel(
+                layout,
+                "Home",
+                layout.sx(76),
+                layout.height - layout.sy(48),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_WIDTH),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_HEIGHT),
+                (255, 243, 248),
+                self._show_home,
+                text_size=layout.ss(22),
+            )
+        else:
+            self.home_button.update_layout(
+                layout,
+                layout.sx(76),
+                layout.height - layout.sy(48),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_WIDTH),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_HEIGHT),
+                layout.ss(22),
+            )
+
+    def on_show_view(self) -> None:
+        arcade.set_background_color(self.background_color)
+        self.music.start()
+        if self.window is not None:
+            self._apply_layout(GameLayout(self.window.width, self.window.height))
+
+    def on_draw(self) -> None:
+        self.clear()
+        if self.left_button is not None:
+            self.left_button.draw()
+        if self.right_button is not None:
+            self.right_button.draw()
+        if self.home_button is not None:
+            self.home_button.draw()
+
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
+        if button != arcade.MOUSE_BUTTON_LEFT:
+            return False
+        if self.left_button is not None and self.left_button.hit_test(x, y):
+            self.left_button.activate()
+            return True
+        if self.right_button is not None and self.right_button.hit_test(x, y):
+            self.right_button.activate()
+            return True
+        if self.home_button is not None and self.home_button.hit_test(x, y):
+            self.home_button.activate()
+            return True
+        return False
+
+    def on_key_press(self, key: int, modifiers: int) -> None:
+        if key == arcade.key.ESCAPE:
+            self._show_home()
+
+    def on_resize(self, width: float, height: float) -> None:
+        self._apply_layout(GameLayout(width, height))
+
+
+class ActivityDetailView(arcade.View):
+    """Simple destination screen reached from the activity menu."""
+
+    def __init__(
+        self,
+        home_view: HomeView,
+        activity_menu_view: ActivityMenuView,
+        music: BackgroundMusicPlaylist,
+        title: str,
+        description: str,
+        background_color: tuple[int, int, int],
+        accent_color: tuple[int, int, int],
+    ) -> None:
+        super().__init__()
+        self.home_view = home_view
+        self.activity_menu_view = activity_menu_view
+        self.music = music
+        self.title = title
+        self.description = description
+        self.background_color = background_color
+        self.accent_color = accent_color
+        self.layout = GameLayout(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
+        self.title_text = arcade.Text(
+            self.title,
+            0,
+            0,
+            THEME_TEXT_PURPLE,
+            self.layout.ss(42),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.description_text = arcade.Text(
+            self.description,
+            0,
+            0,
+            THEME_TEXT_PURPLE,
+            self.layout.ss(22),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.back_button: Optional[SpriteButtonPanel] = None
+        self.home_button: Optional[SpriteButtonPanel] = None
+        self._apply_layout(self.layout)
+
+    def _go_back(self) -> None:
+        if self.window is not None:
+            self.window.show_view(self.activity_menu_view)
+
+    def _go_home(self) -> None:
+        if self.window is not None:
+            self.window.show_view(self.home_view)
+
+    def _apply_layout(self, layout: GameLayout) -> None:
+        self.layout = layout
+        self.title_text.x = layout.width / 2
+        self.title_text.y = layout.height - layout.sy(88)
+        self.title_text.font_size = layout.ss(42)
+        self.description_text.x = layout.width / 2
+        self.description_text.y = layout.height / 2
+        self.description_text.font_size = layout.ss(22)
+        if self.back_button is None:
+            self.back_button = SpriteButtonPanel(
+                layout,
+                "Back",
+                layout.sx(74),
+                layout.height - layout.sy(48),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_WIDTH),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_HEIGHT),
+                self.accent_color,
+                self._go_back,
+                text_size=layout.ss(22),
+            )
+        else:
+            self.back_button.update_layout(
+                layout,
+                layout.sx(74),
+                layout.height - layout.sy(48),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_WIDTH),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_HEIGHT),
+                layout.ss(22),
+            )
+        if self.home_button is None:
+            self.home_button = SpriteButtonPanel(
+                layout,
+                "Home",
+                layout.sx(196),
+                layout.height - layout.sy(48),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_WIDTH),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_HEIGHT),
+                (255, 243, 248),
+                self._go_home,
+                text_size=layout.ss(22),
+            )
+        else:
+            self.home_button.update_layout(
+                layout,
+                layout.sx(196),
+                layout.height - layout.sy(48),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_WIDTH),
+                layout.ss(ACTIVITY_MENU_BACK_BUTTON_HEIGHT),
+                layout.ss(22),
+            )
+
+    def on_show_view(self) -> None:
+        arcade.set_background_color(self.background_color)
+        self.music.start()
+        if self.window is not None:
+            self._apply_layout(GameLayout(self.window.width, self.window.height))
+
+    def on_draw(self) -> None:
+        self.clear()
+        arcade.draw_lrbt_rectangle_filled(
+            0,
+            self.layout.width,
+            0,
+            self.layout.height,
+            self.background_color,
+        )
+        arcade.draw_circle_filled(
+            self.layout.width / 2,
+            self.layout.height / 2,
+            self.layout.ss(120),
+            self.accent_color,
+        )
+        self.title_text.draw()
+        self.description_text.draw()
+        if self.back_button is not None:
+            self.back_button.draw()
+        if self.home_button is not None:
+            self.home_button.draw()
+
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
+        if button != arcade.MOUSE_BUTTON_LEFT:
+            return False
+        if self.back_button is not None and self.back_button.hit_test(x, y):
+            self.back_button.activate()
+            return True
+        if self.home_button is not None and self.home_button.hit_test(x, y):
+            self.home_button.activate()
+            return True
+        return False
+
+    def on_key_press(self, key: int, modifiers: int) -> None:
+        if key == arcade.key.ESCAPE:
+            self._go_back()
+
+    def on_resize(self, width: float, height: float) -> None:
+        self._apply_layout(GameLayout(width, height))
+
+
+class UpcyclingStationView(ActivityDetailView):
+    def __init__(self, home_view: HomeView, activity_menu_view: ActivityMenuView, music: BackgroundMusicPlaylist) -> None:
+        super().__init__(
+            home_view,
+            activity_menu_view,
+            music,
+            "Upcycling Station",
+            "Turn old pieces into something fresh.",
+            (255, 236, 223),
+            (245, 173, 126),
+        )
+
+
+class ThrfiftingView(ActivityDetailView):
+    def __init__(self, home_view: HomeView, activity_menu_view: ActivityMenuView, music: BackgroundMusicPlaylist) -> None:
+        super().__init__(
+            home_view,
+            activity_menu_view,
+            music,
+            "Thrfifting",
+            "Browse and build the perfect thrift look.",
+            (227, 244, 236),
+            (140, 196, 164),
+        )
 
 
 class ComputerWindowOverlay:
