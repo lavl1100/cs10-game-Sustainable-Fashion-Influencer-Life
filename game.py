@@ -1155,6 +1155,7 @@ class HomeView(arcade.View):
         )
         self.buttons: list[HomeButton] = []
         self.active_window: Optional[ComputerWindowOverlay] = None
+        self.social_media_window: Optional[SocialMediaGameOverlay] = None
         self._pressed_button: Optional[HomeButton] = None
         self._build_buttons()
         self._sync_clock_text()
@@ -1298,12 +1299,16 @@ class HomeView(arcade.View):
             self._set_button_active("social media", False)
         if label == "social media":
             self._set_button_active(label, True)
-            self.active_window = SocialMediaGameOverlay(
-                self.layout,
-                lambda: self._close_window(label),
-                self.energy,
-                self.music,
-            )
+            if self.social_media_window is None:
+                self.social_media_window = SocialMediaGameOverlay(
+                    self.layout,
+                    lambda: self._close_window(label),
+                    self.energy,
+                    self.music,
+                )
+            else:
+                self.social_media_window.update_layout(self.layout)
+            self.active_window = self.social_media_window
             return
         self.active_window = ComputerWindowOverlay(
             self.layout,
@@ -1331,6 +1336,8 @@ class HomeView(arcade.View):
             button.reset()
         if self.window is not None:
             self._apply_layout(GameLayout(self.window.width, self.window.height))
+        if self.social_media_window is not None:
+            self.social_media_window.update_layout(self.layout)
         self._sync_money_box()
         self._sync_energy_box()
         self._sync_level_box()
@@ -1370,6 +1377,8 @@ class HomeView(arcade.View):
         self.music.update()
         if self.active_window is not None:
             self.active_window.on_update(delta_time)
+        if self.social_media_window is not None and self.social_media_window is not self.active_window:
+            self.social_media_window.on_update(delta_time)
         self._sync_clock_text()
         self._sync_money_box()
         self._sync_energy_box()
@@ -2844,6 +2853,8 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
     ) -> None:
         bar_fill, bar_border, dot_color = post.ptype.bar
         bar_height = self.layout.sy(22)
+        pad_x = self.layout.sx(12)
+        inner_width = max(0.0, width - pad_x * 2)
         body_fill = SOCIAL_MEDIA_CARD_FILL
         if post.viral_flash > 0:
             body_fill = _lerp_color(SOCIAL_MEDIA_CARD_FILL, bar_fill, min(1.0, (post.viral_flash % 0.4) / 0.4 * 0.25))
@@ -2894,12 +2905,13 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
                 anchor_x="center",
                 anchor_y="center",
                 bold=True,
-            ).draw()
+                ).draw()
 
-        short_text = post.text[:68] + ("..." if len(post.text) > 68 else "")
+        max_chars = max(28, int(inner_width / max(1.0, self.layout.ss(6.2))))
+        short_text = post.text[:max_chars] + ("..." if len(post.text) > max_chars else "")
         arcade.Text(
             short_text,
-            x + self.layout.sx(12),
+            x + pad_x,
             y + height - bar_height - self.layout.sy(18),
             SOCIAL_MEDIA_CARD_TEXT,
             self.layout.ss(12),
@@ -2911,7 +2923,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         stars = max(1, round(post.quality * 5))
         arcade.Text(
             "★" * stars + "☆" * (5 - stars),
-            x + self.layout.sx(12),
+            x + pad_x,
             y + height - bar_height - self.layout.sy(42),
             SOCIAL_MEDIA_CARD_GOLD,
             self.layout.ss(12),
@@ -2928,34 +2940,36 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             SOCIAL_MEDIA_CARD_BORDER,
             1,
         )
+        stat_font_size = max(self.layout.ss(9), self.layout.ss(10))
+        stats_y = y + self.layout.sy(34)
         arcade.Text(
             f"♡ {post.likes:,}",
-            x + self.layout.sx(12),
-            y + self.layout.sy(34),
+            x + pad_x,
+            stats_y,
             SOCIAL_MEDIA_CARD_MUTED,
-            self.layout.ss(10),
+            stat_font_size,
             font_name=UI_FONT_NAME,
             anchor_x="left",
             anchor_y="center",
         ).draw()
         arcade.Text(
             f"↺ {post.shares:,}",
-            x + self.layout.sx(112),
-            y + self.layout.sy(34),
+            x + width / 2,
+            stats_y,
             SOCIAL_MEDIA_CARD_MUTED,
-            self.layout.ss(10),
+            stat_font_size,
             font_name=UI_FONT_NAME,
-            anchor_x="left",
+            anchor_x="center",
             anchor_y="center",
         ).draw()
         arcade.Text(
             f"✉ {post.comments:,}",
-            x + self.layout.sx(212),
-            y + self.layout.sy(34),
+            x + width - pad_x,
+            stats_y,
             SOCIAL_MEDIA_CARD_MUTED,
-            self.layout.ss(10),
+            stat_font_size,
             font_name=UI_FONT_NAME,
-            anchor_x="left",
+            anchor_x="right",
             anchor_y="center",
         ).draw()
 
