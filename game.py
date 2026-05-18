@@ -2216,11 +2216,11 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         self.score_text.color = THRIFTING_TITLE_COLOR
         self.instructions_text.color = THRIFTING_WARNING_COLOR
         self.instructions_text.x = content_left
-        self.instructions_text.y = content_bottom + self.layout.sy(18)
+        self.instructions_text.y = content_bottom + self.layout.sy(12)
         self.money_text.x = content_left
-        self.money_text.y = content_bottom + self.layout.sy(52)
+        self.money_text.y = content_bottom + self.layout.sy(64)
         self.score_text.x = content_left
-        self.score_text.y = content_bottom + self.layout.sy(30)
+        self.score_text.y = content_bottom + self.layout.sy(38)
         self.message_text.x = (content_left + content_right) / 2
         self.message_text.y = min(content_top - self.layout.sy(28), content_bottom + self.layout.sy(80))
         self.message_text.text = self.message
