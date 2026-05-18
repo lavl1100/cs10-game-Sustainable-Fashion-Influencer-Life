@@ -2581,6 +2581,12 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
                 )
 
     def _open_compose(self) -> None:
+        if self._cooldown_active():
+            self._notify(
+                f"Cooldown active - wait {self._format_duration(self._cooldown_remaining())} ♡",
+                SOCIAL_MEDIA_CARD_MUTED,
+            )
+            return
         self.composing = True
         self.hover_idx = -1
 
@@ -2639,6 +2645,8 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         follower_value_y = follower_label_y - self.layout.sy(30)
         day_label_y = follower_value_y - self.layout.sy(42)
         energy_label_y = day_label_y - self.layout.sy(38)
+        cooldown_active = self._cooldown_active()
+        now = _current_time()
 
         arcade.Text(
             "followers",
@@ -2661,20 +2669,31 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             anchor_y="center",
         ).draw()
 
-        arcade.Text(
-            f"Season {(self.day - 1) // 7 + 1}  ♡  Day {(self.day - 1) % 7 + 1}",
-            sidebar_left + (sidebar_right - sidebar_left) / 2,
-            day_label_y,
-            SOCIAL_MEDIA_CARD_MUTED,
-            self.layout.ss(10),
-            font_name=UI_FONT_NAME,
-            anchor_x="center",
-            anchor_y="center",
-        ).draw()
-
         progress_x = sidebar_left + self.layout.sx(14)
         progress_y = day_label_y - self.layout.sy(20)
         progress_width = max(0.0, sidebar_right - sidebar_left - self.layout.sx(28))
+        if cooldown_active:
+            arcade.Text(
+                f"cooldown  ♡  {self._format_duration(self._cooldown_remaining(now))} left",
+                sidebar_left + (sidebar_right - sidebar_left) / 2,
+                day_label_y,
+                SOCIAL_MEDIA_CARD_MUTED,
+                self.layout.ss(10),
+                font_name=UI_FONT_NAME,
+                anchor_x="center",
+                anchor_y="center",
+            ).draw()
+        else:
+            arcade.Text(
+                f"Season {(self.day - 1) // 7 + 1}  ♡  Day {(self.day - 1) % 7 + 1}",
+                sidebar_left + (sidebar_right - sidebar_left) / 2,
+                day_label_y,
+                SOCIAL_MEDIA_CARD_MUTED,
+                self.layout.ss(10),
+                font_name=UI_FONT_NAME,
+                anchor_x="center",
+                anchor_y="center",
+            ).draw()
         _draw_pill(
             progress_x,
             progress_y,
@@ -2683,7 +2702,13 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             SOCIAL_MEDIA_CARD_LIFE_TRACK,
             SOCIAL_MEDIA_CARD_BORDER,
         )
-        fill_width = min(progress_width, max(0.0, progress_width * min(1.0, self.day_timer / self.day_length)))
+        if cooldown_active:
+            fill_width = min(
+                progress_width,
+                max(0.0, progress_width * min(1.0, self._cooldown_remaining(now) / SOCIAL_MEDIA_COOLDOWN_SECONDS)),
+            )
+        else:
+            fill_width = min(progress_width, max(0.0, progress_width * min(1.0, self.day_timer / self.day_length)))
         _draw_pill(
             progress_x,
             progress_y,
@@ -3029,12 +3054,14 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             return
 
         dt = min(delta_time, 0.1)
-        self.day_timer += dt
-        if self.day_timer >= self.day_length:
-            self.day_timer -= self.day_length
-            self.day += 1
-            self.energy = self.max_energy
-            self._notify(f"Day {self.day} ♡ energy restored!", (255, 160, 198))
+        now = _current_time()
+        if self.energy_state.cooldown_ends_at > 0.0:
+            if self._cooldown_remaining(now) <= 0.0:
+                self._finish_cooldown()
+        else:
+            self.day_timer += dt
+            if self.day_timer >= self.day_length:
+                self._start_cooldown("day", now)
 
         total_rate = 0.0
         for post in self.posts:
