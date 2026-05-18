@@ -2032,28 +2032,40 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
             top - self.layout.window_header_height - self.layout.sy(16),
         )
 
-    def _rack_spacing(self, content_left: float, content_right: float) -> float:
-        content_width = max(self.layout.ss(1), content_right - content_left)
-        spacing = content_width / max(6, len(self.rack) or 1)
-        return max(self.layout.ss(42), min(self.layout.ss(76), spacing))
+    def _hanger_position(self) -> tuple[float, float]:
+        content_left, content_right, content_bottom, content_top = self._content_bounds()
+        hanger_x = content_left + (content_right - content_left) * THRIFTING_HANGER_CENTER_RATIO_X
+        hanger_y = content_top - (content_top - content_bottom) * THRIFTING_HANGER_CENTER_RATIO_Y
+        return hanger_x, hanger_y
+
+    def _selected_item_position(self, item: ThriftItem) -> tuple[float, float]:
+        hanger_x, hanger_y = self._hanger_position()
+        visible_center_x, visible_center_y = THRIFTING_CLOTHING_VISIBLE_CENTERS[
+            item.texture_path.name
+        ]
+        offset_x = visible_center_x - THRIFTING_TEXTURE_CENTER[0]
+        offset_y = visible_center_y - THRIFTING_TEXTURE_CENTER[1]
+        scale = 0.30
+        return (
+            hanger_x - offset_x * scale,
+            hanger_y - offset_y * scale,
+        )
+
+    def _show_current_item(self) -> None:
+        self.sprite_list.clear()
+        if not self.rack:
+            return
+        item = self.rack[self.current_index]
+        item.sprite.scale = 0.30
+        item.sprite.center_x, item.sprite.center_y = self._selected_item_position(item)
+        item.sprite.alpha = 255
+        self.sprite_list.append(item.sprite)
 
     def _update_positions(self) -> None:
-        content_left, content_right, content_bottom, content_top = self._content_bounds()
-        center_x = (content_left + content_right) / 2
-        rack_y = content_bottom + (content_top - content_bottom) * 0.43
-        spacing = self._rack_spacing(content_left, content_right)
-        rack_count = len(self.rack)
-        for index, item in enumerate(self.rack):
-            offset = index - self.current_offset
-            if rack_count:
-                offset = (offset + rack_count / 2) % rack_count - rack_count / 2
-            offset *= spacing
-            item.sprite.center_x = center_x + offset
-            dist = abs(offset / spacing) if spacing else 0.0
-            scale = max(0.16, 0.30 - dist * 0.02)
-            item.sprite.scale = scale
-            item.sprite.alpha = max(120, int(255 - dist * 28))
-            item.sprite.center_y = rack_y + self.layout.sy(34) - dist * self.layout.sy(5)
+        for item in self.rack:
+            item.sprite.alpha = 0
+        if self.rack:
+            self._show_current_item()
         self._sync_text()
 
     def _sync_text(self) -> None:
@@ -2107,7 +2119,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         if not self.rack:
             return
         self.current_index = (self.current_index + direction) % len(self.rack)
-        self.target_offset = float(self.current_index)
+        self._update_positions()
 
     def _buy_current_item(self) -> None:
         if not self.rack:
@@ -2133,11 +2145,10 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         self.rack.pop(self.current_index)
         replacement = ThriftItem.create()
         self.rack.append(replacement)
-        self.sprite_list.append(replacement.sprite)
         if self.current_index >= len(self.rack):
             self.current_index = 0
-        self.target_offset = float(self.current_index)
         self._sync_text()
+        self._update_positions()
 
     def update_layout(self, layout: GameLayout) -> None:
         super().update_layout(layout)
@@ -2161,14 +2172,6 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
     def on_update(self, delta_time: float) -> None:
         if not self._game_ready:
             return
-        rack_count = len(self.rack)
-        if rack_count:
-            delta = self.target_offset - self.current_offset
-            if delta > rack_count / 2:
-                delta -= rack_count
-            elif delta < -rack_count / 2:
-                delta += rack_count
-            self.current_offset = (self.current_offset + delta / 7) % rack_count
         self._update_positions()
 
     def on_draw(self) -> None:
