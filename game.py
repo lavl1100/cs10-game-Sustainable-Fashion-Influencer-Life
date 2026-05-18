@@ -948,6 +948,7 @@ class ComputerWindowOverlay:
         self.thrift_message = "Find the pieces with the best style and quality."
         self.thrift_finds: list[ThriftFind] = []
         self.title_text = arcade.Text(
+<<<<<<< HEAD
             self.title,
             0,
             0,
@@ -964,6 +965,40 @@ class ComputerWindowOverlay:
             THEME_TEXT_PURPLE,
             layout.window_close_font_size,
             font_name=UI_FONT_NAME,
+=======
+            "CS10 Arcade Starter",
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 2 + 28,
+            arcade.color.WHITE,
+            30,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.subtitle_text = arcade.Text(
+            "Edit game.py (owner) or your game-yourname.py file",
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 2 - 18,
+            arcade.color.LIGHT_GRAY,
+            14,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.footer_text = arcade.Text(
+            "Run the game from the terminal to preview changes",
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 2 - 50,
+            arcade.color.LIGHT_GRAY,
+            12,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.title_text = arcade.Text(
+            "CS10 Arcade Starter",
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 2 + 24,
+            arcade.color.WHITE,
+            28,
+>>>>>>> Mon, May 11, 2026, 10:29 AM -07:00
             anchor_x="center",
             anchor_y="center",
         )
@@ -1548,6 +1583,7 @@ class ComputerWindowOverlay:
         self.clear()
         self.title_text.draw()
         self.subtitle_text.draw()
+        self.footer_text.draw()
 
 
 
