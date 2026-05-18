@@ -570,6 +570,10 @@ class StatusBox:
         self.value_size = value_size
         self._build_visuals()
 
+    def set_value(self, value: str) -> None:
+        self.value = value
+        self.value_text.text = value
+
     def draw(self) -> None:
         self.shadow.draw()
         self.border.draw()
@@ -577,6 +581,13 @@ class StatusBox:
         self.accent.draw()
         self.label_text.draw()
         self.value_text.draw()
+
+
+@dataclass
+class PlayerWallet:
+    """Shared player money state used by both the home HUD and thrift game."""
+
+    amount: int
 
 
 class ThriftInfoBox:
@@ -1002,12 +1013,13 @@ class HomeView(arcade.View):
         super().__init__()
         self.music = BackgroundMusicPlaylist(ASSETS_DIR)
         self.layout = GameLayout(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
+        self.wallet = PlayerWallet(THRIFTING_STARTING_MONEY)
         self.background_color = THEME_DEEP_PURPLE
         self.background_sprite = DrawableSprite(self._build_background_sprite(self.layout))
         self.theme_overlay = DrawableSprite(_make_panel(self.layout.width / 2, self.layout.height / 2, self.layout.width, self.layout.height, THEME_SOFT_LILAC, THEME_OVERLAY_ALPHA))
         self.top_bar = DrawableSprite(_make_panel(self.layout.width / 2, self.layout.top_bar_y, self.layout.width, self.layout.sy(92), THEME_LAVENDER, 120))
         self.side_bar = DrawableSprite(_make_panel(self.layout.side_bar_x, self.layout.side_bar_y, self.layout.side_bar_width, self.layout.side_bar_height, THEME_LAVENDER, 220))
-        self.money_box = StatusBox(self.layout, "Money", "$120", self.layout.top_hud_left, self.layout.top_bar_y, width=self.layout.ss(132), height=self.layout.ss(42), label_size=self.layout.status_label_font_size, value_size=self.layout.status_value_font_size)
+        self.money_box = StatusBox(self.layout, "Money", f"${self.wallet.amount}", self.layout.top_hud_left, self.layout.top_bar_y, width=self.layout.ss(132), height=self.layout.ss(42), label_size=self.layout.status_label_font_size, value_size=self.layout.status_value_font_size)
         self.energy_box = StatusBox(self.layout, "Energy", "85%", self.layout.top_hud_left + self.layout.top_hud_gap, self.layout.top_bar_y, width=self.layout.ss(132), height=self.layout.ss(42), label_size=self.layout.status_label_font_size, value_size=self.layout.status_value_font_size)
         self.level_box = StatusBox(self.layout, "Level", "1", self.layout.top_hud_left + self.layout.top_hud_gap * 2, self.layout.top_bar_y, width=self.layout.ss(108), height=self.layout.ss(42), accent_color=THEME_DEEP_PURPLE, label_size=self.layout.status_label_font_size, value_size=self.layout.status_value_font_size)
         self.date_text = arcade.Text(
@@ -1051,6 +1063,9 @@ class HomeView(arcade.View):
         now = datetime.now()
         self.date_text.text = now.strftime("%b %d, %Y")
         self.time_text.text = now.strftime("%I:%M %p").lstrip("0")
+
+    def _sync_money_box(self) -> None:
+        self.money_box.set_value(f"${self.wallet.amount}")
 
     def _build_buttons(self) -> None:
         labels = [
@@ -1156,6 +1171,7 @@ class HomeView(arcade.View):
         self.active_window = ThriftingGameOverlay(
             self.layout,
             self._open_activity_menu,
+            self.wallet,
             self.music,
         )
 
@@ -1190,6 +1206,7 @@ class HomeView(arcade.View):
             button.reset()
         if self.window is not None:
             self._apply_layout(GameLayout(self.window.width, self.window.height))
+        self._sync_money_box()
 
     def on_draw(self) -> None:
         self.clear()
@@ -1227,6 +1244,7 @@ class HomeView(arcade.View):
         if self.active_window is not None:
             self.active_window.on_update(delta_time)
         self._sync_clock_text()
+        self._sync_money_box()
         for nav_button in self.buttons:
             nav_button.update(delta_time, now)
 
@@ -2042,13 +2060,13 @@ class ThriftItem:
         if random.random() < 0.5:
             fabric = random.choice(FAST_FASHION_FABRICS)
             eco = False
-            price = random.randint(5, 20)
+            price = random.randint(4, 16)
             value = random.randint(10, 40)
             sprite.color = THRIFTING_WINDOW_FILL
         else:
             fabric = random.choice(ECO_FABRICS)
             eco = True
-            price = random.randint(15, 35)
+            price = random.randint(10, 28)
             value = random.randint(30, 70)
             sprite.color = THRIFTING_CONTENT_BORDER
         sprite.alpha = 255
@@ -2062,6 +2080,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         self,
         layout: GameLayout,
         on_close: Callable[[], None],
+        wallet: PlayerWallet,
         music: Optional[BackgroundMusicPlaylist] = None,
     ) -> None:
         self._game_ready = False
@@ -2078,7 +2097,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
             )
         )
         self.current_index = 0
-        self.money = THRIFTING_STARTING_MONEY
+        self.wallet = wallet
         self.score = 0
         self.message = ""
         self._layout_ready = layout
@@ -2134,6 +2153,14 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         self.setup()
         self.update_layout(layout)
 
+    @property
+    def money(self) -> int:
+        return self.wallet.amount
+
+    @money.setter
+    def money(self, value: int) -> None:
+        self.wallet.amount = value
+
     def _sync_background(self) -> None:
         content_left, content_right, content_bottom, content_top = self._content_bounds()
         self.background_sprite.center_x = (content_left + content_right) / 2
@@ -2165,7 +2192,6 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         self.rack.clear()
         self.sprite_list = arcade.SpriteList()
         self.current_index = 0
-        self.money = THRIFTING_STARTING_MONEY
         self.score = 0
         self.message = ""
         for _ in range(THRIFTING_RACK_SIZE):
