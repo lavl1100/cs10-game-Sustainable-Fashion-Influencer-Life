@@ -2367,6 +2367,8 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         self.energy = 0
         self.day_timer = self.day_length
         self.energy_state.cooldown_ends_at = current_time + SOCIAL_MEDIA_COOLDOWN_SECONDS
+        self.composing = False
+        self.hover_idx = -1
         if reason == "energy":
             self._notify("Out of energy - 10 minute cooldown started ♡", SOCIAL_MEDIA_CARD_MUTED)
         else:
@@ -3072,10 +3074,13 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         if self.energy_state.cooldown_ends_at > 0.0:
             if self._cooldown_remaining(now) <= 0.0:
                 self._finish_cooldown()
+            else:
+                return
         else:
             self.day_timer += dt
             if self.day_timer >= self.day_length:
                 self._start_cooldown("day", now)
+                return
 
         total_rate = 0.0
         for post in self.posts:
@@ -3134,6 +3139,9 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             self._draw_compose_modal()
 
     def on_key_press(self, key: int, modifiers: int) -> None:
+        if self._cooldown_active() and key != arcade.key.ESCAPE:
+            return
+
         if key == arcade.key.ESCAPE:
             if self.composing:
                 self._close_compose()
@@ -3164,6 +3172,9 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
 
+        if self._cooldown_active():
+            return super().on_mouse_press(x, y, button, modifiers)
+
         if self.composing:
             _, _, _, content_top = self._content_bounds()
             if y > content_top:
@@ -3185,6 +3196,10 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         if button != arcade.MOUSE_BUTTON_LEFT:
             return
 
+        if self._cooldown_active():
+            super().on_mouse_release(x, y, button, modifiers)
+            return
+
         if self.sidebar_post_button is not None:
             self.sidebar_post_button.release()
         for button_panel in self.compose_buttons:
@@ -3192,6 +3207,9 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         super().on_mouse_release(x, y, button, modifiers)
 
     def on_mouse_scroll(self, x: float, y: float, scroll_x: float, scroll_y: float) -> bool:
+        if self._cooldown_active():
+            return super().on_mouse_scroll(x, y, scroll_x, scroll_y)
+
         if self.composing:
             return True
 
@@ -3199,6 +3217,9 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         return True
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float) -> None:
+        if self._cooldown_active():
+            return super().on_mouse_motion(x, y, dx, dy)
+
         if not self.composing:
             self.hover_idx = -1
             return
