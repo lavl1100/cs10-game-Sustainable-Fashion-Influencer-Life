@@ -89,7 +89,6 @@ THRIFTING_CLOTHING_IMAGE_PATHS = [
     ASSETS_DIR / "thriftingclothing5.png",
 ]
 THRIFTING_RACK_SIZE = 12
-THRIFTING_SPACING = 120
 THRIFTING_STARTING_MONEY = 100
 FAST_FASHION_FABRICS = ["polyester", "nylon", "rayon", "acrylic"]
 ECO_FABRICS = ["cotton", "linen", "wool", "hemp"]
@@ -104,6 +103,15 @@ THEME_SOFT_LILAC = (234, 189, 230)
 THEME_PALE_PINK = (255, 221, 239)
 THEME_TEXT_PURPLE = (106, 47, 130)
 THEME_OVERLAY_ALPHA = 70
+THRIFTING_WINDOW_FILL = THEME_PALE_PINK
+THRIFTING_WINDOW_HEADER = THEME_LAVENDER
+THRIFTING_WINDOW_BORDER = THEME_DEEP_PURPLE
+THRIFTING_CONTENT_FILL = (255, 247, 251)
+THRIFTING_CONTENT_BORDER = THEME_SOFT_LILAC
+THRIFTING_TRACK_COLOR = THEME_LAVENDER
+THRIFTING_TITLE_COLOR = THEME_TEXT_PURPLE
+THRIFTING_WARNING_COLOR = THEME_TEXT_PURPLE
+THRIFTING_SUCCESS_COLOR = THEME_DEEP_PURPLE
 
 PRESS_ANIMATION_TIME = 0.18
 PRESS_SHRINK_SCALE = 0.86
@@ -1112,9 +1120,9 @@ class ActivityMenuView(arcade.View):
         if self.window is not None:
             self.window.show_view(UpcyclingStationView(self.home_view, self, self.music))
 
-    def _open_thrfifting(self) -> None:
+    def _open_thrifting(self) -> None:
         if self.window is not None:
-            self.window.show_view(ThrfiftingView(self.home_view, self, self.music))
+            self.window.show_view(ThriftingView(self.home_view, self, self.music))
 
     def _apply_layout(self, layout: GameLayout) -> None:
         self.layout = layout
@@ -1132,7 +1140,7 @@ class ActivityMenuView(arcade.View):
                 full_height / 2,
                 button_width,
                 button_height,
-                (248, 214, 233),
+                THRIFTING_WINDOW_FILL,
                 self._open_upcycling,
                 text_size=layout.ss(34),
             )
@@ -1141,13 +1149,13 @@ class ActivityMenuView(arcade.View):
         if self.right_button is None:
             self.right_button = SpriteButtonPanel(
                 layout,
-                "Thrfifting",
+                "Thrifting",
                 right_center_x,
                 full_height / 2,
                 button_width,
                 button_height,
-                (214, 238, 222),
-                self._open_thrfifting,
+                THRIFTING_CONTENT_FILL,
+                self._open_thrifting,
                 image_path=THRIFTING_BUTTON_IMAGE_PATH,
                 text_size=layout.ss(38),
             )
@@ -1395,16 +1403,16 @@ class UpcyclingStationView(ActivityDetailView):
         )
 
 
-class ThrfiftingView(ActivityDetailView):
+class ThriftingView(ActivityDetailView):
     def __init__(self, home_view: HomeView, activity_menu_view: ActivityMenuView, music: BackgroundMusicPlaylist) -> None:
         super().__init__(
             home_view,
             activity_menu_view,
             music,
-            "Thrfifting",
+            "Thrifting",
             "Browse and build the perfect thrift look.",
-            (227, 244, 236),
-            (140, 196, 164),
+            THRIFTING_CONTENT_FILL,
+            THRIFTING_WINDOW_HEADER,
         )
 
 
