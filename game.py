@@ -937,6 +937,7 @@ class ComputerWindowOverlay:
         self.drag_offset_x = 0.0
         self.drag_offset_y = 0.0
         self.is_adjusting_volume = False
+        self.activity_screen = "menu"
         self.thrift_budget = 35
         self.thrift_score = 0
         self.thrift_round = 1
@@ -982,7 +983,7 @@ class ComputerWindowOverlay:
             anchor_x="right",
             anchor_y="center",
         )
-        if self.title == "Clothing Store":
+        if self.title == "Activity Center":
             self._restock_thrift_rack()
         self.update_layout(layout)
 
@@ -1064,6 +1065,25 @@ class ComputerWindowOverlay:
             self.thrift_finds.append(ThriftFind(name, price, style, quality))
         self.thrift_message = "New rack! Click pieces worth more than they cost."
 
+    def _activity_thrifting_button_bounds(self) -> tuple[float, float, float, float]:
+        left, right, bottom, top = self._content_bounds()
+        button_width = min(self.layout.sx(240), (right - left) * 0.7)
+        button_height = min(self.layout.sy(70), (top - bottom) * 0.28)
+        center_x = (left + right) / 2
+        center_y = (bottom + top) / 2
+        return (
+            center_x - button_width / 2,
+            center_x + button_width / 2,
+            center_y - button_height / 2,
+            center_y + button_height / 2,
+        )
+
+    def _thrift_back_button_bounds(self) -> tuple[float, float, float, float]:
+        left, _, bottom, _ = self._content_bounds()
+        button_width = self.layout.sx(88)
+        button_height = self.layout.sy(30)
+        return left, left + button_width, bottom, bottom + button_height
+
     def _content_bounds(self) -> tuple[float, float, float, float]:
         left, right, bottom, top = self._bounds()
         _, _, header_bottom, _ = self._header_bounds()
@@ -1072,11 +1092,13 @@ class ComputerWindowOverlay:
 
     def _thrift_card_bounds(self, index: int) -> tuple[float, float, float, float]:
         left, right, bottom, top = self._content_bounds()
-        gap = self.layout.ss(12)
-        title_space = self.layout.sy(84)
+        gap = self.layout.ss(10)
+        title_space = self.layout.sy(76)
+        bottom_space = self.layout.sy(42)
         grid_top = top - title_space
+        grid_bottom = bottom + bottom_space
         card_width = (right - left - gap) / 2
-        card_height = (grid_top - bottom - gap) / 2
+        card_height = max(self.layout.sy(58), (grid_top - grid_bottom - gap) / 2)
         row = index // 2
         col = index % 2
         card_left = left + col * (card_width + gap)
@@ -1090,6 +1112,47 @@ class ComputerWindowOverlay:
         button_right = right
         button_bottom = bottom
         return button_right - button_width, button_right, button_bottom, button_bottom + button_height
+
+    def _draw_activity_center(self) -> None:
+        left, right, _, top = self._content_bounds()
+        title_size = self.layout.ss(22)
+        body_size = self.layout.ss(14)
+        small_size = self.layout.ss(11)
+        self._draw_window_text(
+            "Activity Center",
+            (left + right) / 2,
+            top - self.layout.sy(16),
+            THEME_TEXT_PURPLE,
+            title_size,
+            anchor_x="center",
+            anchor_y="top",
+        )
+        self._draw_window_text(
+            "Choose an activity",
+            (left + right) / 2,
+            top - self.layout.sy(48),
+            THEME_TEXT_PURPLE,
+            small_size,
+            anchor_x="center",
+            anchor_y="top",
+        )
+        button_left, button_right, button_bottom, button_top = self._activity_thrifting_button_bounds()
+        arcade.draw_lrbt_rectangle_filled(button_left, button_right, button_bottom, button_top, THEME_SOFT_LILAC)
+        arcade.draw_lrbt_rectangle_outline(button_left, button_right, button_bottom, button_top, THEME_DEEP_PURPLE, 3)
+        arcade.draw_circle_filled(
+            button_left + self.layout.sx(34),
+            (button_bottom + button_top) / 2,
+            min(self.layout.ss(18), (button_top - button_bottom) * 0.28),
+            THEME_LAVENDER,
+        )
+        self._draw_window_text(
+            "Thrifting",
+            (button_left + button_right) / 2 + self.layout.sx(14),
+            (button_bottom + button_top) / 2,
+            THEME_TEXT_PURPLE,
+            body_size,
+            anchor_x="center",
+        )
 
     def _draw_window_text(
         self,
@@ -1126,7 +1189,7 @@ class ComputerWindowOverlay:
             anchor_y="top",
         )
         self._draw_window_text(
-            f"Budget ${self.thrift_budget}    Style Score {self.thrift_score}",
+            f"Budget ${self.thrift_budget}   Score {self.thrift_score}",
             right,
             top - self.layout.sy(10),
             THEME_TEXT_PURPLE,
@@ -1151,20 +1214,40 @@ class ComputerWindowOverlay:
             arcade.draw_lrbt_rectangle_outline(card_left, card_right, card_bottom, card_top, border, 2)
 
             tag_width = min(self.layout.sx(64), (card_right - card_left) * 0.36)
+            tag_height = min(self.layout.sy(24), (card_top - card_bottom) * 0.3)
             arcade.draw_lrbt_rectangle_filled(
                 card_right - tag_width,
                 card_right,
-                card_top - self.layout.sy(25),
+                card_top - tag_height,
                 card_top,
                 THEME_LAVENDER,
             )
             self._draw_window_text(
                 f"${item.price}",
                 card_right - tag_width / 2,
-                card_top - self.layout.sy(12),
+                card_top - tag_height / 2,
                 THEME_TEXT_PURPLE,
                 body_size,
                 anchor_x="center",
+            )
+
+            item_width = min((card_right - card_left) * 0.32, self.layout.sx(52))
+            item_height = min((card_top - card_bottom) * 0.42, self.layout.sy(44))
+            item_center_x = card_left + self.layout.sx(18) + item_width / 2
+            item_center_y = card_bottom + (card_top - card_bottom) * 0.48
+            item_left = max(card_left + self.layout.sx(8), item_center_x - item_width / 2)
+            item_right = min(card_right - self.layout.sx(8), item_center_x + item_width / 2)
+            item_bottom = max(card_bottom + self.layout.sy(28), item_center_y - item_height / 2)
+            item_top = min(card_top - self.layout.sy(30), item_center_y + item_height / 2)
+            arcade.draw_lrbt_rectangle_filled(item_left, item_right, item_bottom, item_top, THEME_LAVENDER)
+            arcade.draw_triangle_filled(
+                item_left,
+                item_top,
+                item_right,
+                item_top,
+                (item_left + item_right) / 2,
+                min(card_top - self.layout.sy(10), item_top + self.layout.sy(16)),
+                THEME_DEEP_PURPLE,
             )
 
             name = item.name if len(item.name) <= 16 else item.name[:15] + "."
@@ -1177,14 +1260,14 @@ class ComputerWindowOverlay:
             )
             self._draw_window_text(
                 f"Style {item.style}",
-                card_left + self.layout.sx(10),
+                card_left + max(self.layout.sx(10), item_width + self.layout.sx(22)),
                 card_bottom + self.layout.sy(38),
                 THEME_TEXT_PURPLE,
                 small_size,
             )
             self._draw_window_text(
                 f"Quality {item.quality}",
-                card_left + self.layout.sx(10),
+                card_left + max(self.layout.sx(10), item_width + self.layout.sx(22)),
                 card_bottom + self.layout.sy(20),
                 THEME_TEXT_PURPLE,
                 small_size,
@@ -1211,10 +1294,37 @@ class ComputerWindowOverlay:
             body_size,
             anchor_x="center",
         )
+        back_left, back_right, back_bottom, back_top = self._thrift_back_button_bounds()
+        arcade.draw_lrbt_rectangle_filled(back_left, back_right, back_bottom, back_top, THEME_SOFT_LILAC)
+        arcade.draw_lrbt_rectangle_outline(back_left, back_right, back_bottom, back_top, THEME_DEEP_PURPLE, 2)
+        self._draw_window_text(
+            "Back",
+            (back_left + back_right) / 2,
+            (back_bottom + back_top) / 2,
+            THEME_TEXT_PURPLE,
+            body_size,
+            anchor_x="center",
+        )
+
+    def _hit_test_activity_center(self, x: float, y: float) -> bool:
+        if self.title != "Activity Center":
+            return False
+        if self.activity_screen == "thrifting":
+            return self._hit_test_thrift_game(x, y)
+        button_left, button_right, button_bottom, button_top = self._activity_thrifting_button_bounds()
+        if button_left <= x <= button_right and button_bottom <= y <= button_top:
+            self.activity_screen = "thrifting"
+            self.thrift_message = "Pick the hidden gems before your budget runs out."
+            return True
+        return False
 
     def _hit_test_thrift_game(self, x: float, y: float) -> bool:
-        if self.title != "Clothing Store":
+        if self.title != "Activity Center" or self.activity_screen != "thrifting":
             return False
+        back_left, back_right, back_bottom, back_top = self._thrift_back_button_bounds()
+        if back_left <= x <= back_right and back_bottom <= y <= back_top:
+            self.activity_screen = "menu"
+            return True
         button_left, button_right, button_bottom, button_top = self._thrift_button_bounds()
         if button_left <= x <= button_right and button_bottom <= y <= button_top:
             self._restock_thrift_rack()
@@ -1345,6 +1455,11 @@ class ComputerWindowOverlay:
             )
             self.settings_label_text.draw()
             self.settings_value_text.draw()
+        elif self.title == "Activity Center":
+            if self.activity_screen == "thrifting":
+                self._draw_thrift_game()
+            else:
+                self._draw_activity_center()
 
     def draw(self) -> None:
         self.on_draw()
@@ -1381,6 +1496,8 @@ class ComputerWindowOverlay:
             if self._hit_test_slider(x, y):
                 self.is_adjusting_volume = True
                 self._set_music_volume_from_x(x)
+                return True
+            if self._hit_test_activity_center(x, y):
                 return True
             return True
         return False
