@@ -2848,7 +2848,11 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         content_top = feed_top - self.layout.sy(44)
         content_bottom = feed_bottom + self.layout.sy(12)
         y = content_top + self.scroll
-        window = self.window
+        try:
+            window = arcade.get_window()
+        except RuntimeError:
+            window = None
+
         previous_scissor = window.ctx.scissor if window is not None else None
         if window is not None:
             window.ctx.scissor = (
