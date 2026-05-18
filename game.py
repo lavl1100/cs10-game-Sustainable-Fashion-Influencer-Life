@@ -598,19 +598,29 @@ class PlayerProgress:
 
     level: int = 1
     experience: int = 0
+    highest_rewarded_level: int = 1
 
     def add_experience(self, amount: int) -> int:
-        """Add experience and return the number of levels gained."""
-        if amount <= 0:
+        """Add or remove experience and return the number of new reward levels."""
+        if amount == 0:
             return 0
 
         self.experience += amount
-        levels_gained = 0
         while self.experience >= THRIFTING_XP_PER_LEVEL:
             self.experience -= THRIFTING_XP_PER_LEVEL
             self.level += 1
-            levels_gained += 1
-        return levels_gained
+
+        while self.experience < 0 and self.level > 1:
+            self.level -= 1
+            self.experience += THRIFTING_XP_PER_LEVEL
+
+        if self.experience < 0:
+            self.experience = 0
+
+        new_reward_levels = max(0, self.level - self.highest_rewarded_level)
+        if new_reward_levels > 0:
+            self.highest_rewarded_level = self.level
+        return new_reward_levels
 
 
 class ThriftInfoBox:
@@ -2315,9 +2325,11 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
             levels_gained = self.progress.add_experience(delta)
         else:
             delta = -(item.price + 10)
+            experience_lost = -delta
             self.score += delta
             self.message = f"Fast fashion {delta}"
             self.message_text.color = THRIFTING_WARNING_COLOR
+            self.progress.add_experience(-experience_lost)
 
         if levels_gained > 0:
             self.money += levels_gained * THRIFTING_LEVEL_UP_REWARD
