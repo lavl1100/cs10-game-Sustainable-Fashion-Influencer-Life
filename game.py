@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+import random
 import time
 import warnings
 from typing import Callable, Optional
@@ -90,6 +91,19 @@ THEME_OVERLAY_ALPHA = 70
 
 PRESS_ANIMATION_TIME = 0.18
 PRESS_SHRINK_SCALE = 0.86
+
+THRIFT_ITEM_NAMES = [
+    "Vintage Blazer",
+    "Silk Scarf",
+    "Denim Skirt",
+    "Pearl Cardigan",
+    "Platform Boots",
+    "Floral Dress",
+    "Velvet Bag",
+    "Striped Tee",
+    "Corduroy Pants",
+    "Lace Cami",
+]
 
 
 class BackgroundMusicPlaylist:
@@ -640,6 +654,25 @@ class HomeButton:
         if self.show_label:
             self.text.font_size = max(11, int(self.layout.button_label_font_size * self.current_scale))
             self.text.draw()
+
+
+@dataclass
+class ThriftFind:
+    """One clickable clothing item in the thrifting mini-game."""
+
+    name: str
+    price: int
+    style: int
+    quality: int
+    picked: bool = False
+
+    @property
+    def value(self) -> int:
+        return self.style + self.quality
+
+    @property
+    def is_good_find(self) -> bool:
+        return self.value >= self.price
 
 
 class HomeView(arcade.View):
