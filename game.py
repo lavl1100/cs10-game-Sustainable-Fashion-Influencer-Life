@@ -15,7 +15,11 @@ warnings.filterwarnings(
 )
 
 import arcade
-import pygame
+
+try:
+    import pygame
+except ModuleNotFoundError:
+    pygame = None
 
 BASE_SCREEN_WIDTH = 800
 BASE_SCREEN_HEIGHT = 600
@@ -113,11 +117,11 @@ class BackgroundMusicPlaylist:
         self.track_paths = sorted(
             path for path in music_dir.glob("*.mp3") if path.is_file()
         )
-        self._sounds: list[pygame.mixer.Sound] = []
-        self._channel: Optional[pygame.mixer.Channel] = None
-        self._current_sound: Optional[pygame.mixer.Sound] = None
+        self._sounds: list[object] = []
+        self._channel: Optional[object] = None
+        self._current_sound: Optional[object] = None
         self._started = False
-        self._available = bool(self.track_paths)
+        self._available = pygame is not None and bool(self.track_paths)
         self._volume = 0.7
 
     def start(self) -> None:
