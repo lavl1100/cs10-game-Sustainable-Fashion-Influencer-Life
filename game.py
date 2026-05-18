@@ -669,7 +669,7 @@ class ThriftInfoBox:
                     anchor_x="left",
                     anchor_y="center",
                 )
-                for index in range(4)
+                for index in range(3)
             ]
             self.values = [
                 arcade.Text(
@@ -682,7 +682,7 @@ class ThriftInfoBox:
                     anchor_x="right",
                     anchor_y="center",
                 )
-                for index in range(4)
+                for index in range(3)
             ]
         else:
             self.title_text.x = title_x
@@ -703,7 +703,6 @@ class ThriftInfoBox:
                 ("Fabric", "-", THRIFTING_TITLE_COLOR),
                 ("Type", "-", THRIFTING_TITLE_COLOR),
                 ("Price", "-", THRIFTING_TITLE_COLOR),
-                ("Value", "-", THRIFTING_TITLE_COLOR),
             ]
         else:
             entries = [
@@ -714,7 +713,6 @@ class ThriftInfoBox:
                     THRIFTING_SUCCESS_COLOR if item.eco else THRIFTING_WARNING_COLOR,
                 ),
                 ("Price", f"${item.price}", THRIFTING_TITLE_COLOR),
-                ("Value", f"${item.value}", THRIFTING_TITLE_COLOR),
             ]
 
         for text, (label, value, color) in zip(self.labels, entries):
@@ -2185,9 +2183,9 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         ]
         offset_x = visible_center_x - THRIFTING_TEXTURE_CENTER[0]
         offset_y = visible_center_y - THRIFTING_TEXTURE_CENTER[1]
-        scale = 0.30
+        scale = 0.33
         return (
-            hanger_x - offset_x * scale,
+            hanger_x - offset_x * scale - self.layout.sx(8),
             hanger_y - offset_y * scale,
         )
 
@@ -2196,7 +2194,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         if not self.rack:
             return
         item = self.rack[self.current_index]
-        item.sprite.scale = 0.30
+        item.sprite.scale = 0.33
         item.sprite.center_x, item.sprite.center_y = self._selected_item_position(item)
         item.sprite.alpha = 255
         self.sprite_list.append(item.sprite)
