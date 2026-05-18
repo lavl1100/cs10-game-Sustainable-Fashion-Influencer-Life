@@ -2475,8 +2475,12 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
 
     def _max_scroll(self) -> float:
         _, _, feed_bottom, feed_top = self._feed_bounds()
-        visible_height = max(0.0, feed_top - feed_bottom - self.layout.sy(28))
-        total_height = len(self.posts) * (SOCIAL_MEDIA_CARD_HEIGHT + SOCIAL_MEDIA_CARD_GAP)
+        content_top = feed_top - self.layout.sy(44)
+        content_bottom = feed_bottom + self.layout.sy(12)
+        visible_height = max(0.0, content_top - content_bottom)
+        total_height = len(self.posts) * self.layout.sy(SOCIAL_MEDIA_CARD_HEIGHT)
+        if self.posts:
+            total_height += (len(self.posts) - 1) * self.layout.sy(SOCIAL_MEDIA_CARD_GAP)
         return max(0.0, total_height - visible_height)
 
     def _clamp_scroll(self) -> None:
@@ -2839,16 +2843,27 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             self.empty_hint_text.draw()
             return
 
-        y = feed_top - self.layout.sy(44) + self.scroll
+        card_height = self.layout.sy(SOCIAL_MEDIA_CARD_HEIGHT)
+        card_gap = self.layout.sy(SOCIAL_MEDIA_CARD_GAP)
+        content_top = feed_top - self.layout.sy(44)
+        content_bottom = feed_bottom + self.layout.sy(12)
+        y = content_top + self.scroll
         for slot, post in enumerate(self.posts):
-            card_height = self.layout.sy(SOCIAL_MEDIA_CARD_HEIGHT)
-            if y - card_height > feed_top + self.layout.sy(8):
-                y -= card_height + self.layout.sy(SOCIAL_MEDIA_CARD_GAP)
+            card_bottom = y - card_height
+            if y > feed_top + self.layout.sy(8):
+                y -= card_height + card_gap
                 continue
-            if y < feed_bottom - self.layout.sy(12):
+            if card_bottom < content_bottom:
                 break
-            self._draw_post_card(post, feed_left + self.layout.sx(4), y - card_height, max(0.0, feed_right - feed_left - self.layout.sx(8)), card_height, slot)
-            y -= card_height + self.layout.sy(SOCIAL_MEDIA_CARD_GAP)
+            self._draw_post_card(
+                post,
+                feed_left + self.layout.sx(4),
+                card_bottom,
+                max(0.0, feed_right - feed_left - self.layout.sx(8)),
+                card_height,
+                slot,
+            )
+            y -= card_height + card_gap
 
     def _draw_post_card(
         self,
