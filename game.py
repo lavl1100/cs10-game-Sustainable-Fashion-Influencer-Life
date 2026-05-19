@@ -1567,6 +1567,7 @@ class ActivityMenuView(arcade.View):
                 button_height,
                 THRIFTING_WINDOW_FILL,
                 self._open_upcycling,
+                image_path=ASSETS_DIR / "upcycling_button.png",
                 text_size=layout.ss(34),
             )
         else:
