@@ -93,6 +93,7 @@ SETTINGS_PLAYER_TITLE_SIZE = 17
 SETTINGS_PLAYER_STATUS_SIZE = 18
 SETTINGS_PLAYER_PROGRESS_BAR_HEIGHT = 9
 SETTINGS_PLAYER_PROGRESS_KNOB_RADIUS = 6
+SETTINGS_PLAYER_PROGRESS_BAR_TOP_OFFSET = 130
 ACTIVITY_MENU_BACK_BUTTON_WIDTH = 150
 ACTIVITY_MENU_BACK_BUTTON_HEIGHT = 52
 ACTIVITY_MENU_BACK_BUTTON_MARGIN = 24
@@ -2128,7 +2129,7 @@ class ComputerWindowOverlay:
         panel_left, panel_right, _, panel_top, _, _ = self._player_panel_geometry()
         bar_left = panel_left + self.layout.sx(24)
         bar_right = panel_right - self.layout.sx(24)
-        bar_center_y = panel_top - self.layout.sy(116)
+        bar_center_y = panel_top - self.layout.sy(SETTINGS_PLAYER_PROGRESS_BAR_TOP_OFFSET)
         half_height = self.layout.sy(SETTINGS_PLAYER_PROGRESS_BAR_HEIGHT) / 2
         return bar_left, bar_right, bar_center_y - half_height, bar_center_y + half_height
 
