@@ -553,11 +553,13 @@ class DrawableSprite:
 
 
 @dataclass(frozen=True)
-class UpcyclingCutStage:
+class UpcyclingStage:
     base_path: Path
-    done_path: Path
-    cursor_path: Path
+    cursor_path: Optional[Path] = None
+    done_path: Optional[Path] = None
     guide_path: Optional[Path] = None
+    cuttable: bool = True
+    hold_seconds: float = 0.0
 
 @dataclass
 class StatusBox:
@@ -4009,27 +4011,53 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self._cut_progress = 0.0
         self._cut_band_width = max(layout.ss(12), layout.sy(10))
         self._cut_stage_paths = [
-            UpcyclingCutStage(
+            UpcyclingStage(
                 base_path=UPCYCLING_FIRST_ITEM_IMAGE_PATH,
                 guide_path=UPCYCLING_FIRST_ITEM_ALT_IMAGE_PATH,
                 done_path=UPCYCLING_FIRST_ITEM_DONE_IMAGE_PATH,
                 cursor_path=UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH,
+                cuttable=True,
+                hold_seconds=UPCYCLING_STAGE_HOLD_SECONDS,
             ),
-            UpcyclingCutStage(
+            UpcyclingStage(
                 base_path=UPCYCLING_SECOND_ITEM_IMAGE_PATH,
                 guide_path=UPCYCLING_SECOND_ITEM_ALT_IMAGE_PATH,
                 done_path=UPCYCLING_SECOND_ITEM_DONE_IMAGE_PATH,
                 cursor_path=UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH,
+                cuttable=True,
+                hold_seconds=UPCYCLING_STAGE_HOLD_SECONDS,
             ),
-            UpcyclingCutStage(
+            UpcyclingStage(
                 base_path=UPCYCLING_THIRD_ITEM_IMAGE_PATH,
                 done_path=UPCYCLING_THIRD_ITEM_DONE_IMAGE_PATH,
                 cursor_path=UPCYCLING_NEEDLE_CURSOR_IMAGE_PATH,
+                cuttable=True,
+                hold_seconds=UPCYCLING_STAGE_HOLD_SECONDS,
+            ),
+            UpcyclingStage(
+                base_path=ASSETS_DIR / "upcyclingclothing4.png",
+                cuttable=False,
+                hold_seconds=UPCYCLING_STAGE_HOLD_SECONDS,
+            ),
+            UpcyclingStage(
+                base_path=ASSETS_DIR / "upcyclingclothing4a.png",
+                done_path=ASSETS_DIR / "upcyclingclothing4b.png",
+                cursor_path=UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH,
+                cuttable=True,
+                hold_seconds=0.0,
+            ),
+            UpcyclingStage(
+                base_path=ASSETS_DIR / "upcyclingclothing4b.png",
+                done_path=ASSETS_DIR / "upcyclingclothing4c.png",
+                cursor_path=UPCYCLING_NEEDLE_CURSOR_IMAGE_PATH,
+                cuttable=True,
+                hold_seconds=0.0,
             ),
         ]
         self._cut_path_templates = {
             stage.base_path: self._build_cut_path_template(stage.base_path)
             for stage in self._cut_stage_paths
+            if stage.cuttable
         }
         self._cut_alpha_masks = {
             UPCYCLING_FIRST_ITEM_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_FIRST_ITEM_IMAGE_PATH),
@@ -4040,6 +4068,10 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             UPCYCLING_SECOND_ITEM_DONE_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_SECOND_ITEM_DONE_IMAGE_PATH),
             UPCYCLING_THIRD_ITEM_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_THIRD_ITEM_IMAGE_PATH),
             UPCYCLING_THIRD_ITEM_DONE_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_THIRD_ITEM_DONE_IMAGE_PATH),
+            ASSETS_DIR / "upcyclingclothing4.png": self._build_alpha_mask(ASSETS_DIR / "upcyclingclothing4.png"),
+            ASSETS_DIR / "upcyclingclothing4a.png": self._build_alpha_mask(ASSETS_DIR / "upcyclingclothing4a.png"),
+            ASSETS_DIR / "upcyclingclothing4b.png": self._build_alpha_mask(ASSETS_DIR / "upcyclingclothing4b.png"),
+            ASSETS_DIR / "upcyclingclothing4c.png": self._build_alpha_mask(ASSETS_DIR / "upcyclingclothing4c.png"),
         }
         self._cut_path_points: list[tuple[float, float]] = []
         self._cut_path_length = 1.0
@@ -4142,6 +4174,50 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self.third_item_done_sprite = DrawableSprite(
             _make_sprite(
                 UPCYCLING_THIRD_ITEM_DONE_IMAGE_PATH,
+                layout.width / 2,
+                layout.height / 2,
+                layout.width * 0.42,
+                layout.height * 0.42,
+                THRIFTING_CONTENT_FILL,
+                crop_to_fit=True,
+            )
+        )
+        self.fourth_item_sprite = DrawableSprite(
+            _make_sprite(
+                ASSETS_DIR / "upcyclingclothing4.png",
+                layout.width / 2,
+                layout.height / 2,
+                layout.width * 0.42,
+                layout.height * 0.42,
+                THRIFTING_CONTENT_FILL,
+                crop_to_fit=True,
+            )
+        )
+        self.fourth_item_cut_sprite = DrawableSprite(
+            _make_sprite(
+                ASSETS_DIR / "upcyclingclothing4a.png",
+                layout.width / 2,
+                layout.height / 2,
+                layout.width * 0.42,
+                layout.height * 0.42,
+                THRIFTING_CONTENT_FILL,
+                crop_to_fit=True,
+            )
+        )
+        self.fourth_item_mid_sprite = DrawableSprite(
+            _make_sprite(
+                ASSETS_DIR / "upcyclingclothing4b.png",
+                layout.width / 2,
+                layout.height / 2,
+                layout.width * 0.42,
+                layout.height * 0.42,
+                THRIFTING_CONTENT_FILL,
+                crop_to_fit=True,
+            )
+        )
+        self.fourth_item_done_sprite = DrawableSprite(
+            _make_sprite(
+                ASSETS_DIR / "upcyclingclothing4c.png",
                 layout.width / 2,
                 layout.height / 2,
                 layout.width * 0.42,
