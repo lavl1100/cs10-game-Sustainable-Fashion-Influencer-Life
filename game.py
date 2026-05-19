@@ -3178,23 +3178,6 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             sprite.alpha = 255
             sprite.center_x = girl_center_x
             sprite.center_y = girl_center_y
-            if category == "hats":
-                sprite.center_y = girl_top - girl_height * 0.03
-            elif category == "shirts":
-                sprite.center_y = girl_center_y + girl_height * 0.06
-            elif category == "dresses":
-                sprite.center_y = girl_center_y + girl_height * 0.03
-            elif category == "jackets":
-                sprite.center_y = girl_center_y + girl_height * 0.04
-            elif category == "skirts":
-                sprite.center_y = girl_center_y - girl_height * 0.12
-            elif category == "pants":
-                sprite.center_y = girl_center_y - girl_height * 0.16
-            elif category == "shoes":
-                sprite.center_y = girl_bottom + girl_height * 0.12
-            elif category == "bags":
-                sprite.center_x = girl_right - girl_width * 0.14
-                sprite.center_y = girl_center_y - girl_height * 0.02
             sprite.width = sprite.texture.width * girl_scale_x
             sprite.height = sprite.texture.height * girl_scale_y
 
