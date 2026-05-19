@@ -80,6 +80,12 @@ SETTINGS_SLIDER_BAR_HEIGHT = 10
 SETTINGS_SLIDER_KNOB_RADIUS = 13
 SETTINGS_SLIDER_LABEL_SIZE = 18
 SETTINGS_SLIDER_VALUE_SIZE = 16
+SETTINGS_CONTROLS_LABEL_SIZE = 18
+SETTINGS_CONTROL_BUTTON_WIDTH = 92
+SETTINGS_CONTROL_BUTTON_HEIGHT = 42
+SETTINGS_CONTROL_BUTTON_GAP = 12
+SETTINGS_CONTROL_BUTTON_TEXT_SIZE = 18
+SETTINGS_CONTROL_STATUS_SIZE = 15
 ACTIVITY_MENU_BACK_BUTTON_WIDTH = 150
 ACTIVITY_MENU_BACK_BUTTON_HEIGHT = 52
 ACTIVITY_MENU_BACK_BUTTON_MARGIN = 24
@@ -186,10 +192,13 @@ class BackgroundMusicPlaylist:
         self.track_paths = sorted(
             path for path in music_dir.glob("*.mp3") if path.is_file()
         )
+        self._loaded_track_paths: list[Path] = []
         self._sounds: list[pygame.mixer.Sound] = []
         self._channel: Optional[pygame.mixer.Channel] = None
         self._current_sound: Optional[pygame.mixer.Sound] = None
+        self._current_index: Optional[int] = None
         self._started = False
+        self._paused = False
         self._available = bool(self.track_paths)
         self._volume = 0.7
 
@@ -202,27 +211,30 @@ class BackgroundMusicPlaylist:
                 pygame.mixer.init()
             pygame.mixer.set_reserved(1)
             self._sounds = []
+            self._loaded_track_paths = []
             for path in self.track_paths:
                 try:
                     self._sounds.append(pygame.mixer.Sound(str(path)))
+                    self._loaded_track_paths.append(path)
                 except pygame.error:
                     continue
             if not self._sounds:
                 raise pygame.error("No playable music tracks were found.")
             self._channel = pygame.mixer.Channel(0)
             self._channel.set_volume(self._volume)
-            self._current_sound = self._sounds[0]
-            self._channel.play(self._current_sound)
-            self._queue_next_track()
+            self._play_index(0)
             self._started = True
         except pygame.error:
             self._available = False
             self._sounds = []
+            self._loaded_track_paths = []
             self._channel = None
             self._current_sound = None
+            self._current_index = None
+            self._paused = False
 
     def update(self) -> None:
-        if not self._started or self._channel is None:
+        if not self._started or self._channel is None or self._paused:
             return
 
         current_sound = self._channel.get_sound()
@@ -230,6 +242,21 @@ class BackgroundMusicPlaylist:
             return
 
         self._current_sound = current_sound
+        try:
+            self._current_index = self._sounds.index(current_sound)
+        except ValueError:
+            self._current_index = None
+        self._queue_next_track()
+
+    def _play_index(self, index: int) -> None:
+        if self._channel is None or not self._sounds:
+            return
+
+        self._current_index = index % len(self._sounds)
+        self._current_sound = self._sounds[self._current_index]
+        self._channel.play(self._current_sound)
+        if self._paused:
+            self._channel.pause()
         self._queue_next_track()
 
     def set_volume(self, volume: float) -> None:
@@ -241,16 +268,75 @@ class BackgroundMusicPlaylist:
     def volume(self) -> float:
         return self._volume
 
+    @property
+    def is_paused(self) -> bool:
+        return self._paused
+
+    @property
+    def current_track_label(self) -> str:
+        if not self._loaded_track_paths:
+            return "No music"
+        if self._current_index is None:
+            return self._loaded_track_paths[0].stem
+        return self._loaded_track_paths[self._current_index].stem
+
+    @property
+    def playback_state_label(self) -> str:
+        return "Paused" if self._paused else "Playing"
+
+    def toggle_playback(self) -> None:
+        if self._channel is None or not self._sounds:
+            return
+        if not self._started:
+            self.start()
+            return
+        if self._paused:
+            self._channel.unpause()
+            self._paused = False
+            return
+        self._channel.pause()
+        self._paused = True
+
+    def next_track(self) -> None:
+        if self._channel is None or not self._sounds:
+            return
+        current_index = self._current_index
+        if current_index is None and self._current_sound is not None:
+            try:
+                current_index = self._sounds.index(self._current_sound)
+            except ValueError:
+                current_index = 0
+        elif current_index is None:
+            current_index = 0
+        self._play_index((current_index + 1) % len(self._sounds))
+
+    def previous_track(self) -> None:
+        if self._channel is None or not self._sounds:
+            return
+        current_index = self._current_index
+        if current_index is None and self._current_sound is not None:
+            try:
+                current_index = self._sounds.index(self._current_sound)
+            except ValueError:
+                current_index = 0
+        elif current_index is None:
+            current_index = 0
+        self._play_index((current_index - 1) % len(self._sounds))
+
     def _queue_next_track(self) -> None:
         if self._channel is None or not self._sounds or self._current_sound is None:
             return
 
-        try:
-            current_index = self._sounds.index(self._current_sound)
-        except ValueError:
+        if self._current_index is None:
+            try:
+                self._current_index = self._sounds.index(self._current_sound)
+            except ValueError:
+                return
+
+        next_index = (self._current_index + 1) % len(self._sounds)
+        if next_index < 0:
             return
 
-        next_index = (current_index + 1) % len(self._sounds)
         self._channel.queue(self._sounds[next_index])
 
 
@@ -1905,6 +1991,29 @@ class ComputerWindowOverlay:
             anchor_x="right",
             anchor_y="center",
         )
+        self.controls_label_text = arcade.Text(
+            "Music Controls",
+            0,
+            0,
+            THEME_TEXT_PURPLE,
+            layout.ss(SETTINGS_CONTROLS_LABEL_SIZE),
+            font_name=UI_FONT_NAME,
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.controls_status_text = arcade.Text(
+            "",
+            0,
+            0,
+            THEME_TEXT_PURPLE,
+            layout.ss(SETTINGS_CONTROL_STATUS_SIZE),
+            font_name=UI_FONT_NAME,
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.previous_button = self._make_control_button("Prev", self._previous_track)
+        self.play_pause_button = self._make_control_button("Pause", self._toggle_playback)
+        self.next_button = self._make_control_button("Next", self._next_track)
         self.update_layout(layout)
 
     def _bounds(self) -> tuple[float, float, float, float]:
@@ -1945,6 +2054,14 @@ class ComputerWindowOverlay:
             self.settings_value_text.y = slider_center_y + self.layout.sy(30)
             if self.music is not None:
                 self.settings_value_text.text = f"{int(round(self.music.volume * 100))}%"
+            controls_left, controls_center_y = self._controls_geometry()
+            self.controls_label_text.x = controls_left
+            self.controls_label_text.y = controls_center_y + self.layout.sy(34)
+            self.controls_status_text.x = controls_left
+            self.controls_status_text.y = controls_center_y - self.layout.sy(26)
+            if self.music is not None:
+                self.controls_status_text.text = f"{self.music.current_track_label} | {self.music.playback_state_label}"
+                self.play_pause_button.text.text = "Play" if self.music.is_paused else "Pause"
 
     def _slider_geometry(self) -> tuple[float, float, float]:
         left, right, _, top = self._bounds()
@@ -1952,6 +2069,12 @@ class ComputerWindowOverlay:
         slider_right = right - self.layout.sx(SETTINGS_SLIDER_RIGHT_PADDING)
         slider_center_y = top - self.layout.sy(SETTINGS_SLIDER_TOP_PADDING)
         return slider_left, slider_right, slider_center_y
+
+    def _controls_geometry(self) -> tuple[float, float]:
+        left, right, _, top = self._bounds()
+        controls_left = left + self.layout.sx(SETTINGS_SLIDER_LEFT_PADDING)
+        controls_center_y = top - self.layout.sy(250)
+        return controls_left, controls_center_y
 
     def _slider_bounds(self) -> tuple[float, float, float, float]:
         slider_left, slider_right, slider_center_y = self._slider_geometry()
@@ -1983,6 +2106,71 @@ class ComputerWindowOverlay:
         self.close_text.font_size = layout.window_close_font_size
         self.settings_label_text.font_size = layout.ss(SETTINGS_SLIDER_LABEL_SIZE)
         self.settings_value_text.font_size = layout.ss(SETTINGS_SLIDER_VALUE_SIZE)
+        self.controls_label_text.font_size = layout.ss(SETTINGS_CONTROLS_LABEL_SIZE)
+        self.controls_status_text.font_size = layout.ss(SETTINGS_CONTROL_STATUS_SIZE)
+        button_width = layout.sx(SETTINGS_CONTROL_BUTTON_WIDTH)
+        button_height = layout.sy(SETTINGS_CONTROL_BUTTON_HEIGHT)
+        button_gap = layout.sx(SETTINGS_CONTROL_BUTTON_GAP)
+        controls_left, controls_center_y = self._controls_geometry()
+        previous_x = controls_left + button_width / 2
+        play_pause_x = previous_x + button_width + button_gap
+        next_x = play_pause_x + button_width + button_gap
+        self.previous_button.update_layout(
+            layout,
+            previous_x,
+            controls_center_y,
+            button_width,
+            button_height,
+            layout.ss(SETTINGS_CONTROL_BUTTON_TEXT_SIZE),
+        )
+        self.play_pause_button.update_layout(
+            layout,
+            play_pause_x,
+            controls_center_y,
+            button_width,
+            button_height,
+            layout.ss(SETTINGS_CONTROL_BUTTON_TEXT_SIZE),
+        )
+        self.next_button.update_layout(
+            layout,
+            next_x,
+            controls_center_y,
+            button_width,
+            button_height,
+            layout.ss(SETTINGS_CONTROL_BUTTON_TEXT_SIZE),
+        )
+        self._sync_text_positions()
+
+    def _make_control_button(self, label: str, on_activate: Callable[[], None]) -> SpriteButtonPanel:
+        return SpriteButtonPanel(
+            self.layout,
+            label,
+            0,
+            0,
+            self.layout.sx(SETTINGS_CONTROL_BUTTON_WIDTH),
+            self.layout.sy(SETTINGS_CONTROL_BUTTON_HEIGHT),
+            THEME_SOFT_LILAC,
+            on_activate,
+            text_size=self.layout.ss(SETTINGS_CONTROL_BUTTON_TEXT_SIZE),
+        )
+
+    def _previous_track(self) -> None:
+        if self.music is None:
+            return
+        self.music.previous_track()
+        self._sync_text_positions()
+
+    def _toggle_playback(self) -> None:
+        if self.music is None:
+            return
+        self.music.toggle_playback()
+        self._sync_text_positions()
+
+    def _next_track(self) -> None:
+        if self.music is None:
+            return
+        self.music.next_track()
+        self._sync_text_positions()
 
     def _clamp_position(self, center_x: float, center_y: float) -> tuple[float, float]:
         half_width = self.window_width / 2
@@ -2002,6 +2190,11 @@ class ComputerWindowOverlay:
 
     def _close(self) -> None:
         self.on_close()
+
+    def _release_control_buttons(self) -> None:
+        self.previous_button.release()
+        self.play_pause_button.release()
+        self.next_button.release()
 
     def on_draw(self) -> None:
         left, right, bottom, top = self._bounds()
@@ -2080,6 +2273,11 @@ class ComputerWindowOverlay:
             )
             self.settings_label_text.draw()
             self.settings_value_text.draw()
+            self.controls_label_text.draw()
+            self.controls_status_text.draw()
+            self.previous_button.draw()
+            self.play_pause_button.draw()
+            self.next_button.draw()
 
     def draw(self) -> None:
         self.on_draw()
@@ -2098,6 +2296,14 @@ class ComputerWindowOverlay:
         knob_radius = self.layout.ss(SETTINGS_SLIDER_KNOB_RADIUS) * 1.3
         return (x - knob_x) ** 2 + (y - knob_y) ** 2 <= knob_radius**2
 
+    def _hit_test_controls(self, x: float, y: float) -> Optional[SpriteButtonPanel]:
+        if self.title != "Settings":
+            return None
+        for button in (self.previous_button, self.play_pause_button, self.next_button):
+            if button.hit_test(x, y):
+                return button
+        return None
+
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
@@ -2115,6 +2321,10 @@ class ComputerWindowOverlay:
                 self.is_dragging = True
                 self.drag_offset_x = x - self.window_x
                 self.drag_offset_y = y - self.window_y
+                return True
+            control_button = self._hit_test_controls(x, y)
+            if control_button is not None:
+                control_button.press()
                 return True
             if self._hit_test_slider(x, y):
                 self.is_adjusting_volume = True
@@ -2141,6 +2351,7 @@ class ComputerWindowOverlay:
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.is_dragging = False
             self.is_adjusting_volume = False
+            self._release_control_buttons()
 
     def on_mouse_scroll(self, x: float, y: float, scroll_x: float, scroll_y: float) -> bool:
         return False
