@@ -653,6 +653,47 @@ def _scale_sprite_for_box(sprite: arcade.Sprite, max_width: float, max_height: f
     return min(max_width / texture.width, max_height / texture.height)
 
 
+def _update_cached_text(
+    cache: dict[tuple[object, ...], arcade.Text],
+    key: tuple[object, ...],
+    text: str,
+    x: float,
+    y: float,
+    color: arcade.Color,
+    font_size: float,
+    *,
+    anchor_x: str = "left",
+    anchor_y: str = "baseline",
+    bold: bool = False,
+) -> arcade.Text:
+    """Reuse text objects so busy screens don't recreate labels every frame."""
+    cached = cache.get(key)
+    if cached is None:
+        cached = arcade.Text(
+            text,
+            x,
+            y,
+            color,
+            font_size,
+            font_name=UI_FONT_NAME,
+            anchor_x=anchor_x,
+            anchor_y=anchor_y,
+            bold=bold,
+        )
+        cache[key] = cached
+        return cached
+
+    cached.text = text
+    cached.x = x
+    cached.y = y
+    cached.color = color
+    cached.font_size = font_size
+    cached.anchor_x = anchor_x
+    cached.anchor_y = anchor_y
+    cached.bold = bold
+    return cached
+
+
 def _wrap_wardrobe_title(title: str) -> str:
     """Wrap longer clothing names onto two lines so they stay inside the card."""
     words = title.title().split()
