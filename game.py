@@ -2092,9 +2092,9 @@ class ComputerWindowOverlay:
                 self.settings_value_text.text = f"{int(round(self.music.volume * 100))}%"
             panel_left, panel_right, panel_bottom, panel_top, panel_center_x, panel_center_y = self._player_panel_geometry()
             self.controls_label_text.x = panel_center_x
-            self.controls_label_text.y = panel_top - self.layout.sy(24)
+            self.controls_label_text.y = panel_center_y + self.layout.sy(40)
             self.controls_status_text.x = panel_center_x
-            self.controls_status_text.y = panel_top - self.layout.sy(56)
+            self.controls_status_text.y = panel_center_y + self.layout.sy(12)
             if self.music is not None:
                 self.controls_status_text.text = self.music.current_track_label
                 self.play_pause_button.text.text = "Play" if self.music.is_paused else "Pause"
@@ -2128,7 +2128,7 @@ class ComputerWindowOverlay:
         panel_left, panel_right, _, panel_top, _, _ = self._player_panel_geometry()
         bar_left = panel_left + self.layout.sx(24)
         bar_right = panel_right - self.layout.sx(24)
-        bar_center_y = panel_top - self.layout.sy(88)
+        bar_center_y = panel_top - self.layout.sy(116)
         half_height = self.layout.sy(SETTINGS_PLAYER_PROGRESS_BAR_HEIGHT) / 2
         return bar_left, bar_right, bar_center_y - half_height, bar_center_y + half_height
 
@@ -2172,7 +2172,7 @@ class ComputerWindowOverlay:
         previous_x = panel_center_x - button_width - button_gap
         play_pause_x = previous_x + button_width + button_gap
         next_x = play_pause_x + button_width + button_gap
-        button_y = panel_bottom + layout.sy(44)
+        button_y = panel_bottom + layout.sy(28)
         self.previous_button.update_layout(
             layout,
             previous_x,
@@ -2339,6 +2339,23 @@ class ComputerWindowOverlay:
             )
             progress_fraction = self.music.current_track_progress if self.music is not None else 0.0
             progress_fill_right = progress_left + (progress_right - progress_left) * progress_fraction
+            title_rail_bottom = self.controls_label_text.y - self.layout.sy(18)
+            title_rail_top = self.controls_label_text.y + self.layout.sy(18)
+            arcade.draw_lrbt_rectangle_filled(
+                panel_left + self.layout.sx(16),
+                panel_right - self.layout.sx(16),
+                title_rail_bottom,
+                title_rail_top,
+                THEME_SOFT_LILAC,
+            )
+            arcade.draw_lrbt_rectangle_outline(
+                panel_left + self.layout.sx(16),
+                panel_right - self.layout.sx(16),
+                title_rail_bottom,
+                title_rail_top,
+                THEME_DEEP_PURPLE,
+                2,
+            )
             arcade.draw_lrbt_rectangle_filled(
                 progress_left,
                 progress_right,
