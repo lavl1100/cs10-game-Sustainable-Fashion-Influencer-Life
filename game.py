@@ -3141,9 +3141,12 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         grid_width = max(1.0, grid_right - grid_left)
         grid_height = max(1.0, content_top - content_bottom)
         gap = self.layout.sx(WARDROBE_ITEM_CARD_GAP)
-        card_width = min(self.layout.sx(180), (grid_width - gap * (WARDROBE_ITEM_CARD_COLUMNS - 1)) / WARDROBE_ITEM_CARD_COLUMNS)
-        card_height = min(self.layout.sy(114), (grid_height - gap * (WARDROBE_ITEM_CARD_ROWS - 1)) / WARDROBE_ITEM_CARD_ROWS)
-        return card_width, card_height
+        card_side = min(
+            self.layout.sx(180),
+            (grid_width - gap * (WARDROBE_ITEM_CARD_COLUMNS - 1)) / WARDROBE_ITEM_CARD_COLUMNS,
+            (grid_height - gap * (WARDROBE_ITEM_CARD_ROWS - 1)) / WARDROBE_ITEM_CARD_ROWS,
+        )
+        return card_side, card_side
 
     def _card_position(self, index: int) -> tuple[float, float]:
         grid_left, _, _, content_top = self._grid_bounds()
@@ -3262,10 +3265,10 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         """Give the wardrobe screens extra room for the tab stack and preview panel."""
         max_width = max(0.0, layout.width - layout.window_margin * 2)
         max_height = max(0.0, layout.height - layout.window_margin * 2)
-        width = min(layout.sx(1040), max_width)
-        height = min(layout.sy(680), max_height)
-        width = max(min(layout.sx(900), max_width), width)
-        height = max(min(layout.sy(620), max_height), height)
+        width = min(layout.sx(960), max_width)
+        height = min(layout.sy(620), max_height)
+        width = max(min(layout.sx(840), max_width), width)
+        height = max(min(layout.sy(560), max_height), height)
         return width, height
 
     def _apply_wardrobe_layout(self, layout: GameLayout) -> None:
