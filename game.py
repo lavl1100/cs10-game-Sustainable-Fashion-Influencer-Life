@@ -3149,6 +3149,9 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         girl_center_y = (girl_bottom + girl_top) / 2
         girl_width = girl_right - girl_left
         girl_height = girl_top - girl_bottom
+        girl_texture = self.girl_sprite.sprite.texture
+        girl_scale_x = girl_width / girl_texture.width if girl_texture.width else 1.0
+        girl_scale_y = girl_height / girl_texture.height if girl_texture.height else 1.0
         self.girl_sprite.center_x = girl_center_x
         self.girl_sprite.center_y = girl_center_y
         self.girl_sprite.width = girl_width
@@ -3177,37 +3180,23 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             sprite.center_y = girl_center_y
             if category == "hats":
                 sprite.center_y = girl_top - girl_height * 0.03
-                sprite.width = girl_width
-                sprite.height = girl_height
             elif category == "shirts":
                 sprite.center_y = girl_center_y + girl_height * 0.06
-                sprite.width = girl_width
-                sprite.height = girl_height
             elif category == "dresses":
                 sprite.center_y = girl_center_y + girl_height * 0.03
-                sprite.width = girl_width
-                sprite.height = girl_height
             elif category == "jackets":
                 sprite.center_y = girl_center_y + girl_height * 0.04
-                sprite.width = girl_width
-                sprite.height = girl_height
             elif category == "skirts":
                 sprite.center_y = girl_center_y - girl_height * 0.12
-                sprite.width = girl_width
-                sprite.height = girl_height
             elif category == "pants":
                 sprite.center_y = girl_center_y - girl_height * 0.16
-                sprite.width = girl_width
-                sprite.height = girl_height
             elif category == "shoes":
                 sprite.center_y = girl_bottom + girl_height * 0.12
-                sprite.width = girl_width
-                sprite.height = girl_height
             elif category == "bags":
                 sprite.center_x = girl_right - girl_width * 0.14
                 sprite.center_y = girl_center_y - girl_height * 0.02
-                sprite.width = girl_width
-                sprite.height = girl_height
+            sprite.width = sprite.texture.width * girl_scale_x
+            sprite.height = sprite.texture.height * girl_scale_y
 
         for category, sprite in self.outfit_sprites.items():
             if category not in self.wardrobe.equipped_by_category:
