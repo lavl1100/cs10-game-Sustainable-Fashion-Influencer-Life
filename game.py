@@ -34,6 +34,7 @@ BUTTON_IMAGE_PATHS = {
     "closet": ASSETS_DIR / "closet_button.png",
     "clothing store": ASSETS_DIR / "clothing_store_button.png",
     "activity center": ASSETS_DIR / "activity_center_button.png",
+    "Upcycling Station": ASSETS_DIR / "upcycling_button.png",
 }
 
 BUTTON_ACTIVE_IMAGE_PATHS = {
