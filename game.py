@@ -2858,14 +2858,24 @@ class WardrobeItemCard:
     def _build_item_sprite(self) -> arcade.Sprite:
         sprite_height = self.height * 0.58
         sprite_width = self.width * 0.78
+        icon_center_y = self.center_y + self.height * 0.08
+        if _path_exists(self.item.image_path):
+            texture = arcade.load_texture(str(self.item.image_path))
+            sprite = arcade.Sprite(str(self.item.image_path))
+            sprite.center_x = self.center_x
+            sprite.center_y = icon_center_y
+            if texture.width > 0 and texture.height > 0:
+                scale = min(sprite_width / texture.width, sprite_height / texture.height)
+                sprite.width = texture.width * scale
+                sprite.height = texture.height * scale
+            return sprite
         return _make_sprite(
             self.item.image_path,
             self.center_x,
-            self.center_y + self.height * 0.05,
+            icon_center_y,
             sprite_width,
             sprite_height,
             WARDROBE_STORE_EMPTY_FILL,
-            crop_to_fit=True,
         )
 
     def update_layout(
