@@ -4009,28 +4009,28 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self._cut_progress = 0.0
         self._cut_band_width = max(layout.ss(12), layout.sy(10))
         self._cut_stage_paths = [
-            (
-                UPCYCLING_FIRST_ITEM_IMAGE_PATH,
-                UPCYCLING_FIRST_ITEM_ALT_IMAGE_PATH,
-                UPCYCLING_FIRST_ITEM_DONE_IMAGE_PATH,
+            UpcyclingCutStage(
+                base_path=UPCYCLING_FIRST_ITEM_IMAGE_PATH,
+                guide_path=UPCYCLING_FIRST_ITEM_ALT_IMAGE_PATH,
+                done_path=UPCYCLING_FIRST_ITEM_DONE_IMAGE_PATH,
+                cursor_path=UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH,
             ),
-            (
-                UPCYCLING_SECOND_ITEM_IMAGE_PATH,
-                UPCYCLING_SECOND_ITEM_ALT_IMAGE_PATH,
-                UPCYCLING_SECOND_ITEM_DONE_IMAGE_PATH,
+            UpcyclingCutStage(
+                base_path=UPCYCLING_THIRD_ITEM_IMAGE_PATH,
+                done_path=UPCYCLING_THIRD_ITEM_DONE_IMAGE_PATH,
+                cursor_path=UPCYCLING_NEEDLE_CURSOR_IMAGE_PATH,
             ),
         ]
         self._cut_path_templates = {
-            base_path: self._build_cut_path_template(base_path)
-            for base_path, _, _ in self._cut_stage_paths
+            stage.base_path: self._build_cut_path_template(stage.base_path)
+            for stage in self._cut_stage_paths
         }
         self._cut_alpha_masks = {
             UPCYCLING_FIRST_ITEM_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_FIRST_ITEM_IMAGE_PATH),
             UPCYCLING_FIRST_ITEM_ALT_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_FIRST_ITEM_ALT_IMAGE_PATH),
             UPCYCLING_FIRST_ITEM_DONE_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_FIRST_ITEM_DONE_IMAGE_PATH),
-            UPCYCLING_SECOND_ITEM_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_SECOND_ITEM_IMAGE_PATH),
-            UPCYCLING_SECOND_ITEM_ALT_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_SECOND_ITEM_ALT_IMAGE_PATH),
-            UPCYCLING_SECOND_ITEM_DONE_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_SECOND_ITEM_DONE_IMAGE_PATH),
+            UPCYCLING_THIRD_ITEM_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_THIRD_ITEM_IMAGE_PATH),
+            UPCYCLING_THIRD_ITEM_DONE_IMAGE_PATH: self._build_alpha_mask(UPCYCLING_THIRD_ITEM_DONE_IMAGE_PATH),
         }
         self._cut_path_points: list[tuple[float, float]] = []
         self._cut_path_length = 1.0
@@ -4122,6 +4122,16 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self.cursor_sprite = DrawableSprite(
             _make_sprite(
                 UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH,
+                layout.width / 2,
+                layout.height / 2,
+                UPCYCLING_SCISSORS_CURSOR_SIZE,
+                UPCYCLING_SCISSORS_CURSOR_SIZE,
+                THRIFTING_CONTENT_FILL,
+            )
+        )
+        self.needle_cursor_sprite = DrawableSprite(
+            _make_sprite(
+                UPCYCLING_NEEDLE_CURSOR_IMAGE_PATH,
                 layout.width / 2,
                 layout.height / 2,
                 UPCYCLING_SCISSORS_CURSOR_SIZE,
