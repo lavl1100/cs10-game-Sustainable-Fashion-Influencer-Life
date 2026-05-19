@@ -2690,11 +2690,14 @@ class WardrobeState:
     def equip(self, item: WardrobeCatalogItem) -> None:
         if item.item_id not in self.owned_ids:
             return
-        if item.category == "dresses":
-            for category in ("shirts", "skirts", "pants"):
-                self.equipped_by_category.pop(category, None)
-        elif item.category in {"shirts", "skirts", "pants"}:
-            self.equipped_by_category.pop("dresses", None)
+        conflict_categories = {
+            "shirts": {"dresses"},
+            "dresses": {"shirts", "skirts", "pants"},
+            "skirts": {"dresses", "pants"},
+            "pants": {"dresses", "skirts"},
+        }
+        for category in conflict_categories.get(item.category, set()):
+            self.equipped_by_category.pop(category, None)
         self.equipped_by_category[item.category] = item.item_id
 
     def toggle_equip(self, item: WardrobeCatalogItem) -> bool:
