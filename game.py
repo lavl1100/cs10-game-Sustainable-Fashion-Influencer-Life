@@ -4078,8 +4078,11 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             ASSETS_DIR / "upcyclingclothing4c.png": self._build_alpha_mask(ASSETS_DIR / "upcyclingclothing4c.png"),
         }
         self._cut_path_points: list[tuple[float, float]] = []
+        self._cut_path_segments: list[tuple[float, float, float, float, float, float]] = []
         self._cut_path_length = 1.0
         self._cut_clouds: list[CutCloudPuff] = []
+        self._max_cut_clouds = 48
+        self._cut_motion_threshold = max(self.layout.ss(0.5), 0.75)
         self._cut_guide_visible = False
         self._scissors_visible = False
         self._cut_intro_elapsed = 0.0
@@ -4358,10 +4361,17 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
 
         self._cut_path_points = points
         self._cut_path_length = 0.0
+        self._cut_path_segments = []
+        cumulative_length = 0.0
         for index in range(len(points) - 1):
             ax, ay = points[index]
             bx, by = points[index + 1]
-            self._cut_path_length += math.hypot(bx - ax, by - ay)
+            segment_length = math.hypot(bx - ax, by - ay)
+            if segment_length <= 0.0:
+                continue
+            self._cut_path_segments.append((ax, ay, bx, by, segment_length, cumulative_length))
+            cumulative_length += segment_length
+        self._cut_path_length = max(cumulative_length, 1.0)
         self._cut_band_width = max(self.layout.ss(16), content_height * UPCYCLING_CUT_BAND_WIDTH_RATIO)
 
     def _upcycling_window_size(self, layout: GameLayout) -> tuple[float, float]:
@@ -4451,23 +4461,16 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         return math.hypot(point_x - nearest_x, point_y - nearest_y), t
 
     def _nearest_cut_point(self, x: float, y: float) -> tuple[float, float]:
-        if len(self._cut_path_points) < 2:
+        if len(self._cut_path_segments) < 1:
             return float("inf"), 0.0
 
         best_distance = float("inf")
         best_progress = 0.0
-        distance_before_segment = 0.0
-        for index in range(len(self._cut_path_points) - 1):
-            start_x, start_y = self._cut_path_points[index]
-            end_x, end_y = self._cut_path_points[index + 1]
-            segment_length = math.hypot(end_x - start_x, end_y - start_y)
-            if segment_length <= 0.0:
-                continue
+        for start_x, start_y, end_x, end_y, segment_length, distance_before_segment in self._cut_path_segments:
             distance, t = self._point_to_segment_distance(x, y, start_x, start_y, end_x, end_y)
             if distance < best_distance:
                 best_distance = distance
                 best_progress = (distance_before_segment + segment_length * t) / max(self._cut_path_length, 1.0)
-            distance_before_segment += segment_length
         return best_distance, best_progress
 
     def _point_is_on_cut_clothing(self, x: float, y: float) -> bool:
@@ -4508,7 +4511,10 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
 
     def _spawn_cut_clouds(self, x: float, y: float, motion_strength: float, burst: bool = False) -> None:
         now = _current_time()
-        cloud_count = 4 if burst else max(2, min(4, int(motion_strength / max(self.layout.ss(4), 4)) + 1))
+        cloud_count = 3 if burst else max(1, min(3, int(motion_strength / max(self.layout.ss(5), 5)) + 1))
+        overflow = len(self._cut_clouds) + cloud_count - self._max_cut_clouds
+        if overflow > 0:
+            del self._cut_clouds[:overflow]
         for _ in range(cloud_count):
             angle = random.uniform(0.0, math.tau)
             drift = random.uniform(self.layout.ss(6), self.layout.ss(18))
@@ -4532,14 +4538,13 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         stage = self._current_cut_stage()
         if not stage.cuttable or self._cut_complete or not self._scissors_visible or self._cut_path_length <= 0.0:
             return
+        motion_strength = math.hypot(dx, dy)
+        if motion_strength < self._cut_motion_threshold:
+            return
         if not self._point_is_on_cut_clothing(x, y):
             return
         distance, _ = self._nearest_cut_point(x, y)
         if distance > self._cut_band_width:
-            return
-
-        motion_strength = math.hypot(dx, dy)
-        if motion_strength <= 0.0:
             return
 
         proximity_bonus = 1.0 - min(1.0, distance / self._cut_band_width)
@@ -4596,6 +4601,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         if not self._screen_ready:
             return
         self.window_width, self.window_height = self._upcycling_window_size(layout)
+        self._cut_motion_threshold = max(self.layout.ss(0.5), 0.75)
         self._set_center(layout.width / 2, layout.height / 2 - layout.sy(8))
         self._sync_background()
         self._prune_cut_effects()
