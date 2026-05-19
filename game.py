@@ -2021,7 +2021,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         content_left, content_right, content_bottom, content_top = self._content_bounds()
         girl_left, girl_right, girl_bottom, girl_top = self._girl_bounds()
         self.title_note_text.x = content_left
-        self.title_note_text.y = content_top + self.layout.sy(10)
+        self.title_note_text.y = content_top - self.layout.sy(10)
         self.title_note_text.text = "build looks here" if self.mode == "closet" else "shop new pieces"
         self.wallet_text.x = content_left
         self.wallet_text.y = content_bottom + self.layout.sy(18)
@@ -2114,7 +2114,10 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             self.message_text.draw()
         if not self.item_cards:
             if self.selected_category == "all":
-                self.empty_text.text = "No wardrobe items available yet" if self.mode == "store" else "Your closet is empty here"
+                if self.mode == "store":
+                    self.empty_text.text = "No wardrobe items available yet"
+                else:
+                    self.empty_text.text = "Your closet is empty here"
             else:
                 self.empty_text.text = "No items in this category yet"
             self.empty_text.draw()
