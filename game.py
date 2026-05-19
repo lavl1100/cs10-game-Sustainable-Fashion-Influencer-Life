@@ -111,6 +111,8 @@ THRIFTING_STARTING_MONEY = 100
 THRIFTING_XP_PER_LEVEL = 500
 THRIFTING_LEVEL_UP_REWARD = 100
 UPCYCLING_STAGE_HOLD_SECONDS = 3.0
+UPCYCLING_CUT_HIT_PADDING_PX = 5
+UPCYCLING_CUT_BAND_WIDTH_RATIO = 0.075
 FAST_FASHION_FABRICS = ["polyester", "nylon", "rayon", "acrylic"]
 ECO_FABRICS = ["cotton", "linen", "wool", "hemp"]
 UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
@@ -4009,7 +4011,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self._cut_stage_index = 0
         self._cut_complete = False
         self._cut_progress = 0.0
-        self._cut_band_width = max(layout.ss(12), layout.sy(10))
+        self._cut_band_width = max(layout.ss(16), layout.sy(12))
         self._cut_stage_paths = [
             UpcyclingStage(
                 base_path=UPCYCLING_FIRST_ITEM_IMAGE_PATH,
@@ -4355,7 +4357,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             ax, ay = points[index]
             bx, by = points[index + 1]
             self._cut_path_length += math.hypot(bx - ax, by - ay)
-        self._cut_band_width = max(self.layout.ss(12), content_height * 0.05)
+        self._cut_band_width = max(self.layout.ss(16), content_height * UPCYCLING_CUT_BAND_WIDTH_RATIO)
 
     def _upcycling_window_size(self, layout: GameLayout) -> tuple[float, float]:
         """Size the window so the upcycling art keeps its native aspect ratio."""
@@ -4485,7 +4487,18 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         pixel_x = min(image_width - 1, max(0, int(x_ratio * (image_width - 1))))
         # Screen coordinates count upward, while texture rows start at the top.
         pixel_y = min(image_height - 1, max(0, int((1.0 - y_ratio) * (image_height - 1))))
-        return alpha_mask[pixel_y * image_width + pixel_x] > 0
+
+        padding = UPCYCLING_CUT_HIT_PADDING_PX
+        left_x = max(0, pixel_x - padding)
+        right_x = min(image_width - 1, pixel_x + padding)
+        top_y = max(0, pixel_y - padding)
+        bottom_y = min(image_height - 1, pixel_y + padding)
+        for sample_y in range(top_y, bottom_y + 1):
+            row_offset = sample_y * image_width
+            for sample_x in range(left_x, right_x + 1):
+                if alpha_mask[row_offset + sample_x] > 0:
+                    return True
+        return False
 
     def _spawn_cut_clouds(self, x: float, y: float, motion_strength: float, burst: bool = False) -> None:
         now = _current_time()
