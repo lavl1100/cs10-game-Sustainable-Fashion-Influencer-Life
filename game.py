@@ -734,6 +734,33 @@ class CutSpark:
         return max(0, min(255, int(255 * remaining)))
 
 
+@dataclass
+class CutCloudPuff:
+    """Soft cloud puff used as completion feedback for the cut."""
+
+    x: float
+    y: float
+    vx: float
+    vy: float
+    radius: float
+    spawned_at: float
+    lifetime: float
+    alpha: int
+
+    def state_at(self, now: float) -> tuple[float, float, float, int]:
+        age = now - self.spawned_at
+        if age >= self.lifetime:
+            return self.x, self.y, self.radius, 0
+        growth = 1.0 + age * 0.9
+        fade = 1.0 - (age / self.lifetime)
+        return (
+            self.x + self.vx * age,
+            self.y + self.vy * age,
+            self.radius * growth,
+            max(0, min(255, int(self.alpha * fade))),
+        )
+
+
 class ThriftInfoBox:
     """A detail card that summarizes the currently selected thrift item."""
 
