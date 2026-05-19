@@ -91,7 +91,10 @@ UPCYCLING_FIRST_ITEM_DONE_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing1b.png"
 UPCYCLING_SECOND_ITEM_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing2.png"
 UPCYCLING_SECOND_ITEM_ALT_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing2a.png"
 UPCYCLING_SECOND_ITEM_DONE_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing2b.png"
+UPCYCLING_THIRD_ITEM_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing3.png"
+UPCYCLING_THIRD_ITEM_DONE_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing3a.png"
 UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH = ASSETS_DIR / "scissors.png"
+UPCYCLING_NEEDLE_CURSOR_IMAGE_PATH = ASSETS_DIR / "needle.png"
 UPCYCLING_SCISSORS_CURSOR_SIZE = 64
 UPCYCLING_GARMENT_SCALE = 0.60
 UPCYCLING_ART_ASPECT_RATIO = 1500.0 / 900.0
@@ -547,6 +550,14 @@ class DrawableSprite:
         self._sprite = sprite
         self._sprite_list.clear()
         self._sprite_list.append(sprite)
+
+
+@dataclass(frozen=True)
+class UpcyclingCutStage:
+    base_path: Path
+    done_path: Path
+    cursor_path: Path
+    guide_path: Optional[Path] = None
 
 @dataclass
 class StatusBox:
