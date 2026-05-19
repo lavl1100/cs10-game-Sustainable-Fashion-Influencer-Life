@@ -116,6 +116,14 @@ UPCYCLING_STAGE_HOLD_SECONDS = 3.0
 UPCYCLING_CUT_HIT_PADDING_PX = 5
 UPCYCLING_CUT_BAND_WIDTH_RATIO = 0.075
 UPCYCLING_NOTIFICATION_SECONDS = 2.5
+UPCYCLING_PALETTE_MINT = (192, 225, 210)
+UPCYCLING_PALETTE_CREAM = (246, 244, 232)
+UPCYCLING_PALETTE_BLUSH = (253, 172, 172)
+UPCYCLING_PALETTE_MAUVE = (197, 153, 182)
+UPCYCLING_PALETTE_LILAC = (214, 154, 222)
+UPCYCLING_PALETTE_PURPLE = (170, 96, 200)
+UPCYCLING_PALETTE_ROSE = (228, 155, 166)
+UPCYCLING_PALETTE_PINK = (255, 211, 213)
 FAST_FASHION_FABRICS = ["polyester", "nylon", "rayon", "acrylic"]
 ECO_FABRICS = ["cotton", "linen", "wool", "hemp"]
 UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
@@ -452,6 +460,11 @@ def _make_panel(
 def _lerp_color(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> tuple[int, int, int]:
     t = max(0.0, min(1.0, t))
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+
+
+def _soft_tint(color: tuple[int, int, int], strength: float = 0.32) -> tuple[int, int, int]:
+    """Blend a palette color toward white so the tint stays gentle."""
+    return _lerp_color((255, 255, 255), color, strength)
 
 
 def _draw_pill(
@@ -4316,6 +4329,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
                 THRIFTING_CONTENT_FILL,
             )
         )
+        self._apply_upcycling_palette()
         super().__init__(layout, "Upcycling Station", on_close, music)
         self._screen_ready = True
         self.update_layout(layout)
@@ -4368,6 +4382,41 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         if stage.cursor_path == UPCYCLING_NEEDLE_CURSOR_IMAGE_PATH:
             return self.needle_cursor_sprite
         return self.cursor_sprite
+
+    def _apply_upcycling_palette(self) -> None:
+        tint_map = [
+            (
+                _soft_tint(UPCYCLING_PALETTE_MINT),
+                (self.first_item_sprite, self.first_item_alt_sprite, self.first_item_done_sprite),
+            ),
+            (
+                _soft_tint(UPCYCLING_PALETTE_CREAM),
+                (self.second_item_sprite, self.second_item_alt_sprite, self.second_item_done_sprite),
+            ),
+            (
+                _soft_tint(UPCYCLING_PALETTE_BLUSH),
+                (self.third_item_sprite, self.third_item_done_sprite),
+            ),
+            (
+                _soft_tint(UPCYCLING_PALETTE_MAUVE),
+                (self.fourth_item_sprite,),
+            ),
+            (
+                _soft_tint(UPCYCLING_PALETTE_LILAC),
+                (self.fourth_item_cut_sprite,),
+            ),
+            (
+                _soft_tint(UPCYCLING_PALETTE_PURPLE),
+                (self.fourth_item_mid_sprite,),
+            ),
+            (
+                _soft_tint(UPCYCLING_PALETTE_PINK),
+                (self.fourth_item_done_sprite,),
+            ),
+        ]
+        for tint, sprites in tint_map:
+            for sprite in sprites:
+                sprite.sprite.color = tint
 
     def _notify(self, text: str, color: tuple[int, int, int] = THRIFTING_SUCCESS_COLOR) -> None:
         self._status_message = text
