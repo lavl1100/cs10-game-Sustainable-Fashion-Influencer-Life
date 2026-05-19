@@ -3214,7 +3214,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         girl_center_y = (girl_bottom + girl_top) / 2
         girl_width = girl_right - girl_left
         girl_height = girl_top - girl_bottom
-        girl_scale = _scale_sprite_for_box(self.girl_sprite.sprite, girl_width, girl_height)
+        girl_scale = _scale_sprite_for_box(self.girl_sprite.sprite, girl_width, girl_height) * 1.08
         if self.background_sprite is not None:
             self.background_sprite.center_x = girl_center_x
             self.background_sprite.center_y = girl_center_y
