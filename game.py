@@ -98,6 +98,7 @@ UPCYCLING_NEEDLE_CURSOR_IMAGE_PATH = ASSETS_DIR / "needle.png"
 UPCYCLING_SCISSORS_CURSOR_SIZE = 64
 UPCYCLING_GARMENT_SCALE = 0.68
 UPCYCLING_GARMENT_CENTER_Y_OFFSET_RATIO = 0.05
+UPCYCLING_CUT_PATH_CENTER_Y_OFFSET_RATIO = -0.04
 UPCYCLING_ART_ASPECT_RATIO = 1500.0 / 900.0
 THRIFTING_ART_ASPECT_RATIO = 1500.0 / 900.0
 THRIFTING_CLOTHING_IMAGE_PATHS = [
@@ -4329,8 +4330,10 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         garment_width = content_width * UPCYCLING_GARMENT_SCALE
         garment_height = content_height * UPCYCLING_GARMENT_SCALE
         garment_center_y = (content_bottom + content_top) / 2 + content_height * UPCYCLING_GARMENT_CENTER_Y_OFFSET_RATIO
+        cut_center_y = (content_bottom + content_top) / 2 + content_height * UPCYCLING_CUT_PATH_CENTER_Y_OFFSET_RATIO
         garment_left = (content_left + content_right) / 2 - garment_width / 2
         garment_bottom = garment_center_y - garment_height / 2
+        cut_garment_bottom = cut_center_y - garment_height / 2
 
         base_path, _, _ = self._current_cut_stage_paths()
         cut_path_template = self._cut_path_templates.get(base_path, [])
@@ -4338,12 +4341,12 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             points = [
                 (
                     garment_left + x_ratio * garment_width,
-                    garment_bottom + y_ratio * garment_height,
+                    cut_garment_bottom + y_ratio * garment_height,
                 )
                 for x_ratio, y_ratio in cut_path_template
             ]
         else:
-            center_y = garment_center_y
+            center_y = cut_center_y
             wave = content_height * 0.06
             points = [
                 (content_left + content_width * 0.18, center_y - wave * 0.75),
