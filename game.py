@@ -4300,10 +4300,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         return self.cursor_sprite
 
     def _advance_to_next_cut_stage(self) -> None:
-        if self._cut_stage_index >= len(self._cut_stage_paths) - 1:
-            return
-
-        self._cut_stage_index += 1
+        self._cut_stage_index = (self._cut_stage_index + 1) % len(self._cut_stage_paths)
         self._cut_complete = False
         self._cut_progress = 0.0
         self._cut_intro_elapsed = 0.0
