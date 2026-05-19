@@ -222,7 +222,7 @@ UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
 UI_FONT_NAME = "Kenney Future Narrow"
 TUTORIAL_GUIDE_SPRITE_PATH = ASSETS_DIR / "sprite_happy.png"
 TUTORIAL_GUIDE_BUBBLE_PATH = ASSETS_DIR / "speech_bubble.png"
-TUTORIAL_GUIDE_TEXT_COLOR = THEME_TEXT_PURPLE if "THEME_TEXT_PURPLE" in globals() else (106, 47, 130)
+TUTORIAL_GUIDE_TEXT_COLOR = (106, 47, 130)
 
 arcade.load_font(UI_FONT_PATH)
 
