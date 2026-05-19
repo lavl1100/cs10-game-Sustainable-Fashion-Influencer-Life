@@ -1354,6 +1354,8 @@ class HomeView(arcade.View):
         self.active_window = UpcyclingGameOverlay(
             self.layout,
             self._open_activity_menu,
+            self.wallet,
+            self.progress,
             self.music,
         )
 
@@ -4007,9 +4009,13 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self,
         layout: GameLayout,
         on_close: Callable[[], None],
+        wallet: Optional[PlayerWallet] = None,
+        progress: Optional[PlayerProgress] = None,
         music: Optional[BackgroundMusicPlaylist] = None,
     ) -> None:
         self._screen_ready = False
+        self.wallet = wallet
+        self.progress = progress
         self._cut_stage_index = 0
         self._cut_complete = False
         self._cut_progress = 0.0
@@ -4307,6 +4313,11 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         return self.cursor_sprite
 
     def _advance_to_next_cut_stage(self) -> None:
+        stage = self._current_cut_stage()
+        if stage.cuttable and self._cut_complete and self.progress is not None:
+            levels_gained = self.progress.add_experience(10)
+            if levels_gained > 0 and self.wallet is not None:
+                self.wallet.amount += levels_gained * THRIFTING_LEVEL_UP_REWARD
         self._cut_stage_index = (self._cut_stage_index + 1) % len(self._cut_stage_paths)
         self._cut_complete = False
         self._cut_progress = 0.0
