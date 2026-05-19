@@ -4250,16 +4250,17 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self._screen_ready = True
         self.update_layout(layout)
 
-    def _current_cut_stage(self) -> UpcyclingCutStage:
+    def _current_cut_stage(self) -> UpcyclingStage:
         return self._cut_stage_paths[min(self._cut_stage_index, len(self._cut_stage_paths) - 1)]
 
-    def _current_cut_stage_paths(self) -> tuple[Path, Optional[Path], Path]:
+    def _current_cut_stage_paths(self) -> tuple[Path, Optional[Path], Optional[Path]]:
         stage = self._current_cut_stage()
         return stage.base_path, stage.guide_path, stage.done_path
 
     def _active_cut_sprite_path(self) -> Path:
         base_path, guide_path, done_path = self._current_cut_stage_paths()
-        if self._cut_complete:
+        stage = self._current_cut_stage()
+        if stage.cuttable and self._cut_complete and done_path is not None:
             return done_path
         if guide_path is not None and self._cut_guide_visible:
             return guide_path
@@ -4278,9 +4279,19 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             if self._cut_guide_visible:
                 return self.second_item_alt_sprite
             return self.second_item_sprite
+        if self._cut_stage_index == 2:
+            if self._cut_complete:
+                return self.third_item_done_sprite
+            return self.third_item_sprite
+        if self._cut_stage_index == 3:
+            return self.fourth_item_sprite
+        if self._cut_stage_index == 4:
+            if self._cut_complete:
+                return self.fourth_item_mid_sprite
+            return self.fourth_item_cut_sprite
         if self._cut_complete:
-            return self.third_item_done_sprite
-        return self.third_item_sprite
+            return self.fourth_item_done_sprite
+        return self.fourth_item_mid_sprite
 
     def _active_cursor_sprite(self) -> DrawableSprite:
         stage = self._current_cut_stage()
@@ -4392,6 +4403,10 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             self.second_item_done_sprite,
             self.third_item_sprite,
             self.third_item_done_sprite,
+            self.fourth_item_sprite,
+            self.fourth_item_cut_sprite,
+            self.fourth_item_mid_sprite,
+            self.fourth_item_done_sprite,
         ):
             sprite.center_x = (content_left + content_right) / 2
             sprite.center_y = (content_bottom + content_top) / 2
@@ -4498,7 +4513,8 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             )
 
     def _advance_cut_progress(self, x: float, y: float, dx: float, dy: float) -> None:
-        if self._cut_complete or not self._scissors_visible or self._cut_path_length <= 0.0:
+        stage = self._current_cut_stage()
+        if not stage.cuttable or self._cut_complete or not self._scissors_visible or self._cut_path_length <= 0.0:
             return
         if not self._point_is_on_cut_clothing(x, y):
             return
@@ -4556,7 +4572,8 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
 
     def _refresh_animation_state(self) -> None:
         if self._screen_ready:
-            self._set_scissors_cursor_visible(self._scissors_visible and not self._cut_complete)
+            stage = self._current_cut_stage()
+            self._set_scissors_cursor_visible(stage.cuttable and self._scissors_visible and not self._cut_complete)
 
     def update_layout(self, layout: GameLayout) -> None:
         super().update_layout(layout)
@@ -4579,9 +4596,14 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
     def on_update(self, delta_time: float) -> None:
         if not self._screen_ready:
             return
-        if self._cut_complete:
+        stage = self._current_cut_stage()
+        if not stage.cuttable:
             self._cut_stage_complete_elapsed += delta_time
-            if self._cut_stage_complete_elapsed >= UPCYCLING_STAGE_HOLD_SECONDS:
+            if self._cut_stage_complete_elapsed >= stage.hold_seconds:
+                self._advance_to_next_cut_stage()
+        elif self._cut_complete:
+            self._cut_stage_complete_elapsed += delta_time
+            if self._cut_stage_complete_elapsed >= stage.hold_seconds:
                 self._advance_to_next_cut_stage()
         else:
             self._cut_intro_elapsed += delta_time
