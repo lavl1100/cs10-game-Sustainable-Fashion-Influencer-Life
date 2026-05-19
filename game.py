@@ -3958,8 +3958,9 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self.cursor_sprite.center_y = self._mouse_y
 
     def _set_scissors_cursor_visible(self, visible: bool) -> None:
-        if self.window is not None:
-            self.window.set_mouse_visible(not visible)
+        window = arcade.get_window()
+        if window is not None:
+            window.set_mouse_visible(not visible)
 
     def _refresh_animation_state(self) -> None:
         if self._swapped_item:
