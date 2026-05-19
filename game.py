@@ -1283,7 +1283,12 @@ class HomeView(arcade.View):
 
         return open_window
 
+    def _show_system_cursor(self) -> None:
+        if self.window is not None:
+            self.window.set_mouse_visible(True)
+
     def _open_activity_menu(self) -> None:
+        self._show_system_cursor()
         self.active_window = ActivityWindowOverlay(
             self.layout,
             self._close_activity_window,
@@ -1312,6 +1317,7 @@ class HomeView(arcade.View):
         )
 
     def _open_window(self, label: str) -> None:
+        self._show_system_cursor()
         if self.active_window is not None and self.active_window.title == "Social Media" and label != "social media":
             self._set_button_active("social media", False)
         if label == "social media":
@@ -1350,6 +1356,7 @@ class HomeView(arcade.View):
     def on_show_view(self) -> None:
         arcade.set_background_color(self.background_color)
         self.music.start()
+        self._show_system_cursor()
         self._pressed_button = None
         for button in self.buttons:
             button.reset()
