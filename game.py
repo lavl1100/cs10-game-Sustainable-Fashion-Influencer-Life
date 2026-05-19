@@ -125,7 +125,6 @@ THRIFTING_CLOTHING_IMAGE_PATHS = [
     ASSETS_DIR / "thriftingclothing5.png",
 ]
 WARDROBE_GIRL_IMAGE_PATH = ASSETS_DIR / "closet_girl.png"
-WARDROBE_CLOSET_IMAGE_PATH = ASSETS_DIR / "closet_.png"
 WARDROBE_CATEGORY_ORDER = [
     "all",
     "hats",
@@ -165,7 +164,6 @@ WARDROBE_TABS_WIDTH = 132
 WARDROBE_TABS_HEIGHT = 42
 WARDROBE_TABS_GAP = 10
 WARDROBE_GIRL_PANEL_WIDTH = 232
-WARDROBE_STORE_PANEL_WIDTH = 252
 WARDROBE_GIRL_PANEL_MARGIN = 16
 WARDROBE_SHIRT_SCALE = 0.34
 WARDROBE_DRESS_SCALE = 0.36
@@ -2957,10 +2955,9 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self.tab_buttons: list[WardrobeTabButton] = []
         self.item_cards: list[WardrobeItemCard] = []
         self.outfit_sprites: dict[str, arcade.Sprite] = {}
-        base_image_path = WARDROBE_GIRL_IMAGE_PATH if mode == "closet" else WARDROBE_CLOSET_IMAGE_PATH
         self.girl_sprite = DrawableSprite(
             _make_sprite(
-                base_image_path,
+                WARDROBE_GIRL_IMAGE_PATH,
                 layout.width / 2,
                 layout.height / 2,
                 layout.width * 0.35,
@@ -3027,9 +3024,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
 
     def _girl_bounds(self) -> tuple[float, float, float, float]:
         content_left, content_right, content_bottom, content_top = self._content_bounds()
-        panel_width_limit = WARDROBE_GIRL_PANEL_WIDTH if self.mode == "closet" else WARDROBE_STORE_PANEL_WIDTH
-        panel_width_ratio = 0.32 if self.mode == "closet" else 0.35
-        panel_width = min(self.layout.sx(panel_width_limit), (content_right - content_left) * panel_width_ratio)
+        panel_width = min(self.layout.sx(WARDROBE_GIRL_PANEL_WIDTH), (content_right - content_left) * 0.32)
         left = content_left
         right = left + panel_width
         return left, right, content_bottom, content_top
