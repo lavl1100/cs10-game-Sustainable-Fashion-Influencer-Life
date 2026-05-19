@@ -115,6 +115,7 @@ THRIFTING_LEVEL_UP_REWARD = 100
 UPCYCLING_STAGE_HOLD_SECONDS = 3.0
 UPCYCLING_CUT_HIT_PADDING_PX = 5
 UPCYCLING_CUT_BAND_WIDTH_RATIO = 0.075
+UPCYCLING_NOTIFICATION_SECONDS = 2.5
 FAST_FASHION_FABRICS = ["polyester", "nylon", "rayon", "acrylic"]
 ECO_FABRICS = ["cotton", "linen", "wool", "hemp"]
 UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
@@ -4095,6 +4096,61 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self._cut_stage_complete_elapsed = 0.0
         self._cut_guide_reveal_delay = 0.2
         self._scissors_reveal_delay = 0.55
+        self._status_message = ""
+        self._status_message_color = THRIFTING_SUCCESS_COLOR
+        self._status_message_timer = 0.0
+        self.instructions_title_text = arcade.Text(
+            "How to play",
+            0,
+            0,
+            THRIFTING_TITLE_COLOR,
+            layout.ss(13),
+            font_name=UI_FONT_NAME,
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.instructions_texts = [
+            arcade.Text(
+                "- Wait for the guide to appear",
+                0,
+                0,
+                THRIFTING_TITLE_COLOR,
+                layout.ss(11),
+                font_name=UI_FONT_NAME,
+                anchor_x="left",
+                anchor_y="center",
+            ),
+            arcade.Text(
+                "- Hold and trace the cut line",
+                0,
+                0,
+                THRIFTING_TITLE_COLOR,
+                layout.ss(11),
+                font_name=UI_FONT_NAME,
+                anchor_x="left",
+                anchor_y="center",
+            ),
+            arcade.Text(
+                "- Finish pieces to earn XP",
+                0,
+                0,
+                THRIFTING_TITLE_COLOR,
+                layout.ss(11),
+                font_name=UI_FONT_NAME,
+                anchor_x="left",
+                anchor_y="center",
+            ),
+        ]
+        self.status_text = arcade.Text(
+            "",
+            0,
+            0,
+            THRIFTING_SUCCESS_COLOR,
+            layout.ss(15),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
         self._mouse_x = layout.width / 2
         self._mouse_y = layout.height / 2
         self.background_sprite = DrawableSprite(
@@ -4312,10 +4368,26 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             return self.needle_cursor_sprite
         return self.cursor_sprite
 
+    def _notify(self, text: str, color: tuple[int, int, int] = THRIFTING_SUCCESS_COLOR) -> None:
+        self._status_message = text
+        self._status_message_color = color
+        self._status_message_timer = UPCYCLING_NOTIFICATION_SECONDS
+        self.status_text.text = text
+        self.status_text.color = color
+
     def _advance_to_next_cut_stage(self) -> None:
         stage = self._current_cut_stage()
         if stage.cuttable and self._cut_complete and self.progress is not None:
-            levels_gained = self.progress.add_experience(10)
+            xp_gain = 10
+            levels_gained = self.progress.add_experience(xp_gain)
+            if levels_gained > 0:
+                level_word = "level" if levels_gained == 1 else "levels"
+                self._notify(
+                    f"♡  +{xp_gain} XP earned! {levels_gained} {level_word} up - now level {self.progress.level} ♡",
+                    THRIFTING_SUCCESS_COLOR,
+                )
+            else:
+                self._notify(f"♡  +{xp_gain} XP earned! ♡", THRIFTING_SUCCESS_COLOR)
             if levels_gained > 0 and self.wallet is not None:
                 self.wallet.amount += levels_gained * THRIFTING_LEVEL_UP_REWARD
         self._cut_stage_index = (self._cut_stage_index + 1) % len(self._cut_stage_paths)
@@ -4616,19 +4688,76 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self._set_center(layout.width / 2, layout.height / 2 - layout.sy(8))
         self._sync_background()
         self._prune_cut_effects()
+        self._sync_overlay_text()
         self._refresh_animation_state()
+
+    def _sync_overlay_text(self) -> None:
+        content_left, content_right, content_bottom, content_top = self._content_bounds()
+        card_left = content_left + self.layout.sx(12)
+        card_top = content_top - self.layout.sy(12)
+        title_y = card_top - self.layout.sy(2)
+        line_gap = max(self.layout.sy(17), self.layout.ss(14))
+        self.instructions_title_text.x = card_left
+        self.instructions_title_text.y = title_y
+        self.instructions_title_text.font_size = self.layout.ss(13)
+        for index, text in enumerate(self.instructions_texts):
+            text.x = card_left
+            text.y = title_y - line_gap * (index + 1)
+            text.font_size = self.layout.ss(11)
+
+        if self._status_message_timer > 0.0 and self._status_message:
+            self.status_text.text = self._status_message
+            self.status_text.color = self._status_message_color
+            self.status_text.x = (content_left + content_right) / 2
+            self.status_text.y = content_top - self.layout.sy(18)
+            self.status_text.font_size = self.layout.ss(15)
+        else:
+            self.status_text.text = ""
 
     def on_draw(self) -> None:
         super().on_draw()
         self.background_sprite.draw()
         self._active_cut_sprite().draw()
         self._draw_cut_clouds()
+        self._draw_instructions_card()
+        if self.status_text.text:
+            self.status_text.draw()
         if self._scissors_visible and not self._cut_complete:
             self._active_cursor_sprite().draw()
+
+    def _draw_instructions_card(self) -> None:
+        content_left, _, content_bottom, content_top = self._content_bounds()
+        card_left = content_left + self.layout.sx(8)
+        card_right = content_left + self.layout.sx(214)
+        card_top = content_top - self.layout.sy(8)
+        card_bottom = card_top - self.layout.sy(76)
+        arcade.draw_lrbt_rectangle_filled(
+            card_left,
+            card_right,
+            card_bottom,
+            card_top,
+            (255, 248, 252, 210),
+        )
+        arcade.draw_lrbt_rectangle_outline(
+            card_left,
+            card_right,
+            card_bottom,
+            card_top,
+            THEME_LAVENDER,
+            2,
+        )
+        self.instructions_title_text.draw()
+        for text in self.instructions_texts:
+            text.draw()
 
     def on_update(self, delta_time: float) -> None:
         if not self._screen_ready:
             return
+        if self._status_message_timer > 0.0:
+            self._status_message_timer = max(0.0, self._status_message_timer - delta_time)
+            if self._status_message_timer == 0.0:
+                self._status_message = ""
+                self.status_text.text = ""
         stage = self._current_cut_stage()
         if not stage.cuttable:
             self._cut_stage_complete_elapsed += delta_time
