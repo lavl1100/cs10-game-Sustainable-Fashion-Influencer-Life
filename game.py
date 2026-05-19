@@ -85,6 +85,11 @@ ACTIVITY_MENU_BACK_BUTTON_MARGIN = 24
 THRIFTING_BUTTON_IMAGE_PATH = ASSETS_DIR / "thrifting.png"
 THRIFTING_BACKGROUND_IMAGE_PATH = ASSETS_DIR / "thrifting.png"
 UPCYCLING_BACKGROUND_IMAGE_PATH = ASSETS_DIR / "upcycling.png"
+UPCYCLING_FIRST_ITEM_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing1.png"
+UPCYCLING_FIRST_ITEM_ALT_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing1a.png"
+UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH = ASSETS_DIR / "scissors.png"
+UPCYCLING_FIRST_ITEM_SWAP_SECONDS = 3.0
+UPCYCLING_SCISSORS_CURSOR_SIZE = 42
 THRIFTING_ART_ASPECT_RATIO = 1500.0 / 900.0
 THRIFTING_CLOTHING_IMAGE_PATHS = [
     ASSETS_DIR / "thriftingclothing.png",
@@ -3865,6 +3870,10 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         music: Optional[BackgroundMusicPlaylist] = None,
     ) -> None:
         self._screen_ready = False
+        self._swapped_item = False
+        self._mouse_x = layout.width / 2
+        self._mouse_y = layout.height / 2
+        self._upcycling_started_at = _current_time()
         self.background_sprite = DrawableSprite(
             _make_sprite(
                 UPCYCLING_BACKGROUND_IMAGE_PATH,
@@ -3872,6 +3881,38 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
                 layout.height / 2,
                 layout.width,
                 layout.height,
+                THRIFTING_CONTENT_FILL,
+            )
+        )
+        self.first_item_sprite = DrawableSprite(
+            _make_sprite(
+                UPCYCLING_FIRST_ITEM_IMAGE_PATH,
+                layout.width / 2,
+                layout.height / 2,
+                layout.width * 0.42,
+                layout.height * 0.42,
+                THRIFTING_CONTENT_FILL,
+                crop_to_fit=True,
+            )
+        )
+        self.first_item_alt_sprite = DrawableSprite(
+            _make_sprite(
+                UPCYCLING_FIRST_ITEM_ALT_IMAGE_PATH,
+                layout.width / 2,
+                layout.height / 2,
+                layout.width * 0.42,
+                layout.height * 0.42,
+                THRIFTING_CONTENT_FILL,
+                crop_to_fit=True,
+            )
+        )
+        self.cursor_sprite = DrawableSprite(
+            _make_sprite(
+                UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH,
+                layout.width / 2,
+                layout.height / 2,
+                UPCYCLING_SCISSORS_CURSOR_SIZE,
+                UPCYCLING_SCISSORS_CURSOR_SIZE,
                 THRIFTING_CONTENT_FILL,
             )
         )
@@ -3894,6 +3935,31 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         self.background_sprite.center_y = (content_bottom + content_top) / 2
         self.background_sprite.width = content_right - content_left
         self.background_sprite.height = content_top - content_bottom
+        garment_width = (content_right - content_left) * 0.42
+        garment_height = (content_top - content_bottom) * 0.42
+        for sprite in (self.first_item_sprite, self.first_item_alt_sprite):
+            sprite.center_x = (content_left + content_right) / 2
+            sprite.center_y = (content_bottom + content_top) / 2
+            sprite.width = garment_width
+            sprite.height = garment_height
+        self.cursor_sprite.width = self.layout.ss(UPCYCLING_SCISSORS_CURSOR_SIZE)
+        self.cursor_sprite.height = self.layout.ss(UPCYCLING_SCISSORS_CURSOR_SIZE)
+        self._sync_cursor_position()
+
+    def _sync_cursor_position(self) -> None:
+        self.cursor_sprite.center_x = self._mouse_x
+        self.cursor_sprite.center_y = self._mouse_y
+
+    def _set_scissors_cursor_visible(self, visible: bool) -> None:
+        if self.window is not None:
+            self.window.set_mouse_visible(not visible)
+
+    def _refresh_animation_state(self) -> None:
+        if self._swapped_item:
+            return
+        if _current_time() - self._upcycling_started_at >= UPCYCLING_FIRST_ITEM_SWAP_SECONDS:
+            self._swapped_item = True
+            self._set_scissors_cursor_visible(True)
 
     def update_layout(self, layout: GameLayout) -> None:
         super().update_layout(layout)
@@ -3904,10 +3970,33 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
     def on_draw(self) -> None:
         super().on_draw()
         self.background_sprite.draw()
+        if self._swapped_item:
+            self.first_item_alt_sprite.draw()
+        else:
+            self.first_item_sprite.draw()
+        if self._swapped_item:
+            self.cursor_sprite.draw()
+
+    def on_update(self, delta_time: float) -> None:
+        if not self._screen_ready:
+            return
+        self._refresh_animation_state()
+        if self._swapped_item:
+            self._sync_cursor_position()
+
+    def on_mouse_motion(self, x: float, y: float, dx: float, dy: float) -> None:
+        self._mouse_x = x
+        self._mouse_y = y
+        if self._swapped_item:
+            self._sync_cursor_position()
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
             self._close()
+
+    def _close(self) -> None:
+        self._set_scissors_cursor_visible(False)
+        super()._close()
 
     def on_resize(self, width: float, height: float) -> None:
         self.update_layout(GameLayout(width, height))
