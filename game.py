@@ -90,6 +90,7 @@ UPCYCLING_FIRST_ITEM_ALT_IMAGE_PATH = ASSETS_DIR / "upcyclingclothing1a.png"
 UPCYCLING_SCISSORS_CURSOR_IMAGE_PATH = ASSETS_DIR / "scissors.png"
 UPCYCLING_FIRST_ITEM_SWAP_SECONDS = 3.0
 UPCYCLING_SCISSORS_CURSOR_SIZE = 42
+UPCYCLING_ART_ASPECT_RATIO = 1500.0 / 900.0
 THRIFTING_ART_ASPECT_RATIO = 1500.0 / 900.0
 THRIFTING_CLOTHING_IMAGE_PATHS = [
     ASSETS_DIR / "thriftingclothing.png",
@@ -3936,6 +3937,26 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             top - self.layout.window_header_height - self.layout.sy(16),
         )
 
+    def _upcycling_window_size(self, layout: GameLayout) -> tuple[float, float]:
+        """Size the window so the upcycling art keeps its native aspect ratio."""
+        horizontal_padding = layout.sx(36)
+        vertical_padding = layout.sy(34)
+        header_height = layout.window_header_height
+        max_window_width = layout.width - layout.window_margin * 2
+        max_window_height = layout.height - layout.window_margin * 2
+
+        max_content_width = max(0.0, max_window_width - horizontal_padding)
+        max_content_height = max(0.0, max_window_height - header_height - vertical_padding)
+
+        if max_content_width / UPCYCLING_ART_ASPECT_RATIO <= max_content_height:
+            content_width = max_content_width
+            content_height = content_width / UPCYCLING_ART_ASPECT_RATIO
+        else:
+            content_height = max_content_height
+            content_width = content_height * UPCYCLING_ART_ASPECT_RATIO
+
+        return content_width + horizontal_padding, content_height + header_height + vertical_padding
+
     def _sync_background(self) -> None:
         content_left, content_right, content_bottom, content_top = self._content_bounds()
         self.background_sprite.center_x = (content_left + content_right) / 2
@@ -3973,7 +3994,10 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         super().update_layout(layout)
         if not self._screen_ready:
             return
+        self.window_width, self.window_height = self._upcycling_window_size(layout)
+        self._set_center(layout.width / 2, layout.height / 2 - layout.sy(8))
         self._sync_background()
+        self._refresh_animation_state()
 
     def on_draw(self) -> None:
         super().on_draw()
