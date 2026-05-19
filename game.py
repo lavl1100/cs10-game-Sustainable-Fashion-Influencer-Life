@@ -4055,7 +4055,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
                 done_path=ASSETS_DIR / "upcyclingclothing4c.png",
                 cursor_path=UPCYCLING_NEEDLE_CURSOR_IMAGE_PATH,
                 cuttable=True,
-                hold_seconds=0.0,
+                hold_seconds=UPCYCLING_STAGE_HOLD_SECONDS,
             ),
         ]
         self._cut_path_templates = {
