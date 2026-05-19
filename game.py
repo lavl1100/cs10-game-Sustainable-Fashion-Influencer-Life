@@ -1434,6 +1434,794 @@ class SpriteButtonPanel:
         self.text.draw()
 
 
+@dataclass(frozen=True)
+class WardrobeCatalogItem:
+    """A single clothing item that can be bought or equipped."""
+
+    name: str
+    category: str
+    image_path: Path
+    price: int
+
+    @property
+    def item_id(self) -> str:
+        return f"{self.category}:{self.name}"
+
+
+@dataclass
+class WardrobeState:
+    """Shared wardrobe state used by the closet and store screens."""
+
+    catalog: list[WardrobeCatalogItem]
+    owned_ids: set[str]
+    equipped_by_category: dict[str, str]
+
+    @classmethod
+    def create_default(cls) -> "WardrobeState":
+        catalog = [
+            WardrobeCatalogItem(name, category, image_path, price)
+            for name, category, image_path, price in WARDROBE_CLOSET_CATALOG
+        ]
+        owned_ids = {
+            item.item_id
+            for item in catalog
+            if item.name in {"starter shirt", "starter skirt", "starter shoes"}
+        }
+        equipped_by_category = {
+            "shirts": "shirts:starter shirt",
+            "skirts": "skirts:starter skirt",
+            "shoes": "shoes:starter shoes",
+        }
+        return cls(catalog, owned_ids, equipped_by_category)
+
+    def items_for_category(self, category: str, owned_only: bool = False) -> list[WardrobeCatalogItem]:
+        items = [
+            item
+            for item in self.catalog
+            if category == "all" or item.category == category
+        ]
+        if owned_only:
+            items = [item for item in items if item.item_id in self.owned_ids]
+        return items
+
+    def is_owned(self, item: WardrobeCatalogItem) -> bool:
+        return item.item_id in self.owned_ids
+
+    def is_equipped(self, item: WardrobeCatalogItem) -> bool:
+        return self.equipped_by_category.get(item.category) == item.item_id
+
+    def equip(self, item: WardrobeCatalogItem) -> None:
+        if item.item_id not in self.owned_ids:
+            return
+        if item.category == "dresses":
+            for category in ("shirts", "skirts", "pants"):
+                self.equipped_by_category.pop(category, None)
+        elif item.category in {"shirts", "skirts", "pants"}:
+            self.equipped_by_category.pop("dresses", None)
+        self.equipped_by_category[item.category] = item.item_id
+
+    def toggle_equip(self, item: WardrobeCatalogItem) -> bool:
+        if item.item_id not in self.owned_ids:
+            return False
+        if self.equipped_by_category.get(item.category) == item.item_id:
+            self.equipped_by_category.pop(item.category, None)
+            return False
+        self.equip(item)
+        return True
+
+    def buy(self, item: WardrobeCatalogItem, wallet: PlayerWallet) -> tuple[bool, str]:
+        if item.item_id in self.owned_ids:
+            return False, f"{item.name.title()} is already in your closet."
+        if wallet.amount < item.price:
+            return False, "Not enough money for that item."
+        wallet.amount -= item.price
+        self.owned_ids.add(item.item_id)
+        return True, f"Bought {item.name.title()} for ${item.price}."
+
+
+class WardrobeTabButton:
+    """A compact vertical tab used to switch clothing categories."""
+
+    def __init__(
+        self,
+        layout: GameLayout,
+        category: str,
+        center_x: float,
+        center_y: float,
+        width: float,
+        height: float,
+        on_activate: Callable[[], None],
+        selected: bool = False,
+    ) -> None:
+        self.layout = layout
+        self.category = category
+        self.center_x = center_x
+        self.center_y = center_y
+        self.width = width
+        self.height = height
+        self.on_activate = on_activate
+        self.selected = selected
+        self.panel = DrawableSprite(self._build_panel())
+        self.text = arcade.Text(
+            WARDROBE_CATEGORY_LABELS[category],
+            center_x,
+            center_y,
+            THEME_TEXT_PURPLE,
+            layout.ss(12),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
+
+    def _build_panel(self) -> arcade.Sprite:
+        fill = WARDROBE_TAB_ACTIVE_FILL if self.selected else WARDROBE_TAB_FILL
+        return _make_panel(self.center_x, self.center_y, self.width, self.height, fill, 240)
+
+    def update_layout(
+        self,
+        layout: GameLayout,
+        center_x: float,
+        center_y: float,
+        width: float,
+        height: float,
+    ) -> None:
+        self.layout = layout
+        self.center_x = center_x
+        self.center_y = center_y
+        self.width = width
+        self.height = height
+        self.panel.replace(self._build_panel())
+        self.text.x = center_x
+        self.text.y = center_y
+        self.text.font_size = layout.ss(12)
+
+    def set_selected(self, selected: bool) -> None:
+        self.selected = selected
+        self.panel.replace(self._build_panel())
+
+    def hit_test(self, x: float, y: float) -> bool:
+        left = self.center_x - self.width / 2
+        right = self.center_x + self.width / 2
+        bottom = self.center_y - self.height / 2
+        top = self.center_y + self.height / 2
+        return left <= x <= right and bottom <= y <= top
+
+    def press(self) -> None:
+        self.on_activate()
+
+    def draw(self) -> None:
+        self.panel.draw()
+        arcade.draw_lrbt_rectangle_outline(
+            self.center_x - self.width / 2,
+            self.center_x + self.width / 2,
+            self.center_y - self.height / 2,
+            self.center_y + self.height / 2,
+            WARDROBE_TAB_BORDER,
+            2,
+        )
+        self.text.draw()
+
+
+class WardrobeItemCard:
+    """A clickable clothing card used by both wardrobe screens."""
+
+    def __init__(
+        self,
+        layout: GameLayout,
+        item: WardrobeCatalogItem,
+        center_x: float,
+        center_y: float,
+        width: float,
+        height: float,
+        mode: str,
+        on_activate: Callable[[WardrobeCatalogItem], None],
+    ) -> None:
+        self.layout = layout
+        self.item = item
+        self.center_x = center_x
+        self.center_y = center_y
+        self.width = width
+        self.height = height
+        self.mode = mode
+        self.on_activate = on_activate
+        self.is_pressed = False
+        self.owned = False
+        self.equipped = False
+        self.message = ""
+        self.panel = DrawableSprite(self._build_panel())
+        self.item_sprite = DrawableSprite(self._build_item_sprite())
+        self.title_text = arcade.Text(
+            item.name.title(),
+            center_x,
+            center_y - height * 0.27,
+            THEME_TEXT_PURPLE,
+            layout.ss(11),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.detail_text = arcade.Text(
+            "",
+            center_x,
+            center_y - height * 0.42,
+            THEME_TEXT_PURPLE,
+            layout.ss(10),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
+
+    def _build_panel(self) -> arcade.Sprite:
+        fill = WARDROBE_CARD_FILL
+        if self.mode == "store" and self.owned:
+            fill = WARDROBE_CARD_OWNED_FILL
+        elif self.equipped:
+            fill = WARDROBE_CARD_SELECTED_FILL
+        return _make_panel(self.center_x, self.center_y, self.width, self.height, fill, 230)
+
+    def _build_item_sprite(self) -> arcade.Sprite:
+        sprite_height = self.height * 0.58
+        sprite_width = self.width * 0.78
+        return _make_sprite(
+            self.item.image_path,
+            self.center_x,
+            self.center_y + self.height * 0.05,
+            sprite_width,
+            sprite_height,
+            WARDROBE_STORE_EMPTY_FILL,
+            crop_to_fit=True,
+        )
+
+    def update_layout(
+        self,
+        layout: GameLayout,
+        center_x: float,
+        center_y: float,
+        width: float,
+        height: float,
+    ) -> None:
+        self.layout = layout
+        self.center_x = center_x
+        self.center_y = center_y
+        self.width = width
+        self.height = height
+        self.panel.replace(self._build_panel())
+        self.item_sprite.replace(self._build_item_sprite())
+        self.title_text.x = center_x
+        self.title_text.y = center_y - height * 0.27
+        self.title_text.font_size = layout.ss(11)
+        self.detail_text.x = center_x
+        self.detail_text.y = center_y - height * 0.42
+        self.detail_text.font_size = layout.ss(10)
+
+    def refresh(self, owned: bool, equipped: bool, detail: str) -> None:
+        self.owned = owned
+        self.equipped = equipped
+        self.message = detail
+        self.panel.replace(self._build_panel())
+        self.detail_text.text = detail
+        self.detail_text.color = THEME_DEEP_PURPLE if equipped else THEME_TEXT_PURPLE
+        self.title_text.color = THEME_DEEP_PURPLE if equipped else THEME_TEXT_PURPLE
+        self.item_sprite.alpha = 235 if self.mode == "store" and owned else 255
+
+    def set_pressed(self, pressed: bool) -> None:
+        self.is_pressed = pressed
+
+    def hit_test(self, x: float, y: float) -> bool:
+        left = self.center_x - self.width / 2
+        right = self.center_x + self.width / 2
+        bottom = self.center_y - self.height / 2
+        top = self.center_y + self.height / 2
+        return left <= x <= right and bottom <= y <= top
+
+    def press(self) -> None:
+        self.is_pressed = True
+        self.on_activate(self.item)
+
+    def release(self) -> None:
+        self.is_pressed = False
+
+    def draw(self) -> None:
+        self.panel.draw()
+        arcade.draw_lrbt_rectangle_outline(
+            self.center_x - self.width / 2,
+            self.center_x + self.width / 2,
+            self.center_y - self.height / 2,
+            self.center_y + self.height / 2,
+            WARDROBE_CARD_ACTIVE_BORDER if self.equipped else WARDROBE_CARD_BORDER,
+            2,
+        )
+        self.item_sprite.draw()
+        self.title_text.draw()
+        self.detail_text.draw()
+
+
+class WardrobeCatalogOverlay(ComputerWindowOverlay):
+    """Shared wardrobe layout for the closet and clothing store screens."""
+
+    def __init__(
+        self,
+        layout: GameLayout,
+        title: str,
+        on_close: Callable[[], None],
+        wardrobe: WardrobeState,
+        wallet: PlayerWallet,
+        mode: str,
+        music: Optional[BackgroundMusicPlaylist] = None,
+    ) -> None:
+        self._wardrobe_ready = False
+        self.mode = mode
+        self.wardrobe = wardrobe
+        self.wallet = wallet
+        self.selected_category = "all"
+        self.message = ""
+        self.message_timer = 0.0
+        self.tab_buttons: list[WardrobeTabButton] = []
+        self.item_cards: list[WardrobeItemCard] = []
+        self.outfit_sprites: dict[str, arcade.Sprite] = {}
+        self.girl_sprite = DrawableSprite(
+            _make_sprite(
+                WARDROBE_GIRL_IMAGE_PATH,
+                layout.width / 2,
+                layout.height / 2,
+                layout.width * 0.35,
+                layout.height * 0.75,
+                WARDROBE_PANEL_FILL,
+                crop_to_fit=True,
+            )
+        )
+        self.title_note_text = arcade.Text(
+            "",
+            0,
+            0,
+            THEME_TEXT_PURPLE,
+            layout.ss(14),
+            font_name=UI_FONT_NAME,
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.wallet_text = arcade.Text(
+            "",
+            0,
+            0,
+            THEME_TEXT_PURPLE,
+            layout.ss(14),
+            font_name=UI_FONT_NAME,
+            anchor_x="left",
+            anchor_y="center",
+        )
+        self.message_text = arcade.Text(
+            "",
+            0,
+            0,
+            THEME_TEXT_PURPLE,
+            layout.ss(14),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        self.empty_text = arcade.Text(
+            "",
+            0,
+            0,
+            THEME_TEXT_PURPLE,
+            layout.ss(15),
+            font_name=UI_FONT_NAME,
+            anchor_x="center",
+            anchor_y="center",
+        )
+        super().__init__(layout, title, on_close, music)
+        self._wardrobe_ready = True
+        self.update_layout(layout)
+
+    def _can_start_drag(self, x: float, y: float) -> bool:
+        return False
+
+    def _content_bounds(self) -> tuple[float, float, float, float]:
+        left, right, bottom, top = self._bounds()
+        return (
+            left + self.layout.sx(16),
+            right - self.layout.sx(16),
+            bottom + self.layout.sy(16),
+            top - self.layout.window_header_height - self.layout.sy(16),
+        )
+
+    def _girl_bounds(self) -> tuple[float, float, float, float]:
+        content_left, content_right, content_bottom, content_top = self._content_bounds()
+        panel_width = min(self.layout.sx(WARDROBE_GIRL_PANEL_WIDTH), (content_right - content_left) * 0.32)
+        left = content_left
+        right = left + panel_width
+        return left, right, content_bottom, content_top
+
+    def _tabs_bounds(self) -> tuple[float, float]:
+        _, content_right, _, _ = self._content_bounds()
+        tab_width = self.layout.sx(WARDROBE_TABS_WIDTH)
+        return content_right - tab_width, content_right
+
+    def _grid_bounds(self) -> tuple[float, float, float, float]:
+        _, girl_right, content_bottom, content_top = self._girl_bounds()
+        tabs_left, _ = self._tabs_bounds()
+        left = girl_right + self.layout.sx(14)
+        right = tabs_left - self.layout.sx(14)
+        return left, right, content_bottom, content_top
+
+    def _display_items(self) -> list[WardrobeCatalogItem]:
+        owned_only = self.mode == "closet"
+        return self.wardrobe.items_for_category(self.selected_category, owned_only=owned_only)
+
+    def _set_message(self, message: str) -> None:
+        self.message = message
+        self.message_timer = 2.6
+        self.message_text.text = message
+
+    def _tab_center_y(self, index: int) -> float:
+        _, _, content_bottom, content_top = self._content_bounds()
+        tab_height = self.layout.sy(WARDROBE_TABS_HEIGHT)
+        gap = self.layout.sy(WARDROBE_TABS_GAP)
+        total_height = len(WARDROBE_CATEGORY_ORDER) * tab_height + (len(WARDROBE_CATEGORY_ORDER) - 1) * gap
+        start_y = content_top - (content_top - content_bottom - total_height) / 2 - tab_height / 2
+        return start_y - index * (tab_height + gap)
+
+    def _build_tab_buttons(self) -> None:
+        _, tabs_right = self._tabs_bounds()
+        tab_width = self.layout.sx(WARDROBE_TABS_WIDTH)
+        tab_height = self.layout.sy(WARDROBE_TABS_HEIGHT)
+        center_x = tabs_right - tab_width / 2
+        self.tab_buttons = []
+        for index, category in enumerate(WARDROBE_CATEGORY_ORDER):
+            button = WardrobeTabButton(
+                self.layout,
+                category,
+                center_x,
+                self._tab_center_y(index),
+                tab_width,
+                tab_height,
+                lambda category=category: self._select_category(category),
+                selected=category == self.selected_category,
+            )
+            self.tab_buttons.append(button)
+
+    def _select_category(self, category: str) -> None:
+        self.selected_category = category
+        for button in self.tab_buttons:
+            button.set_selected(button.category == category)
+        self._sync_item_cards()
+
+    def _card_geometry(self) -> tuple[float, float]:
+        grid_left, grid_right, content_bottom, content_top = self._grid_bounds()
+        grid_width = max(1.0, grid_right - grid_left)
+        grid_height = max(1.0, content_top - content_bottom)
+        gap = self.layout.sx(WARDROBE_ITEM_CARD_GAP)
+        card_width = min(self.layout.sx(112), (grid_width - gap * (WARDROBE_ITEM_CARD_COLUMNS - 1)) / WARDROBE_ITEM_CARD_COLUMNS)
+        card_height = min(self.layout.sy(104), (grid_height - gap * (WARDROBE_ITEM_CARD_ROWS - 1)) / WARDROBE_ITEM_CARD_ROWS)
+        return card_width, card_height
+
+    def _card_position(self, index: int) -> tuple[float, float]:
+        grid_left, _, _, content_top = self._grid_bounds()
+        card_width, card_height = self._card_geometry()
+        gap = self.layout.sx(WARDROBE_ITEM_CARD_GAP)
+        columns = WARDROBE_ITEM_CARD_COLUMNS
+        col = index % columns
+        row = index // columns
+        x = grid_left + card_width / 2 + col * (card_width + gap)
+        y = content_top - card_height / 2 - row * (card_height + gap)
+        return x, y
+
+    def _card_detail(self, item: WardrobeCatalogItem) -> str:
+        owned = self.wardrobe.is_owned(item)
+        equipped = self.wardrobe.is_equipped(item)
+        if self.mode == "store":
+            if owned:
+                return "Owned"
+            return f"${item.price}"
+        if equipped:
+            return "Wearing"
+        return "Owned" if owned else "Locked"
+
+    def _sync_item_cards(self) -> None:
+        items = self._display_items()
+        card_width, card_height = self._card_geometry()
+        self.item_cards = []
+        for index, item in enumerate(items):
+            center_x, center_y = self._card_position(index)
+            card = WardrobeItemCard(
+                self.layout,
+                item,
+                center_x,
+                center_y,
+                card_width,
+                card_height,
+                self.mode,
+                self._handle_item_activation,
+            )
+            card.refresh(self.wardrobe.is_owned(item), self.wardrobe.is_equipped(item), self._card_detail(item))
+            self.item_cards.append(card)
+        self._sync_outfit_sprites()
+        self._sync_overlay_text()
+
+    def _layer_order(self) -> list[str]:
+        equipped_categories = [
+            category
+            for category, item_id in self.wardrobe.equipped_by_category.items()
+            if item_id
+        ]
+        return sorted(equipped_categories, key=lambda category: WARDROBE_CATEGORY_LAYER_ORDER.get(category, 99))
+
+    def _sync_outfit_sprites(self) -> None:
+        girl_left, girl_right, girl_bottom, girl_top = self._girl_bounds()
+        girl_center_x = (girl_left + girl_right) / 2
+        girl_center_y = (girl_bottom + girl_top) / 2
+        girl_width = girl_right - girl_left
+        girl_height = girl_top - girl_bottom
+        self.girl_sprite.center_x = girl_center_x
+        self.girl_sprite.center_y = girl_center_y
+        self.girl_sprite.width = girl_width
+        self.girl_sprite.height = girl_height
+
+        equipped_lookup = {item.item_id: item for item in self.wardrobe.catalog}
+        for category in WARDROBE_CATEGORY_ORDER:
+            if category == "all":
+                continue
+            item_id = self.wardrobe.equipped_by_category.get(category)
+            item = equipped_lookup.get(item_id) if item_id else None
+            sprite = self.outfit_sprites.get(category)
+            if item is None:
+                if sprite is not None:
+                    sprite.alpha = 0
+                continue
+
+            if sprite is None:
+                sprite = arcade.Sprite(item.image_path)
+                self.outfit_sprites[category] = sprite
+            else:
+                sprite.texture = arcade.load_texture(str(item.image_path))
+
+            sprite.alpha = 255
+            sprite.center_x = girl_center_x
+            sprite.center_y = girl_center_y
+            if category == "hats":
+                sprite.center_y = girl_top - girl_height * 0.03
+                sprite.width = girl_width * WARDROBE_HAT_SCALE
+                sprite.height = girl_height * WARDROBE_HAT_SCALE
+            elif category == "shirts":
+                sprite.center_y = girl_center_y + girl_height * 0.06
+                sprite.width = girl_width * WARDROBE_SHIRT_SCALE
+                sprite.height = girl_height * WARDROBE_SHIRT_SCALE
+            elif category == "dresses":
+                sprite.center_y = girl_center_y + girl_height * 0.03
+                sprite.width = girl_width * WARDROBE_DRESS_SCALE
+                sprite.height = girl_height * WARDROBE_DRESS_SCALE
+            elif category == "jackets":
+                sprite.center_y = girl_center_y + girl_height * 0.04
+                sprite.width = girl_width * WARDROBE_JACKET_SCALE
+                sprite.height = girl_height * WARDROBE_JACKET_SCALE
+            elif category == "skirts":
+                sprite.center_y = girl_center_y - girl_height * 0.12
+                sprite.width = girl_width * WARDROBE_SKIRT_SCALE
+                sprite.height = girl_height * WARDROBE_SKIRT_SCALE
+            elif category == "pants":
+                sprite.center_y = girl_center_y - girl_height * 0.16
+                sprite.width = girl_width * WARDROBE_PANTS_SCALE
+                sprite.height = girl_height * WARDROBE_PANTS_SCALE
+            elif category == "shoes":
+                sprite.center_y = girl_bottom + girl_height * 0.12
+                sprite.width = girl_width * WARDROBE_SHOES_SCALE
+                sprite.height = girl_height * WARDROBE_SHOES_SCALE
+            elif category == "bags":
+                sprite.center_x = girl_right - girl_width * 0.14
+                sprite.center_y = girl_center_y - girl_height * 0.02
+                sprite.width = girl_width * WARDROBE_BAG_SCALE
+                sprite.height = girl_height * WARDROBE_BAG_SCALE
+
+        for category, sprite in self.outfit_sprites.items():
+            if category not in self.wardrobe.equipped_by_category:
+                sprite.alpha = 0
+
+    def _sync_overlay_text(self) -> None:
+        content_left, content_right, content_bottom, content_top = self._content_bounds()
+        girl_left, girl_right, girl_bottom, girl_top = self._girl_bounds()
+        self.title_note_text.x = content_left
+        self.title_note_text.y = content_top + self.layout.sy(10)
+        self.title_note_text.text = "build looks here" if self.mode == "closet" else "shop new pieces"
+        self.wallet_text.x = content_left
+        self.wallet_text.y = content_bottom + self.layout.sy(18)
+        self.wallet_text.text = f"Money: ${self.wallet.amount}"
+        self.message_text.x = (girl_right + content_right) / 2
+        self.message_text.y = content_bottom + self.layout.sy(34)
+        self.message_text.text = self.message if self.message_timer > 0.0 else ""
+        self.empty_text.x = (content_left + content_right) / 2
+        self.empty_text.y = (girl_bottom + girl_top) / 2
+
+    def _apply_wardrobe_layout(self, layout: GameLayout) -> None:
+        self._build_tab_buttons()
+        self._sync_item_cards()
+        self.title_text.font_size = layout.window_title_font_size
+        self.close_text.font_size = layout.window_close_font_size
+        self.title_note_text.font_size = layout.ss(14)
+        self.wallet_text.font_size = layout.ss(14)
+        self.message_text.font_size = layout.ss(14)
+        self.empty_text.font_size = layout.ss(15)
+
+    def update_layout(self, layout: GameLayout) -> None:
+        super().update_layout(layout)
+        if not self._wardrobe_ready:
+            return
+        self._apply_wardrobe_layout(layout)
+
+    def on_draw(self) -> None:
+        super().on_draw()
+        girl_left, girl_right, girl_bottom, girl_top = self._girl_bounds()
+        grid_left, grid_right, grid_bottom, grid_top = self._grid_bounds()
+        tabs_left, tabs_right = self._tabs_bounds()
+
+        arcade.draw_lrbt_rectangle_filled(
+            girl_left,
+            girl_right,
+            girl_bottom,
+            girl_top,
+            WARDROBE_PANEL_FILL,
+        )
+        arcade.draw_lrbt_rectangle_outline(
+            girl_left,
+            girl_right,
+            girl_bottom,
+            girl_top,
+            WARDROBE_PANEL_BORDER,
+            2,
+        )
+        arcade.draw_lrbt_rectangle_filled(
+            grid_left,
+            grid_right,
+            grid_bottom,
+            grid_top,
+            (255, 253, 255),
+        )
+        arcade.draw_lrbt_rectangle_outline(
+            grid_left,
+            grid_right,
+            grid_bottom,
+            grid_top,
+            WARDROBE_CARD_BORDER,
+            2,
+        )
+        arcade.draw_lrbt_rectangle_filled(
+            tabs_left,
+            tabs_right,
+            grid_bottom,
+            grid_top,
+            (255, 249, 252),
+        )
+        arcade.draw_lrbt_rectangle_outline(
+            tabs_left,
+            tabs_right,
+            grid_bottom,
+            grid_top,
+            WARDROBE_CARD_BORDER,
+            2,
+        )
+        self.girl_sprite.draw()
+        for category in self._layer_order():
+            sprite = self.outfit_sprites.get(category)
+            if sprite is not None and sprite.alpha > 0:
+                sprite.draw()
+        for card in self.item_cards:
+            card.draw()
+        for button in self.tab_buttons:
+            button.draw()
+        self.title_note_text.draw()
+        self.wallet_text.draw()
+        if self.message_timer > 0.0 and self.message:
+            self.message_text.draw()
+        if not self.item_cards:
+            if self.selected_category == "all":
+                self.empty_text.text = "No wardrobe items available yet" if self.mode == "store" else "Your closet is empty here"
+            else:
+                self.empty_text.text = "No items in this category yet"
+            self.empty_text.draw()
+
+    def _handle_item_activation(self, item: WardrobeCatalogItem) -> None:
+        if self.mode == "store":
+            bought, message = self.wardrobe.buy(item, self.wallet)
+            self._set_message(message)
+            if bought:
+                self._sync_item_cards()
+            return
+        changed = self.wardrobe.toggle_equip(item)
+        if changed:
+            self._set_message(f"Wearing {item.name.title()}.")
+        else:
+            self._set_message(f"Stopped wearing {item.name.title()}.")
+        self._sync_item_cards()
+
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
+        if button != arcade.MOUSE_BUTTON_LEFT:
+            return False
+
+        close_left, close_right, close_bottom, close_top = self._close_bounds()
+        if close_left <= x <= close_right and close_bottom <= y <= close_top:
+            self._close()
+            return True
+
+        header_left, header_right, header_bottom, header_top = self._header_bounds()
+        if header_left <= x <= header_right and header_bottom <= y <= header_top:
+            self.is_dragging = True
+            self.drag_offset_x = x - self.window_x
+            self.drag_offset_y = y - self.window_y
+            return True
+
+        for button_panel in self.tab_buttons:
+            if button_panel.hit_test(x, y):
+                button_panel.press()
+                return True
+
+        for card in self.item_cards:
+            if card.hit_test(x, y):
+                card.press()
+                return True
+
+        left, right, bottom, top = self._bounds()
+        if left <= x <= right and bottom <= y <= top:
+            return True
+        return False
+
+    def on_mouse_drag(
+        self,
+        x: float,
+        y: float,
+        dx: float,
+        dy: float,
+        buttons: int,
+        modifiers: int,
+    ) -> None:
+        if self.is_dragging and buttons & arcade.MOUSE_BUTTON_LEFT:
+            self._set_center(x - self.drag_offset_x, y - self.drag_offset_y)
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
+        if button != arcade.MOUSE_BUTTON_LEFT:
+            return
+        self.is_dragging = False
+        for card in self.item_cards:
+            card.release()
+
+    def on_update(self, delta_time: float) -> None:
+        if self.message_timer > 0.0:
+            self.message_timer = max(0.0, self.message_timer - delta_time)
+            if self.message_timer == 0.0:
+                self.message = ""
+        self._sync_overlay_text()
+
+    def on_resize(self, width: float, height: float) -> None:
+        self.update_layout(GameLayout(width, height))
+
+
+class ClosetOverlay(WardrobeCatalogOverlay):
+    """The player closet with the girl preview on the left."""
+
+    def __init__(
+        self,
+        layout: GameLayout,
+        on_close: Callable[[], None],
+        wardrobe: WardrobeState,
+        wallet: PlayerWallet,
+        music: Optional[BackgroundMusicPlaylist] = None,
+    ) -> None:
+        super().__init__(layout, "Closet", on_close, wardrobe, wallet, "closet", music)
+
+
+class ClothingStoreOverlay(WardrobeCatalogOverlay):
+    """A shopping screen that reuses the same wardrobe tabs as the closet."""
+
+    def __init__(
+        self,
+        layout: GameLayout,
+        on_close: Callable[[], None],
+        wardrobe: WardrobeState,
+        wallet: PlayerWallet,
+        music: Optional[BackgroundMusicPlaylist] = None,
+    ) -> None:
+        super().__init__(layout, "Clothing Store", on_close, wardrobe, wallet, "store", music)
+
+
 class HomeView(arcade.View):
     """Main dashboard with button sprites and top status boxes."""
 
