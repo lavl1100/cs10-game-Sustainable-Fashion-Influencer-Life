@@ -1560,7 +1560,7 @@ class ActivityMenuView(arcade.View):
         if self.left_button is None:
             self.left_button = SpriteButtonPanel(
                 layout,
-                "Upcycling Station",
+                "",
                 left_center_x,
                 full_height / 2,
                 button_width,
