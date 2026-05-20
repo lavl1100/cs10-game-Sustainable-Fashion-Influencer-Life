@@ -222,6 +222,7 @@ UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
 UI_FONT_NAME = "Kenney Future Narrow"
 TUTORIAL_GUIDE_SPRITE_PATH = ASSETS_DIR / "sprite_happy.png"
 TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH = ASSETS_DIR / "sprite_default.png"
+TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH = ASSETS_DIR / "sprite_mouthopen.png"
 TUTORIAL_GUIDE_BUBBLE_PATH = ASSETS_DIR / "speech_bubble.png"
 TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO = 1500.0 / 900.0
 TUTORIAL_GUIDE_TEXT_COLOR = (106, 47, 130)
@@ -788,6 +789,13 @@ def _format_compact_count(value: int) -> str:
     return str(value)
 
 
+def _tutorial_sprite_path_for_message(message: str) -> Path:
+    normalized = message.strip().lower()
+    if normalized == "adjust the music controls here, then close the window when you're done.":
+        return TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH
+    return TUTORIAL_GUIDE_SPRITE_PATH
+
+
 class DrawableSprite:
     """Small wrapper that renders a single sprite through a SpriteList."""
 
@@ -886,6 +894,7 @@ class TutorialGuide:
         )
         self._bubble_visible = True
         self._text_visible = True
+        self._sprite_path = _tutorial_sprite_path_for_message(message)
         self.update_layout(layout)
 
     def set_message(self, message: str) -> None:
@@ -893,12 +902,13 @@ class TutorialGuide:
         self._bubble_visible = True
         self._text_visible = True
         self.text.text = message
+        self._sprite_path = _tutorial_sprite_path_for_message(message)
         current_center_x = self.sprite.center_x
         current_center_y = self.sprite.center_y
         current_width = self.sprite.width
         current_height = self.sprite.height
         current_alpha = self.sprite.alpha
-        self.sprite.replace(_make_sprite(TUTORIAL_GUIDE_SPRITE_PATH, 0, 0, 1, 1, (255, 255, 255)))
+        self.sprite.replace(_make_sprite(self._sprite_path, 0, 0, 1, 1, (255, 255, 255)))
         self.sprite.center_x = current_center_x
         self.sprite.center_y = current_center_y
         self.sprite.width = current_width
