@@ -995,7 +995,7 @@ class TutorialGuide:
 def _tutorial_message_for_screen(label: str) -> str:
     normalized = label.strip().lower()
     messages = {
-        "home": "Welcome to life as a sustainable fashion influencer!\nPractice sustainability by using the sidebar to open the closet,\nlocal clothes store, social media, or sustainable activities.",
+        "home": "\nWelcome to life as a sustainable fashion influencer!\nPractice sustainability by using the sidebar to open the closet,\nlocal clothes store, social media, or sustainable activities.",
         "settings": "Adjust the music controls if needed, then \nclose the window when you're done.",
         "closet": "Preview outfits on the left, then switch\ntabs to compare looks and check what you own.",
         "clothing store": "Browse the catalog and buy clothing\npieces with your money.",
