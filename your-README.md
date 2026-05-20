@@ -2,7 +2,7 @@
 
 ---
 
-# Sustainable Fashion Influencer Life
+# Your Game Title Here
 
 **Group Members:** Lavinia, Alexandra, Greyson
 
