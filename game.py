@@ -877,7 +877,7 @@ class TutorialGuide:
             _make_sprite(TUTORIAL_GUIDE_BUBBLE_PATH, 0, 0, 1, 1, (255, 255, 255))
         )
         self.sprite = DrawableSprite(
-            _make_sprite(TUTORIAL_GUIDE_SPRITE_PATH, 0, 0, 1, 1, (255, 255, 255))
+            _make_sprite(_tutorial_sprite_path_for_message(message), 0, 0, 1, 1, (255, 255, 255))
         )
         self.text = arcade.Text(
             message,
