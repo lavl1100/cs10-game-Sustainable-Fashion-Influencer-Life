@@ -37,6 +37,10 @@ SCREEN_TITLE = "Sustainable Fashion Influencer Life"
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 BACKGROUND_IMAGE = ASSETS_DIR / "home_background.png"
+BUTTON_SOUND_PATHS = (
+    ASSETS_DIR / "button.mp3",
+    ASSETS_DIR / "button_clicking.mp3",
+)
 
 BUTTON_IMAGE_PATHS = {
     "settings": ASSETS_DIR / "settings_button.png",
@@ -305,6 +309,40 @@ class BackgroundMusicPlaylist:
         self._paused = False
         self._available = bool(self.track_paths)
         self._volume = 0.7
+
+
+class ButtonClickSound:
+    """Play the shared button click sound effect on demand."""
+
+    def __init__(self, sound_paths: tuple[Path, ...]) -> None:
+        self.sound_paths = sound_paths
+        self._sound: Optional[pygame.mixer.Sound] = None
+        self._available = True
+
+    def _load(self) -> None:
+        if self._sound is not None or not self._available:
+            return
+
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            for path in self.sound_paths:
+                if not path.is_file():
+                    continue
+                self._sound = pygame.mixer.Sound(str(path))
+                return
+            raise pygame.error("No playable button click sound was found.")
+        except pygame.error:
+            self._available = False
+            self._sound = None
+
+    def play(self) -> None:
+        self._load()
+        if self._sound is not None:
+            self._sound.play()
+
+
+BUTTON_CLICK_SOUND = ButtonClickSound(BUTTON_SOUND_PATHS)
 
     def start(self) -> None:
         if self._started or not self._available:
