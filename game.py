@@ -919,18 +919,6 @@ class TutorialGuide:
         self._bubble_visible = False
         self._text_visible = False
         self.text.text = ""
-        current_center_x = self.sprite.center_x
-        current_center_y = self.sprite.center_y
-        current_width = self.sprite.width
-        current_height = self.sprite.height
-        current_alpha = self.sprite.alpha
-        self._sprite_path = TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH
-        self.sprite.replace(_make_sprite(TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH, 0, 0, 1, 1, (255, 255, 255)))
-        self.sprite.center_x = current_center_x
-        self.sprite.center_y = current_center_y
-        self.sprite.width = current_width
-        self.sprite.height = current_height
-        self.sprite.alpha = current_alpha
 
     def hit_test_sprite(self, x: float, y: float) -> bool:
         return self.sprite.collides_with_point((x, y))
