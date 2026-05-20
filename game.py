@@ -222,6 +222,7 @@ UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
 UI_FONT_NAME = "Kenney Future Narrow"
 TUTORIAL_GUIDE_SPRITE_PATH = ASSETS_DIR / "sprite_happy.png"
 TUTORIAL_GUIDE_BUBBLE_PATH = ASSETS_DIR / "speech_bubble.png"
+TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO = 1500.0 / 900.0
 TUTORIAL_GUIDE_TEXT_COLOR = (106, 47, 130)
 
 arcade.load_font(UI_FONT_PATH)
@@ -904,8 +905,14 @@ class TutorialGuide:
         return False
 
     def update_layout(self, layout: GameLayout) -> None:
-        bubble_width = min(layout.width - layout.sx(44), max(layout.sx(520), layout.width * 0.82))
-        bubble_height = min(layout.height - layout.sy(96), max(layout.sy(320), layout.height * 0.68))
+        max_bubble_width = layout.width - layout.sx(44)
+        max_bubble_height = layout.height - layout.sy(96)
+        if max_bubble_width / TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO <= max_bubble_height:
+            bubble_width = max_bubble_width
+            bubble_height = bubble_width / TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
+        else:
+            bubble_height = max_bubble_height
+            bubble_width = bubble_height * TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
         bubble_center_x = layout.width - layout.sx(16) - bubble_width / 2 - layout.sx(52)
         bubble_center_y = layout.sy(44) + bubble_height / 2 + layout.sy(26)
         sprite_size = min(layout.ss(168), max(layout.ss(112), min(layout.width, layout.height) * 0.20))
