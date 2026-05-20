@@ -1873,6 +1873,7 @@ class HomeView(arcade.View):
             self._sync_cursor_mode()
             return
         if label == "clothing store":
+            self.tutorial_guide.set_message(_tutorial_message_for_screen("clothing store"))
             self.active_window = ClothingStoreOverlay(
                 self.layout,
                 lambda: self._close_window(label),
