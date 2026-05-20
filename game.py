@@ -933,9 +933,12 @@ class TutorialGuide:
 
     def set_message(self, message: str) -> None:
         self.message = message
+        self.show_text()
+
+    def show_text(self) -> None:
         self._bubble_visible = True
         self._text_visible = True
-        self.text.text = message
+        self.text.text = self.message
         self._sync_sprite_image(visible=True)
 
     def hide_text(self) -> None:
@@ -1874,6 +1877,9 @@ class HomeView(arcade.View):
             else:
                 self.social_media_window.update_layout(self.layout)
             self.active_window = self.social_media_window
+            show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
+            if callable(show_tutorial_guide):
+                show_tutorial_guide()
             self._sync_cursor_mode()
             return
         if label == "closet":
@@ -1884,6 +1890,9 @@ class HomeView(arcade.View):
                 self.wallet,
                 self.music,
             )
+            show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
+            if callable(show_tutorial_guide):
+                show_tutorial_guide()
             self._sync_cursor_mode()
             return
         if label == "clothing store":
@@ -1895,6 +1904,9 @@ class HomeView(arcade.View):
                 self.wallet,
                 self.music,
             )
+            show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
+            if callable(show_tutorial_guide):
+                show_tutorial_guide()
             self._sync_cursor_mode()
             return
         self.active_window = ComputerWindowOverlay(
@@ -1903,6 +1915,9 @@ class HomeView(arcade.View):
             on_close=lambda: self._close_window(label),
             music=self.music,
         )
+        show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
+        if callable(show_tutorial_guide):
+            show_tutorial_guide()
         self._sync_cursor_mode()
 
     def _set_button_active(self, label: str, is_active: bool) -> None:
@@ -2239,6 +2254,9 @@ class ActivityDetailView(arcade.View):
     def hide_tutorial_guide(self) -> None:
         self.tutorial_guide.hide_text()
 
+    def show_tutorial_guide(self) -> None:
+        self.tutorial_guide.show_text()
+
     def _go_back(self) -> None:
         if self.window is not None:
             self.window.show_view(self.activity_menu_view)
@@ -2480,6 +2498,9 @@ class ComputerWindowOverlay:
 
     def hide_tutorial_guide(self) -> None:
         self.tutorial_guide.hide_text()
+
+    def show_tutorial_guide(self) -> None:
+        self.tutorial_guide.show_text()
 
     def _bounds(self) -> tuple[float, float, float, float]:
         left = self.window_x - self.window_width / 2
