@@ -2,13 +2,13 @@
 
 ---
 
-# Your Game Title Here
+# Sustainable Fashion Influencer Life
 
 **Group Members:** Lavinia, Alexandra, Greyson
 
 ## Description
 
-In "Sustainable Fashion Life," the player enters a world where they are a fashion influencer who is trying to grow their following. They can post on their social media, earn money either by playing minigames or leveling up, and expand their closet by purchasing new clothes. There are two minigames: one where the player upcycles old clothes and earns experience when doing so, and one where the player thrifts second-hand clothing while deciding if the clothes are eco-friendly. This game is meant to educate players on the importance of sustainable clothing in the world of fast fashion, and encourages the player to educate others just like how they do in the game.
+In "Sustainable Fashion Influencer Life," the player enters a world where they are a fashion influencer who is trying to grow their following. They can post on their social media, earn money either by playing minigames or leveling up, and expand their closet by purchasing new clothes. There are two minigames: one where the player upcycles old clothes and earns experience when doing so, and one where the player thrifts second-hand clothing while deciding if the clothes are eco-friendly. This game is meant to educate players on the importance of sustainable clothing in the world of fast fashion, and encourages the player to educate others just like how they do in the game.
 
 ## Screenshots
 
