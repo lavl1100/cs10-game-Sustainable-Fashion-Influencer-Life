@@ -5192,6 +5192,7 @@ class ActivityWindowOverlay(ComputerWindowOverlay):
         super().__init__(layout, "Activities", on_close, music)
         self._activity_ready = True
         self._apply_activity_layout(layout)
+        self._draw_tutorial_guide_last = False
 
     def _select_activity(self, label: str) -> None:
         self._selected_label = f"Selected: {label}"
@@ -5273,6 +5274,7 @@ class ActivityWindowOverlay(ComputerWindowOverlay):
             self.upcycling_button.draw()
         if self.thrifting_button is not None:
             self.thrifting_button.draw()
+        self.tutorial_guide.draw()
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
         if button != arcade.MOUSE_BUTTON_LEFT:
