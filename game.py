@@ -1948,8 +1948,6 @@ class HomeView(arcade.View):
             return
 
         if self.active_window is None and self.tutorial_guide.on_mouse_press(x, y, button):
-            if self.active_window is not None and self.active_window.title == "Settings":
-                self.active_window.tutorial_guide.hide_text()
             return
 
         now = _current_time()
