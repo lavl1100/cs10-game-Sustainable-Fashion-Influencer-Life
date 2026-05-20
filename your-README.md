@@ -17,7 +17,7 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 
 ## Justifications
 
-Although the game was supposed to be story-focused as stated in our design doc, we decided that it would be better to ______ due to time constraints.
+Although the game was supposed to be more story-oriented, as stated in our design doc, we decided that it would be better to create a simulation/minigame-based game due to time constraints. While in the design doc the 
 
 ## How to Install & Play
 
