@@ -871,6 +871,7 @@ class DrawableSprite:
 class TutorialGuide:
     """Bottom-right helper that pairs a sprite with a speech bubble."""
 
+<<<<<<< HEAD
     def __init__(
         self,
         layout: GameLayout,
@@ -878,6 +879,11 @@ class TutorialGuide:
         sprite_path: Optional[Path] = None,
         visible_sprite_path: Optional[Path] = None,
     ) -> None:
+=======
+    _globally_dismissed: bool = False
+
+    def __init__(self, layout: GameLayout, message: str, sprite_path: Optional[Path] = None) -> None:
+>>>>>>> de6d073a9bd8ca3b1fd8b6982e13f65bbf1139e3
         self.message = message
         self._visible_sprite_path = visible_sprite_path
         self.bubble = DrawableSprite(
@@ -906,6 +912,7 @@ class TutorialGuide:
             anchor_y="center",
             multiline=True,
         )
+<<<<<<< HEAD
         self._bubble_visible = True
         self._text_visible = True
 <<<<<<< HEAD
@@ -915,6 +922,11 @@ class TutorialGuide:
     def _sync_sprite_image(self, visible: bool) -> None:
 =======
         self._dismissed = False
+=======
+        self._dismissed = TutorialGuide._globally_dismissed
+        self._bubble_visible = not self._dismissed
+        self._text_visible = not self._dismissed
+>>>>>>> de6d073a9bd8ca3b1fd8b6982e13f65bbf1139e3
         self.update_layout(layout)
 
     def set_message(self, message: str) -> None:
@@ -955,6 +967,7 @@ class TutorialGuide:
         self._sync_sprite_image(visible=True)
 
     def hide_text(self) -> None:
+        TutorialGuide._globally_dismissed = True
         self._dismissed = True
         self._bubble_visible = False
         self._text_visible = False
