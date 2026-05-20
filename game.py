@@ -904,8 +904,14 @@ class TutorialGuide:
 
         self.sprite.center_x = sprite_center_x
         self.sprite.center_y = sprite_center_y
-        self.sprite.width = sprite_size
-        self.sprite.height = sprite_size
+        texture = self.sprite.sprite.texture
+        if texture is not None and texture.width > 0 and texture.height > 0:
+            scale = min(sprite_size / texture.width, sprite_size / texture.height)
+            self.sprite.width = texture.width * scale
+            self.sprite.height = texture.height * scale
+        else:
+            self.sprite.width = sprite_size
+            self.sprite.height = sprite_size
 
         self.text.x = bubble_center_x - layout.sx(8)
         self.text.y = bubble_center_y + layout.sy(12)
