@@ -5102,6 +5102,9 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
 
+        if self.tutorial_guide.on_mouse_press(x, y, button):
+            return True
+
         if self._cooldown_active():
             return super().on_mouse_press(x, y, button, modifiers)
 
@@ -5281,6 +5284,8 @@ class ActivityWindowOverlay(ComputerWindowOverlay):
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
+        if self.tutorial_guide.on_mouse_press(x, y, button):
+            return True
         if self.upcycling_button is not None and self.upcycling_button.hit_test(x, y):
             self.upcycling_button.press()
             return True
