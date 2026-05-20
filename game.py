@@ -310,40 +310,6 @@ class BackgroundMusicPlaylist:
         self._available = bool(self.track_paths)
         self._volume = 0.7
 
-
-class ButtonClickSound:
-    """Play the shared button click sound effect on demand."""
-
-    def __init__(self, sound_paths: tuple[Path, ...]) -> None:
-        self.sound_paths = sound_paths
-        self._sound: Optional[pygame.mixer.Sound] = None
-        self._available = True
-
-    def _load(self) -> None:
-        if self._sound is not None or not self._available:
-            return
-
-        try:
-            if not pygame.mixer.get_init():
-                pygame.mixer.init()
-            for path in self.sound_paths:
-                if not path.is_file():
-                    continue
-                self._sound = pygame.mixer.Sound(str(path))
-                return
-            raise pygame.error("No playable button click sound was found.")
-        except pygame.error:
-            self._available = False
-            self._sound = None
-
-    def play(self) -> None:
-        self._load()
-        if self._sound is not None:
-            self._sound.play()
-
-
-BUTTON_CLICK_SOUND = ButtonClickSound(BUTTON_SOUND_PATHS)
-
     def start(self) -> None:
         if self._started or not self._available:
             return
@@ -507,6 +473,40 @@ BUTTON_CLICK_SOUND = ButtonClickSound(BUTTON_SOUND_PATHS)
             return
 
         self._channel.queue(self._sounds[next_index])
+
+
+class ButtonClickSound:
+    """Play the shared button click sound effect on demand."""
+
+    def __init__(self, sound_paths: tuple[Path, ...]) -> None:
+        self.sound_paths = sound_paths
+        self._sound: Optional[pygame.mixer.Sound] = None
+        self._available = True
+
+    def _load(self) -> None:
+        if self._sound is not None or not self._available:
+            return
+
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            for path in self.sound_paths:
+                if not path.is_file():
+                    continue
+                self._sound = pygame.mixer.Sound(str(path))
+                return
+            raise pygame.error("No playable button click sound was found.")
+        except pygame.error:
+            self._available = False
+            self._sound = None
+
+    def play(self) -> None:
+        self._load()
+        if self._sound is not None:
+            self._sound.play()
+
+
+BUTTON_CLICK_SOUND = ButtonClickSound(BUTTON_SOUND_PATHS)
 
 
 @dataclass(frozen=True)
@@ -1535,6 +1535,7 @@ class HomeButton:
         self.press_started_at = now
         self.pending_activation = True
         self.is_pressed = True
+        BUTTON_CLICK_SOUND.play()
         self.on_activate()
 
     def release(self) -> None:
@@ -1677,6 +1678,7 @@ class SpriteButtonPanel:
 
     def press(self) -> None:
         self.is_pressed = True
+        BUTTON_CLICK_SOUND.play()
         self.activate()
 
     def release(self) -> None:
@@ -3190,6 +3192,7 @@ class WardrobeTabButton:
         return left <= x <= right and bottom <= y <= top
 
     def press(self) -> None:
+        BUTTON_CLICK_SOUND.play()
         self.on_activate()
 
     def draw(self) -> None:
@@ -3331,6 +3334,7 @@ class WardrobeItemCard:
 
     def press(self) -> None:
         self.is_pressed = True
+        BUTTON_CLICK_SOUND.play()
         self.on_activate(self.item)
 
     def release(self) -> None:
