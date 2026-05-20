@@ -791,7 +791,7 @@ def _format_compact_count(value: int) -> str:
 
 def _tutorial_sprite_path_for_message(message: str) -> Path:
     normalized = message.strip().lower()
-    if normalized == "adjust the music controls here, then close the window when you're done.":
+    if "music controls" in normalized:
         return TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH
     return TUTORIAL_GUIDE_SPRITE_PATH
 
