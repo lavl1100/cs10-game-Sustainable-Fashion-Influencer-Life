@@ -908,18 +908,22 @@ class TutorialGuide:
         )
         self._bubble_visible = True
         self._text_visible = True
+        self._sync_sprite_image(visible=True)
         self.update_layout(layout)
 
-    def set_message(self, message: str) -> None:
-        self.message = message
-        self._bubble_visible = True
-        self._text_visible = True
-        self.text.text = message
-        self._sprite_path = self._visible_sprite_path if self._visible_sprite_path is not None else _tutorial_sprite_path_for_message(message)
+    def _sync_sprite_image(self, visible: bool) -> None:
         current_center_x = self.sprite.center_x
         current_center_y = self.sprite.center_y
         current_width = self.sprite.width
         current_height = self.sprite.height
+        if visible:
+            self._sprite_path = (
+                self._visible_sprite_path
+                if self._visible_sprite_path is not None
+                else _tutorial_sprite_path_for_message(self.message)
+            )
+        else:
+            self._sprite_path = TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH
         self.sprite.replace(_make_sprite(self._sprite_path, 0, 0, 1, 1, (255, 255, 255)))
         self.sprite.center_x = current_center_x
         self.sprite.center_y = current_center_y
@@ -927,21 +931,18 @@ class TutorialGuide:
         self.sprite.height = current_height
         self.sprite.alpha = 255
 
+    def set_message(self, message: str) -> None:
+        self.message = message
+        self._bubble_visible = True
+        self._text_visible = True
+        self.text.text = message
+        self._sync_sprite_image(visible=True)
+
     def hide_text(self) -> None:
         self._bubble_visible = False
         self._text_visible = False
         self.text.text = ""
-        current_center_x = self.sprite.center_x
-        current_center_y = self.sprite.center_y
-        current_width = self.sprite.width
-        current_height = self.sprite.height
-        self._sprite_path = TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH
-        self.sprite.replace(_make_sprite(TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH, 0, 0, 1, 1, (255, 255, 255)))
-        self.sprite.center_x = current_center_x
-        self.sprite.center_y = current_center_y
-        self.sprite.width = current_width
-        self.sprite.height = current_height
-        self.sprite.alpha = 255
+        self._sync_sprite_image(visible=False)
 
     def hit_test_sprite(self, x: float, y: float) -> bool:
         return self.sprite.collides_with_point((x, y))
@@ -989,6 +990,8 @@ class TutorialGuide:
         self.text.font_size = layout.ss(11)
         self.text.width = bubble_width - layout.sx(48)
         self.text.text = self.message if self._text_visible else ""
+        if self._bubble_visible or self._text_visible:
+            self._sync_sprite_image(visible=True)
 
     def draw(self) -> None:
         if self._bubble_visible:
