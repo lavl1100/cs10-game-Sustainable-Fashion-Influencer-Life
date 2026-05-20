@@ -872,7 +872,7 @@ class DrawableSprite:
 class TutorialGuide:
     """Bottom-right helper that pairs a sprite with a speech bubble."""
 
-    _globally_dismissed: bool = False
+    _dismissed_messages: set[str] = set()
 
     def __init__(self, layout: GameLayout, message: str, sprite_path: Optional[Path] = None, visible_sprite_path: Optional[Path] = None) -> None:
         self.message = message
@@ -903,11 +903,15 @@ class TutorialGuide:
             anchor_y="center",
             multiline=True,
         )
-        self._dismissed = TutorialGuide._globally_dismissed
+        self._dismissed = self._is_message_dismissed(message)
         self._bubble_visible = not self._dismissed
         self._text_visible = not self._dismissed
         self._sync_sprite_image(visible=not self._dismissed)
         self.update_layout(layout)
+
+    @classmethod
+    def _is_message_dismissed(cls, message: str) -> bool:
+        return message in cls._dismissed_messages
 
     def _sync_sprite_image(self, visible: bool) -> None:
         current_center_x = self.sprite.center_x
@@ -931,17 +935,30 @@ class TutorialGuide:
 
     def set_message(self, message: str) -> None:
         self.message = message
+        self._dismissed = self._is_message_dismissed(message)
         if not self._dismissed:
             self.show_text()
+        else:
+            self._bubble_visible = False
+            self._text_visible = False
+            self.text.text = ""
+            self._sync_sprite_image(visible=False)
 
     def show_text(self) -> None:
+        if self._is_message_dismissed(self.message):
+            self._dismissed = True
+            self._bubble_visible = False
+            self._text_visible = False
+            self.text.text = ""
+            self._sync_sprite_image(visible=False)
+            return
         self._bubble_visible = True
         self._text_visible = True
         self.text.text = self.message
         self._sync_sprite_image(visible=True)
 
     def hide_text(self) -> None:
-        TutorialGuide._globally_dismissed = True
+        TutorialGuide._dismissed_messages.add(self.message)
         self._dismissed = True
         self._bubble_visible = False
         self._text_visible = False
