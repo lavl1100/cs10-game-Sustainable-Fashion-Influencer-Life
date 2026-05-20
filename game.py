@@ -883,15 +883,18 @@ class TutorialGuide:
             anchor_y="center",
             multiline=True,
         )
+        self._bubble_visible = True
         self._text_visible = True
         self.update_layout(layout)
 
     def set_message(self, message: str) -> None:
         self.message = message
+        self._bubble_visible = True
         self._text_visible = True
         self.text.text = message
 
     def hide_text(self) -> None:
+        self._bubble_visible = False
         self._text_visible = False
         self.text.text = ""
 
@@ -943,8 +946,10 @@ class TutorialGuide:
         self.text.text = self.message if self._text_visible else ""
 
     def draw(self) -> None:
-        self.bubble.draw()
-        self.text.draw()
+        if self._bubble_visible:
+            self.bubble.draw()
+        if self._bubble_visible and self._text_visible:
+            self.text.draw()
         self.sprite.draw()
 
 
