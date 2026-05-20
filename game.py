@@ -4051,6 +4051,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         )
         super().__init__(layout, "Social Media", on_close, music)
         self._social_ready = True
+        self._draw_tutorial_guide_last = False
         self.update_layout(layout)
 
     @property
@@ -5065,6 +5066,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         self._draw_notifications()
         if self.composing:
             self._draw_compose_modal()
+        self.tutorial_guide.draw()
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if self._cooldown_active() and key != arcade.key.ESCAPE:
@@ -5408,6 +5410,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         )
         super().__init__(layout, "Thrifting", on_close, music)
         self._game_ready = True
+        self._draw_tutorial_guide_last = False
         self.setup()
         self.update_layout(layout)
 
@@ -5594,6 +5597,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         self.score_text.draw()
         self.instructions_text.draw()
         self.message_text.draw()
+        self.tutorial_guide.draw()
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
@@ -6461,6 +6465,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             self.status_text.draw()
         if self._scissors_visible and not self._cut_complete:
             self._active_cursor_sprite().draw()
+        self.tutorial_guide.draw()
 
     def _draw_instructions_card(self) -> None:
         content_left, _, content_bottom, content_top = self._content_bounds()
