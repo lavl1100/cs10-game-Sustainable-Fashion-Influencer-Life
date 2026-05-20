@@ -2440,6 +2440,7 @@ class ComputerWindowOverlay:
             _tutorial_message_for_screen(self.title),
             TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH,
         )
+        self._draw_tutorial_guide_last = True
         self.update_layout(layout)
 
     def _bounds(self) -> tuple[float, float, float, float]:
@@ -2810,7 +2811,8 @@ class ComputerWindowOverlay:
             self.previous_button.draw()
             self.play_pause_button.draw()
             self.next_button.draw()
-        self.tutorial_guide.draw()
+        if self._draw_tutorial_guide_last:
+            self.tutorial_guide.draw()
 
     def draw(self) -> None:
         self.on_draw()
