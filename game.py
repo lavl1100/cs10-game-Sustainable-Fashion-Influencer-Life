@@ -922,11 +922,8 @@ class TutorialGuide:
     def hit_test_sprite(self, x: float, y: float) -> bool:
         return self.sprite.collides_with_point((x, y))
 
-    def hit_test(self, x: float, y: float) -> bool:
-        return self.hit_test_sprite(x, y) or self.bubble.collides_with_point((x, y))
-
     def on_mouse_press(self, x: float, y: float, button: int) -> bool:
-        if button == arcade.MOUSE_BUTTON_LEFT and self.hit_test(x, y):
+        if button == arcade.MOUSE_BUTTON_LEFT and self.hit_test_sprite(x, y):
             self.hide_text()
             return True
         return False
