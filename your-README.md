@@ -15,6 +15,10 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 [Add 2-3 screenshots of your game in action here. You can embed images using:
 `![Screenshot description](path/to/screenshot.png)`]
 
+## Justifications
+
+
+
 ## How to Install & Play
 
 Simply download the game executable for your operating system and double-click it to play. No installation required!
