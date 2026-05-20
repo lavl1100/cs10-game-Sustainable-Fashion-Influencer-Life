@@ -2470,7 +2470,7 @@ class ComputerWindowOverlay:
         self.tutorial_guide = TutorialGuide(
             self.layout,
             _tutorial_message_for_screen(self.title),
-            visible_sprite_path,
+            visible_sprite_path=visible_sprite_path,
         )
         self._draw_tutorial_guide_last = True
         self.update_layout(layout)
