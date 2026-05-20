@@ -38,7 +38,6 @@ SCREEN_TITLE = "Sustainable Fashion Influencer Life"
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 BACKGROUND_IMAGE = ASSETS_DIR / "home_background.png"
 BUTTON_SOUND_PATHS = (
-    ASSETS_DIR / "button.mp3",
     ASSETS_DIR / "button_clicking.mp3",
 )
 
