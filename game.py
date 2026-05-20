@@ -918,7 +918,6 @@ class TutorialGuide:
         self._bubble_visible = False
         self._text_visible = False
         self.text.text = ""
-        self.sprite.alpha = 0
 
     def hit_test_sprite(self, x: float, y: float) -> bool:
         return self.sprite.collides_with_point((x, y))
