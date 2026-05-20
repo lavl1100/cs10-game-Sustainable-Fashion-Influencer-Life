@@ -17,7 +17,7 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 
 ## Justifications
 
-Although the game is supposed to be more story-oriented, as stated in our design doc, we decided that it would be better to create a simulation/minigame-based game due to time constraints. The player enters the game already knowing the impact of promoting sustainable fashion on their platform, omitting the story which would show the player learning from their actions and shifting away from fast fashion.
+Although the game is supposed to be more story-oriented, as stated in our design doc, we decided that it would be better to create a simulation/minigame-based game due to time constraints. In the revised game, the player enters already knowing the impact of promoting sustainable fashion on their platform, omitting the story which would show the player learning from their actions and shifting away from fast fashion.
 
 ## How to Install & Play
 
