@@ -878,12 +878,25 @@ class DrawableSprite:
 class TutorialGuide:
     """Bottom-right helper that pairs a sprite with a speech bubble."""
 
-    def __init__(self, layout: GameLayout, message: str, sprite_path: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        layout: GameLayout,
+        message: str,
+        sprite_path: Optional[Path] = None,
+        visible_sprite_path: Optional[Path] = None,
+    ) -> None:
         self.message = message
+        self._visible_sprite_path = visible_sprite_path
         self.bubble = DrawableSprite(
             _make_sprite(TUTORIAL_GUIDE_BUBBLE_PATH, 0, 0, 1, 1, (255, 255, 255))
         )
-        self._sprite_path = _visible_tutorial_sprite_path(message, sprite_path)
+        self._sprite_path = (
+            sprite_path
+            if sprite_path is not None
+            else visible_sprite_path
+            if visible_sprite_path is not None
+            else _tutorial_sprite_path_for_message(message)
+        )
         self.sprite = DrawableSprite(
             _make_sprite(self._sprite_path, 0, 0, 1, 1, (255, 255, 255))
         )
@@ -909,7 +922,7 @@ class TutorialGuide:
         self._bubble_visible = True
         self._text_visible = True
         self.text.text = message
-        self._sprite_path = _visible_tutorial_sprite_path(message)
+        self._sprite_path = self._visible_sprite_path if self._visible_sprite_path is not None else _tutorial_sprite_path_for_message(message)
         current_center_x = self.sprite.center_x
         current_center_y = self.sprite.center_y
         current_width = self.sprite.width
@@ -2042,7 +2055,11 @@ class ActivityMenuView(arcade.View):
         self.left_button: Optional[SpriteButtonPanel] = None
         self.right_button: Optional[SpriteButtonPanel] = None
         self.home_button: Optional[SpriteButtonPanel] = None
-        self.tutorial_guide = TutorialGuide(self.layout, _tutorial_message_for_screen("activity center"))
+        self.tutorial_guide = TutorialGuide(
+            self.layout,
+            _tutorial_message_for_screen("activity center"),
+            visible_sprite_path=TUTORIAL_GUIDE_SPRITE_PATH,
+        )
         self._apply_layout(self.layout)
 
     def _show_home(self) -> None:
@@ -2216,7 +2233,11 @@ class ActivityDetailView(arcade.View):
         )
         self.back_button: Optional[SpriteButtonPanel] = None
         self.home_button: Optional[SpriteButtonPanel] = None
-        self.tutorial_guide = TutorialGuide(self.layout, _tutorial_message_for_screen(title))
+        self.tutorial_guide = TutorialGuide(
+            self.layout,
+            _tutorial_message_for_screen(title),
+            visible_sprite_path=TUTORIAL_GUIDE_SPRITE_PATH,
+        )
         self._apply_layout(self.layout)
 
     def hide_tutorial_guide(self) -> None:
@@ -2379,6 +2400,7 @@ class ComputerWindowOverlay:
         title: str,
         on_close: Callable[[], None],
         music: Optional[BackgroundMusicPlaylist] = None,
+        visible_sprite_path: Optional[Path] = None,
     ) -> None:
         self.layout = layout
         self.title = title
@@ -2456,6 +2478,7 @@ class ComputerWindowOverlay:
             self.layout,
             _tutorial_message_for_screen(self.title),
             TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH,
+            visible_sprite_path,
         )
         self._draw_tutorial_guide_last = True
         self.update_layout(layout)
@@ -3336,7 +3359,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             anchor_x="center",
             anchor_y="center",
         )
-        super().__init__(layout, title, on_close, music)
+        super().__init__(layout, title, on_close, music, visible_sprite_path=TUTORIAL_GUIDE_SPRITE_PATH)
         self._wardrobe_ready = True
         self.update_layout(layout)
 
@@ -4072,7 +4095,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             anchor_x="center",
             anchor_y="center",
         )
-        super().__init__(layout, "Social Media", on_close, music)
+        super().__init__(layout, "Social Media", on_close, music, visible_sprite_path=TUTORIAL_GUIDE_SPRITE_PATH)
         self._social_ready = True
         self._draw_tutorial_guide_last = True
         self.update_layout(layout)
@@ -5217,7 +5240,7 @@ class ActivityWindowOverlay(ComputerWindowOverlay):
             anchor_x="center",
             anchor_y="center",
         )
-        super().__init__(layout, "Activities", on_close, music)
+        super().__init__(layout, "Activities", on_close, music, visible_sprite_path=TUTORIAL_GUIDE_SPRITE_PATH)
         self._activity_ready = True
         self._apply_activity_layout(layout)
         self._draw_tutorial_guide_last = True
@@ -5436,7 +5459,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
             anchor_x="center",
             anchor_y="center",
         )
-        super().__init__(layout, "Thrifting", on_close, music)
+        super().__init__(layout, "Thrifting", on_close, music, visible_sprite_path=TUTORIAL_GUIDE_SPRITE_PATH)
         self._game_ready = True
         self._draw_tutorial_guide_last = True
         self.setup()
@@ -6039,7 +6062,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             )
         )
         self._apply_upcycling_palette()
-        super().__init__(layout, "Upcycling Station", on_close, music)
+        super().__init__(layout, "Upcycling Station", on_close, music, visible_sprite_path=TUTORIAL_GUIDE_SPRITE_PATH)
         self._draw_tutorial_guide_last = True
         self._screen_ready = True
         self.update_layout(layout)
