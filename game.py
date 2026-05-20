@@ -1865,7 +1865,6 @@ class HomeView(arcade.View):
             self._sync_cursor_mode()
             return
         if label == "closet":
-            self.tutorial_guide.hide_text()
             self.active_window = ClosetOverlay(
                 self.layout,
                 lambda: self._close_window(label),
@@ -1903,8 +1902,6 @@ class HomeView(arcade.View):
         self.active_window = None
         if label == "social media":
             self._set_button_active(label, False)
-        if label == "closet":
-            self.tutorial_guide.set_message(_tutorial_message_for_screen("home"))
         if label == "settings":
             self.tutorial_guide.set_message(_tutorial_message_for_screen("home"))
         self._sync_cursor_mode()
@@ -1943,13 +1940,14 @@ class HomeView(arcade.View):
             button.draw()
         if self.active_window is not None:
             self.active_window.draw()
-        self.tutorial_guide.draw()
+        if self.active_window is None:
+            self.tutorial_guide.draw()
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return
 
-        if self.tutorial_guide.on_mouse_press(x, y, button):
+        if self.active_window is None and self.tutorial_guide.on_mouse_press(x, y, button):
             if self.active_window is not None and self.active_window.title == "Settings":
                 self.active_window.tutorial_guide.hide_text()
             return
