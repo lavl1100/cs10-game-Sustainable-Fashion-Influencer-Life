@@ -1043,8 +1043,8 @@ class TutorialGuide:
             self.sprite.height = sprite_size
         self.sprite.center_y = max(self.sprite.height / 2, layout.sy(2))
 
-        self.text.x = bubble_center_x - layout.sx(16)
-        text_top_padding = bubble_height * 0.56
+        self.text.x = bubble_center_x - layout.sx(24)
+        text_top_padding = bubble_height * 0.50
         self.text.y = bubble_center_y + bubble_height / 2 - text_top_padding
         self.text.font_size = layout.ss(11)
         self.text.width = bubble_width - layout.sx(48)
