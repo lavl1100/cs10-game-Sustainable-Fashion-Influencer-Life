@@ -895,13 +895,15 @@ class TutorialGuide:
         )
         self._bubble_visible = True
         self._text_visible = True
+        self._dismissed = False
         self.update_layout(layout)
 
     def set_message(self, message: str) -> None:
         self.message = message
-        self._bubble_visible = True
-        self._text_visible = True
-        self.text.text = message
+        if not self._dismissed:
+            self._bubble_visible = True
+            self._text_visible = True
+        self.text.text = message if not self._dismissed else ""
         self._sprite_path = _tutorial_sprite_path_for_message(message)
         current_center_x = self.sprite.center_x
         current_center_y = self.sprite.center_y
@@ -915,6 +917,7 @@ class TutorialGuide:
         self.sprite.alpha = 255
 
     def hide_text(self) -> None:
+        self._dismissed = True
         self._bubble_visible = False
         self._text_visible = False
         self.text.text = ""
@@ -967,7 +970,7 @@ class TutorialGuide:
         self.text.y = bubble_center_y + bubble_height / 2 - layout.sy(66)
         self.text.font_size = layout.ss(11)
         self.text.width = bubble_width - layout.sx(48)
-        self.text.text = self.message if self._text_visible else ""
+        self.text.text = self.message if self._text_visible and not self._dismissed else ""
 
     def draw(self) -> None:
         if self._bubble_visible:
@@ -2000,6 +2003,7 @@ class HomeView(arcade.View):
             self.active_window.on_key_press(key, modifiers)
             return
         if key == arcade.key.ESCAPE:
+            self.tutorial_guide.hide_text()
             return
 
     def on_resize(self, width: float, height: float) -> None:
@@ -2142,6 +2146,7 @@ class ActivityMenuView(arcade.View):
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
+            self.tutorial_guide.hide_text()
             self._show_home()
 
     def on_resize(self, width: float, height: float) -> None:
@@ -2311,6 +2316,7 @@ class ActivityDetailView(arcade.View):
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
+            self.tutorial_guide.hide_text()
             self._go_back()
 
     def on_resize(self, width: float, height: float) -> None:
@@ -2881,6 +2887,8 @@ class ComputerWindowOverlay:
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
+            if hasattr(self, 'tutorial_guide'):
+                self.tutorial_guide.hide_text()
             self._close()
 
     def close(self) -> None:
@@ -5599,6 +5607,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
+            self.tutorial_guide.hide_text()
             self._close()
             return
         if key == arcade.key.LEFT:
@@ -6561,6 +6570,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         if key == arcade.key.ESCAPE:
+            self.tutorial_guide.hide_text()
             self._close()
 
     def _close(self) -> None:
