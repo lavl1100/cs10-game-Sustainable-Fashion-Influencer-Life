@@ -17,7 +17,7 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 
 ## Justifications
 
-
+Although the game was supposed to be story-focused as stated in our design doc, we decided that it would be better to ______ and
 
 ## How to Install & Play
 
