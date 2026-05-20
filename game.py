@@ -930,7 +930,7 @@ class TutorialGuide:
 
         self.text.x = bubble_center_x
         self.text.y = bubble_center_y + layout.sy(2)
-        self.text.font_size = layout.ss(16)
+        self.text.font_size = layout.ss(13)
         self.text.width = bubble_width - layout.sx(48)
         self.text.text = self.message if self._text_visible else ""
 
