@@ -889,10 +889,10 @@ class TutorialGuide:
         self.text.text = message
 
     def update_layout(self, layout: GameLayout) -> None:
-        bubble_width = min(layout.sx(320), max(layout.sx(220), layout.width * 0.34))
-        bubble_height = min(layout.sy(170), max(layout.sy(120), layout.height * 0.22))
+        bubble_width = min(layout.sx(360), max(layout.sx(250), layout.width * 0.38))
+        bubble_height = min(layout.sy(196), max(layout.sy(136), layout.height * 0.26))
         bubble_center_x = layout.width - layout.sx(16) - bubble_width / 2 - layout.sx(52)
-        bubble_center_y = layout.sy(42) + bubble_height / 2 + layout.sy(24)
+        bubble_center_y = layout.sy(44) + bubble_height / 2 + layout.sy(26)
         sprite_size = min(layout.ss(168), max(layout.ss(112), min(layout.width, layout.height) * 0.20))
         sprite_center_x = layout.width - layout.sx(56)
         sprite_center_y = layout.sy(58)
@@ -913,10 +913,10 @@ class TutorialGuide:
             self.sprite.width = sprite_size
             self.sprite.height = sprite_size
 
-        self.text.x = bubble_center_x - layout.sx(8)
-        self.text.y = bubble_center_y + layout.sy(12)
-        self.text.font_size = layout.ss(12)
-        self.text.width = bubble_width - layout.sx(52)
+        self.text.x = bubble_center_x
+        self.text.y = bubble_center_y + layout.sy(2)
+        self.text.font_size = layout.ss(14)
+        self.text.width = bubble_width - layout.sx(34)
         self.text.text = self.message
 
     def draw(self) -> None:
