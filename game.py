@@ -907,18 +907,18 @@ class TutorialGuide:
         current_center_y = self.sprite.center_y
         current_width = self.sprite.width
         current_height = self.sprite.height
-        current_alpha = self.sprite.alpha
         self.sprite.replace(_make_sprite(self._sprite_path, 0, 0, 1, 1, (255, 255, 255)))
         self.sprite.center_x = current_center_x
         self.sprite.center_y = current_center_y
         self.sprite.width = current_width
         self.sprite.height = current_height
-        self.sprite.alpha = current_alpha
+        self.sprite.alpha = 255
 
     def hide_text(self) -> None:
         self._bubble_visible = False
         self._text_visible = False
         self.text.text = ""
+        self.sprite.alpha = 0
 
     def hit_test_sprite(self, x: float, y: float) -> bool:
         return self.sprite.collides_with_point((x, y))
