@@ -796,13 +796,6 @@ def _tutorial_sprite_path_for_message(message: str) -> Path:
     return TUTORIAL_GUIDE_SPRITE_PATH
 
 
-def _visible_tutorial_sprite_path(message: str, sprite_path: Optional[Path] = None) -> Path:
-    """Pick the visible guide sprite for a message."""
-    if sprite_path in (TUTORIAL_GUIDE_SPRITE_PATH, TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH):
-        return sprite_path
-    return _tutorial_sprite_path_for_message(message)
-
-
 class DrawableSprite:
     """Small wrapper that renders a single sprite through a SpriteList."""
 
@@ -2477,7 +2470,6 @@ class ComputerWindowOverlay:
         self.tutorial_guide = TutorialGuide(
             self.layout,
             _tutorial_message_for_screen(self.title),
-            TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH,
             visible_sprite_path,
         )
         self._draw_tutorial_guide_last = True
