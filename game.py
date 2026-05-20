@@ -904,8 +904,8 @@ class TutorialGuide:
         return False
 
     def update_layout(self, layout: GameLayout) -> None:
-        bubble_width = min(layout.sx(360), max(layout.sx(250), layout.width * 0.38))
-        bubble_height = min(layout.sy(196), max(layout.sy(136), layout.height * 0.26))
+        bubble_width = min(layout.width - layout.sx(44), max(layout.sx(520), layout.width * 0.82))
+        bubble_height = min(layout.height - layout.sy(96), max(layout.sy(320), layout.height * 0.68))
         bubble_center_x = layout.width - layout.sx(16) - bubble_width / 2 - layout.sx(52)
         bubble_center_y = layout.sy(44) + bubble_height / 2 + layout.sy(26)
         sprite_size = min(layout.ss(168), max(layout.ss(112), min(layout.width, layout.height) * 0.20))
@@ -930,8 +930,8 @@ class TutorialGuide:
 
         self.text.x = bubble_center_x
         self.text.y = bubble_center_y + layout.sy(2)
-        self.text.font_size = layout.ss(14)
-        self.text.width = bubble_width - layout.sx(34)
+        self.text.font_size = layout.ss(16)
+        self.text.width = bubble_width - layout.sx(48)
         self.text.text = self.message if self._text_visible else ""
 
     def draw(self) -> None:
