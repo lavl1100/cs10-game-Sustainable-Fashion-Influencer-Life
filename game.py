@@ -1877,6 +1877,7 @@ class HomeView(arcade.View):
             else:
                 self.social_media_window.update_layout(self.layout)
             self.active_window = self.social_media_window
+            self.tutorial_guide.hide_text()
             show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
             if callable(show_tutorial_guide):
                 show_tutorial_guide()
@@ -1890,6 +1891,7 @@ class HomeView(arcade.View):
                 self.wallet,
                 self.music,
             )
+            self.tutorial_guide.hide_text()
             show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
             if callable(show_tutorial_guide):
                 show_tutorial_guide()
@@ -1904,6 +1906,7 @@ class HomeView(arcade.View):
                 self.wallet,
                 self.music,
             )
+            self.tutorial_guide.hide_text()
             show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
             if callable(show_tutorial_guide):
                 show_tutorial_guide()
@@ -1915,6 +1918,7 @@ class HomeView(arcade.View):
             on_close=lambda: self._close_window(label),
             music=self.music,
         )
+        self.tutorial_guide.hide_text()
         show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
         if callable(show_tutorial_guide):
             show_tutorial_guide()
@@ -1932,6 +1936,8 @@ class HomeView(arcade.View):
             self._set_button_active(label, False)
         if label == "settings":
             self.tutorial_guide.set_message(_tutorial_message_for_screen("home"))
+        else:
+            self.tutorial_guide.show_text()
         self._sync_cursor_mode()
 
     def _hide_tutorial_guides(self) -> None:
@@ -1976,13 +1982,14 @@ class HomeView(arcade.View):
             button.draw()
         if self.active_window is not None:
             self.active_window.draw()
-        self.tutorial_guide.draw()
+        if self.active_window is None:
+            self.tutorial_guide.draw()
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return
 
-        if self.tutorial_guide.on_mouse_press(x, y, button):
+        if self.active_window is None and self.tutorial_guide.on_mouse_press(x, y, button):
             self._hide_tutorial_guides()
             return
 
