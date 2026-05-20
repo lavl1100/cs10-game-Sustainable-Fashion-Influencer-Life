@@ -929,8 +929,8 @@ class TutorialGuide:
             self.sprite.height = sprite_size
 
         self.text.x = bubble_center_x
-        self.text.y = bubble_center_y + layout.sy(2)
-        self.text.font_size = layout.ss(13)
+        self.text.y = bubble_center_y + layout.sy(24)
+        self.text.font_size = layout.ss(11)
         self.text.width = bubble_width - layout.sx(48)
         self.text.text = self.message if self._text_visible else ""
 
