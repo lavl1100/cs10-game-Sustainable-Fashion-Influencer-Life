@@ -221,6 +221,7 @@ ECO_FABRICS = ["cotton", "linen", "wool", "hemp"]
 UI_FONT_PATH = ":resources:/fonts/ttf/Kenney/Kenney_Future_Narrow.ttf"
 UI_FONT_NAME = "Kenney Future Narrow"
 TUTORIAL_GUIDE_SPRITE_PATH = ASSETS_DIR / "sprite_happy.png"
+TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH = ASSETS_DIR / "sprite_default.png"
 TUTORIAL_GUIDE_BUBBLE_PATH = ASSETS_DIR / "speech_bubble.png"
 TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO = 1500.0 / 900.0
 TUTORIAL_GUIDE_TEXT_COLOR = (106, 47, 130)
@@ -897,6 +898,17 @@ class TutorialGuide:
         self._bubble_visible = False
         self._text_visible = False
         self.text.text = ""
+        current_center_x = self.sprite.center_x
+        current_center_y = self.sprite.center_y
+        current_width = self.sprite.width
+        current_height = self.sprite.height
+        current_alpha = self.sprite.alpha
+        self.sprite.replace(_make_sprite(TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH, 0, 0, 1, 1, (255, 255, 255)))
+        self.sprite.center_x = current_center_x
+        self.sprite.center_y = current_center_y
+        self.sprite.width = current_width
+        self.sprite.height = current_height
+        self.sprite.alpha = current_alpha
 
     def hit_test_sprite(self, x: float, y: float) -> bool:
         return self.sprite.collides_with_point((x, y))
