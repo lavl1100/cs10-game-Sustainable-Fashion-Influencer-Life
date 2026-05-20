@@ -871,13 +871,14 @@ class DrawableSprite:
 class TutorialGuide:
     """Bottom-right helper that pairs a sprite with a speech bubble."""
 
-    def __init__(self, layout: GameLayout, message: str) -> None:
+    def __init__(self, layout: GameLayout, message: str, sprite_path: Optional[Path] = None) -> None:
         self.message = message
         self.bubble = DrawableSprite(
             _make_sprite(TUTORIAL_GUIDE_BUBBLE_PATH, 0, 0, 1, 1, (255, 255, 255))
         )
+        self._sprite_path = sprite_path if sprite_path is not None else _tutorial_sprite_path_for_message(message)
         self.sprite = DrawableSprite(
-            _make_sprite(_tutorial_sprite_path_for_message(message), 0, 0, 1, 1, (255, 255, 255))
+            _make_sprite(self._sprite_path, 0, 0, 1, 1, (255, 255, 255))
         )
         self.text = arcade.Text(
             message,
@@ -894,7 +895,6 @@ class TutorialGuide:
         )
         self._bubble_visible = True
         self._text_visible = True
-        self._sprite_path = _tutorial_sprite_path_for_message(message)
         self.update_layout(layout)
 
     def set_message(self, message: str) -> None:
@@ -2431,7 +2431,11 @@ class ComputerWindowOverlay:
         self.previous_button = self._make_control_button("Prev", self._previous_track)
         self.play_pause_button = self._make_control_button("Pause", self._toggle_playback)
         self.next_button = self._make_control_button("Next", self._next_track)
-        self.tutorial_guide = TutorialGuide(self.layout, _tutorial_message_for_screen(self.title))
+        self.tutorial_guide = TutorialGuide(
+            self.layout,
+            _tutorial_message_for_screen(self.title),
+            TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH,
+        )
         self.update_layout(layout)
 
     def _bounds(self) -> tuple[float, float, float, float]:
