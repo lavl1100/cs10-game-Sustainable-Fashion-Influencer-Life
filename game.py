@@ -873,7 +873,7 @@ class TutorialGuide:
 
     _globally_dismissed: bool = False
 
-    def __init__(self, layout: GameLayout, message: str, sprite_path: Optional[Path] = None) -> None:
+    def __init__(self, layout: GameLayout, message: str, sprite_path: Optional[Path] = None, visible_sprite_path: Optional[Path] = None) -> None:
         self.message = message
         self._visible_sprite_path = visible_sprite_path
         self.bubble = DrawableSprite(
@@ -902,31 +902,13 @@ class TutorialGuide:
             anchor_y="center",
             multiline=True,
         )
-<<<<<<< HEAD
-        self._bubble_visible = True
-        self._text_visible = True
-<<<<<<< HEAD
-        self._sync_sprite_image(visible=True)
-        self.update_layout(layout)
-
-    def _sync_sprite_image(self, visible: bool) -> None:
-=======
-        self._dismissed = False
-=======
         self._dismissed = TutorialGuide._globally_dismissed
         self._bubble_visible = not self._dismissed
         self._text_visible = not self._dismissed
->>>>>>> de6d073a9bd8ca3b1fd8b6982e13f65bbf1139e3
+        self._sync_sprite_image(visible=not self._dismissed)
         self.update_layout(layout)
 
-    def set_message(self, message: str) -> None:
-        self.message = message
-        if not self._dismissed:
-            self._bubble_visible = True
-            self._text_visible = True
-        self.text.text = message if not self._dismissed else ""
-        self._sprite_path = _tutorial_sprite_path_for_message(message)
->>>>>>> 72bc45404149cd74201f5aed55e2251a5c91f61a
+    def _sync_sprite_image(self, visible: bool) -> None:
         current_center_x = self.sprite.center_x
         current_center_y = self.sprite.center_y
         current_width = self.sprite.width
@@ -948,7 +930,8 @@ class TutorialGuide:
 
     def set_message(self, message: str) -> None:
         self.message = message
-        self.show_text()
+        if not self._dismissed:
+            self.show_text()
 
     def show_text(self) -> None:
         self._bubble_visible = True
@@ -1009,13 +992,7 @@ class TutorialGuide:
         self.text.y = bubble_center_y + bubble_height / 2 - layout.sy(78)
         self.text.font_size = layout.ss(11)
         self.text.width = bubble_width - layout.sx(48)
-<<<<<<< HEAD
-        self.text.text = self.message if self._text_visible else ""
-        if self._bubble_visible or self._text_visible:
-            self._sync_sprite_image(visible=True)
-=======
         self.text.text = self.message if self._text_visible and not self._dismissed else ""
->>>>>>> 72bc45404149cd74201f5aed55e2251a5c91f61a
 
     def draw(self) -> None:
         if self._bubble_visible:
