@@ -10,7 +10,7 @@
 
 [Write a short description of your game here. What is it about? What makes it fun?]
 
-In "Sustainable Fashion Life," the player enters a world where they are a fashion influencer who is trying to grow their following. They can post on their social media, earn money by playing minigames and leveling up, and expand their closet by purchasing new clothes. At the beginning of the game, the player learns about fast fashion and its consequences, and spends the rest of the game trying to make up for their actions by encouraging sustainable clothing through their influence.
+In "Sustainable Fashion Life," the player enters a world where they are a fashion influencer who is trying to grow their following. They can post on their social media, earn money by playing minigames and leveling up, and expand their closet by purchasing new clothes. This game is meant to educate players on the importance of sustainable clothing in the world of fast fashion, and encourages the 
 
 ## Screenshots
 
