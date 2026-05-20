@@ -1000,7 +1000,7 @@ def _tutorial_message_for_screen(label: str) -> str:
         "clothing store": "Browse the catalog and buy clothing pieces with your money.",
         "social media": "Publish a variety of posts on your social media page, and grow your following.",
         "activity center minigames": "Upcycle old clothes or thrift second-hand ones.",
-        "thrifting": "Move through the rack, then press Space to buy the highlighted item.",
+        "thrifting": "Move through the rack, and choose .",
         "upcycling station": "Drag the scissors along the highlighted path until the cut is complete.",
         "upcycling": "Drag the scissors along the highlighted path until the cut is complete.",
     }
