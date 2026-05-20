@@ -3779,7 +3779,7 @@ class ClosetOverlay(WardrobeCatalogOverlay):
             WARDROBE_CLOSET_BACKGROUND_IMAGE_PATH,
             music,
         )
-        self._draw_tutorial_guide_last = False
+        self._draw_tutorial_guide_last = True
 
 
 class ClothingStoreOverlay(WardrobeCatalogOverlay):
@@ -4074,7 +4074,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         )
         super().__init__(layout, "Social Media", on_close, music)
         self._social_ready = True
-        self._draw_tutorial_guide_last = False
+        self._draw_tutorial_guide_last = True
         self.update_layout(layout)
 
     @property
@@ -5220,7 +5220,7 @@ class ActivityWindowOverlay(ComputerWindowOverlay):
         super().__init__(layout, "Activities", on_close, music)
         self._activity_ready = True
         self._apply_activity_layout(layout)
-        self._draw_tutorial_guide_last = False
+        self._draw_tutorial_guide_last = True
 
     def _select_activity(self, label: str) -> None:
         self._selected_label = f"Selected: {label}"
@@ -5438,7 +5438,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         )
         super().__init__(layout, "Thrifting", on_close, music)
         self._game_ready = True
-        self._draw_tutorial_guide_last = False
+        self._draw_tutorial_guide_last = True
         self.setup()
         self.update_layout(layout)
 
@@ -6040,7 +6040,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         )
         self._apply_upcycling_palette()
         super().__init__(layout, "Upcycling Station", on_close, music)
-        self._draw_tutorial_guide_last = False
+        self._draw_tutorial_guide_last = True
         self._screen_ready = True
         self.update_layout(layout)
 
