@@ -33,7 +33,7 @@ BASE_SCREEN_WIDTH = 800
 BASE_SCREEN_HEIGHT = 600
 DEFAULT_WINDOW_WIDTH = 1280
 DEFAULT_WINDOW_HEIGHT = 720
-SCREEN_TITLE = "Fashion Influencer Life"
+SCREEN_TITLE = "Sustainable Fashion Influencer Life"
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 BACKGROUND_IMAGE = ASSETS_DIR / "home_background.png"
