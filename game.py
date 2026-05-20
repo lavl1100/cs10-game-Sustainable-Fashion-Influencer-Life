@@ -2304,7 +2304,7 @@ class ThriftingView(ActivityDetailView):
 
 
 class ComputerWindowOverlay:
-    """A draggable computer-style window drawn on top of the home screen."""
+    """A computer-style window drawn on top of the home screen."""
 
     def __init__(
         self,
@@ -2321,9 +2321,6 @@ class ComputerWindowOverlay:
         self.window_height = 0.0
         self.window_x = 0.0
         self.window_y = 0.0
-        self.is_dragging = False
-        self.drag_offset_x = 0.0
-        self.drag_offset_y = 0.0
         self.is_adjusting_volume = False
         self.title_text = arcade.Text(
             self.title,
@@ -2589,9 +2586,6 @@ class ComputerWindowOverlay:
     def _close(self) -> None:
         self.on_close()
 
-    def _can_start_drag(self, x: float, y: float) -> bool:
-        return True
-
     def _release_control_buttons(self) -> None:
         self.previous_button.release()
         self.play_pause_button.release()
@@ -2802,11 +2796,6 @@ class ComputerWindowOverlay:
         header_left, header_right, header_bottom, header_top = self._header_bounds()
         bottom = self.window_y - self.window_height / 2
         if left <= x <= right and bottom <= y <= top:
-            if header_left <= x <= header_right and header_bottom <= y <= header_top:
-                self.is_dragging = True
-                self.drag_offset_x = x - self.window_x
-                self.drag_offset_y = y - self.window_y
-                return True
             control_button = self._hit_test_controls(x, y)
             if control_button is not None:
                 control_button.press()
@@ -2814,11 +2803,6 @@ class ComputerWindowOverlay:
             if self._hit_test_slider(x, y):
                 self.is_adjusting_volume = True
                 self._set_music_volume_from_x(x)
-                return True
-            if self._can_start_drag(x, y):
-                self.is_dragging = True
-                self.drag_offset_x = x - self.window_x
-                self.drag_offset_y = y - self.window_y
                 return True
             return True
         return False
@@ -2832,14 +2816,11 @@ class ComputerWindowOverlay:
         buttons: int,
         modifiers: int,
     ) -> None:
-        if self.is_dragging and buttons & arcade.MOUSE_BUTTON_LEFT:
-            self._set_center(x - self.drag_offset_x, y - self.drag_offset_y)
-        elif self.is_adjusting_volume and buttons & arcade.MOUSE_BUTTON_LEFT:
+        if self.is_adjusting_volume and buttons & arcade.MOUSE_BUTTON_LEFT:
             self._set_music_volume_from_x(x)
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button == arcade.MOUSE_BUTTON_LEFT:
-            self.is_dragging = False
             self.is_adjusting_volume = False
             self._release_control_buttons()
 
@@ -3280,9 +3261,6 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self._wardrobe_ready = True
         self.update_layout(layout)
 
-    def _can_start_drag(self, x: float, y: float) -> bool:
-        return False
-
     def _content_bounds(self) -> tuple[float, float, float, float]:
         left, right, bottom, top = self._bounds()
         padding_x = self.layout.sx(22)
@@ -3657,13 +3635,6 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             self._close()
             return True
 
-        header_left, header_right, header_bottom, header_top = self._header_bounds()
-        if header_left <= x <= header_right and header_bottom <= y <= header_top:
-            self.is_dragging = True
-            self.drag_offset_x = x - self.window_x
-            self.drag_offset_y = y - self.window_y
-            return True
-
         for button_panel in self.tab_buttons:
             if button_panel.hit_test(x, y):
                 button_panel.press()
@@ -3688,13 +3659,11 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         buttons: int,
         modifiers: int,
     ) -> None:
-        if self.is_dragging and buttons & arcade.MOUSE_BUTTON_LEFT:
-            self._set_center(x - self.drag_offset_x, y - self.drag_offset_y)
+        pass
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return
-        self.is_dragging = False
         for card in self.item_cards:
             card.release()
 
@@ -6533,11 +6502,6 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
     def _close(self) -> None:
         self._set_scissors_cursor_visible(False)
         super()._close()
-
-    def _can_start_drag(self, x: float, y: float) -> bool:
-        left, right, _, top = self._bounds()
-        header_left, header_right, header_bottom, header_top = self._header_bounds()
-        return left <= x <= right and header_left <= x <= header_right and header_bottom <= y <= header_top
 
     def on_resize(self, width: float, height: float) -> None:
         self.update_layout(GameLayout(width, height))
