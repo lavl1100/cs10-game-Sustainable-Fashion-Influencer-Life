@@ -1001,8 +1001,8 @@ def _tutorial_message_for_screen(label: str) -> str:
         "clothing store": "Browse the catalog and buy clothing\npieces with your money.",
         "social media": "Publish a variety of posts on your\nsocial media page, and grow your following to spread sustainability.",
         "activity center minigames": "Upcycle old clothes or thrift\nsecond-hand ones.",
-        "thrifting": "Move through the rack, and decide whether to buy clothing pieces based on their sustainability.",
-        "upcycling station": "Drag the scissors or needle along the highlighted path to repair the clothes.",
+        "thrifting": "Move through the rack, and decide whether to buy clothing\npieces based on their sustainability.",
+        "upcycling station": "Drag the scissors or needle along the highlighted\npath to repair the clothes.",
     }
     return messages.get(
         normalized,
