@@ -225,6 +225,7 @@ TUTORIAL_GUIDE_SPRITE_DEFAULT_PATH = ASSETS_DIR / "sprite_default.png"
 TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH = ASSETS_DIR / "sprite_mouthopen.png"
 TUTORIAL_GUIDE_BUBBLE_PATH = ASSETS_DIR / "speech_bubble.png"
 TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO = 1500.0 / 900.0
+TUTORIAL_GUIDE_BUBBLE_HEIGHT = 600
 TUTORIAL_GUIDE_TEXT_COLOR = (106, 47, 130)
 
 arcade.load_font(UI_FONT_PATH)
@@ -959,12 +960,12 @@ class TutorialGuide:
     def update_layout(self, layout: GameLayout) -> None:
         max_bubble_width = layout.width - layout.sx(24)
         max_bubble_height = layout.height - layout.sy(56)
-        if max_bubble_width / TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO <= max_bubble_height:
-            bubble_width = max_bubble_width
-            bubble_height = bubble_width / TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
-        else:
-            bubble_height = max_bubble_height
-            bubble_width = bubble_height * TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
+        bubble_height = min(
+            float(TUTORIAL_GUIDE_BUBBLE_HEIGHT),
+            max_bubble_height,
+            max_bubble_width / TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO,
+        )
+        bubble_width = bubble_height * TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
         bubble_center_x = layout.width - layout.sx(6) - bubble_width / 2 - layout.sx(28)
         bubble_center_y = layout.sy(-28) + bubble_height / 2
         sprite_size = min(layout.ss(360), max(layout.ss(230), min(layout.width, layout.height) * 0.42))
@@ -989,7 +990,8 @@ class TutorialGuide:
         self.sprite.center_y = max(self.sprite.height / 2, layout.sy(2))
 
         self.text.x = bubble_center_x - layout.sx(16)
-        self.text.y = bubble_center_y + bubble_height / 2 - layout.sy(78)
+        text_top_padding = bubble_height * 0.17
+        self.text.y = bubble_center_y + bubble_height / 2 - text_top_padding
         self.text.font_size = layout.ss(11)
         self.text.width = bubble_width - layout.sx(48)
         self.text.text = self.message if self._text_visible and not self._dismissed else ""
