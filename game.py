@@ -893,6 +893,17 @@ class TutorialGuide:
         self._bubble_visible = True
         self._text_visible = True
         self.text.text = message
+        current_center_x = self.sprite.center_x
+        current_center_y = self.sprite.center_y
+        current_width = self.sprite.width
+        current_height = self.sprite.height
+        current_alpha = self.sprite.alpha
+        self.sprite.replace(_make_sprite(TUTORIAL_GUIDE_SPRITE_PATH, 0, 0, 1, 1, (255, 255, 255)))
+        self.sprite.center_x = current_center_x
+        self.sprite.center_y = current_center_y
+        self.sprite.width = current_width
+        self.sprite.height = current_height
+        self.sprite.alpha = current_alpha
 
     def hide_text(self) -> None:
         self._bubble_visible = False
