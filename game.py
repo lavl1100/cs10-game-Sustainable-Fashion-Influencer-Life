@@ -995,11 +995,11 @@ class TutorialGuide:
 def _tutorial_message_for_screen(label: str) -> str:
     normalized = label.strip().lower()
     messages = {
-        "home": "Welcome to life as a sustainable fashion influencer!\nPractice sustainability Use the sidebar to open the closet, local clothes store,\n social media, or sustainable activities.",
+        "home": "Welcome to life as a sustainable fashion influencer!\nPractice sustainability by using the sidebar to open the closet,\nlocal clothes store, social media, or sustainable activities.",
         "settings": "Adjust the music controls if needed, then \nclose the window when you're done.",
-        "closet": "Preview outfits on the left, then switch\n tabs to compare looks and check what you own.",
-        "clothing store": "Browse the catalog and buy clothing pieces with your money.",
-        "social media": "Publish a variety of posts on your social media page, and grow your following.",
+        "closet": "Preview outfits on the left, then switch\ntabs to compare looks and check what you own.",
+        "clothing store": "Browse the catalog and buy clothing\npieces with your money.",
+        "social media": "Publish a variety of posts on your\nsocial media page, and grow your following.",
         "activity center minigames": "Upcycle old clothes or thrift second-hand ones.",
         "thrifting": "Move through the rack, and decide whether to buy clothing pieces based on their sustainability.",
         "upcycling station": "Drag the scissors or needle along the highlighted path to repair the clothes.",
