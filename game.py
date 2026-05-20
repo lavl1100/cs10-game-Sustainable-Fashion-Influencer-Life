@@ -6012,6 +6012,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         )
         self._apply_upcycling_palette()
         super().__init__(layout, "Upcycling Station", on_close, music)
+        self._draw_tutorial_guide_last = False
         self._screen_ready = True
         self.update_layout(layout)
 
