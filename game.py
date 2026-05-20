@@ -1001,8 +1001,7 @@ def _tutorial_message_for_screen(label: str) -> str:
         "social media": "Publish a variety of posts on your social media page, and grow your following.",
         "activity center minigames": "Upcycle old clothes or thrift second-hand ones.",
         "thrifting": "Move through the rack, and decide whether to buy clothing pieces based on their sustainability.",
-        "upcycling station": "Drag the scissors along the highlighted path until the cut is complete, or .",
-        "upcycling": "Drag the scissors along the highlighted path until the cut is complete.",
+        "upcycling station": "Drag the scissors or needle along the highlighted path to repair the clothes.",
     }
     return messages.get(
         normalized,
