@@ -3657,6 +3657,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             else:
                 self.empty_text.text = "No items in this category yet"
             self.empty_text.draw()
+        self.tutorial_guide.draw()
 
     def on_mouse_scroll(self, x: float, y: float, scroll_x: float, scroll_y: float) -> bool:
         if self.mode == "store" and self.selected_category == "all":
@@ -3755,6 +3756,7 @@ class ClosetOverlay(WardrobeCatalogOverlay):
             WARDROBE_CLOSET_BACKGROUND_IMAGE_PATH,
             music,
         )
+        self._draw_tutorial_guide_last = False
 
 
 class ClothingStoreOverlay(WardrobeCatalogOverlay):
