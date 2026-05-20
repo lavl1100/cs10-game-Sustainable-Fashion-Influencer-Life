@@ -882,11 +882,26 @@ class TutorialGuide:
             anchor_y="center",
             multiline=True,
         )
+        self._text_visible = True
         self.update_layout(layout)
 
     def set_message(self, message: str) -> None:
         self.message = message
+        self._text_visible = True
         self.text.text = message
+
+    def hide_text(self) -> None:
+        self._text_visible = False
+        self.text.text = ""
+
+    def hit_test_sprite(self, x: float, y: float) -> bool:
+        return self.sprite.collides_with_point((x, y))
+
+    def on_mouse_press(self, x: float, y: float, button: int) -> bool:
+        if button == arcade.MOUSE_BUTTON_LEFT and self.hit_test_sprite(x, y):
+            self.hide_text()
+            return True
+        return False
 
     def update_layout(self, layout: GameLayout) -> None:
         bubble_width = min(layout.sx(360), max(layout.sx(250), layout.width * 0.38))
@@ -917,7 +932,7 @@ class TutorialGuide:
         self.text.y = bubble_center_y + layout.sy(2)
         self.text.font_size = layout.ss(14)
         self.text.width = bubble_width - layout.sx(34)
-        self.text.text = self.message
+        self.text.text = self.message if self._text_visible else ""
 
     def draw(self) -> None:
         self.bubble.draw()
@@ -1880,6 +1895,9 @@ class HomeView(arcade.View):
         if button != arcade.MOUSE_BUTTON_LEFT:
             return
 
+        if self.tutorial_guide.on_mouse_press(x, y, button):
+            return
+
         now = _current_time()
         for nav_button in self.buttons:
             if nav_button.hit_test(x, y):
@@ -2056,6 +2074,8 @@ class ActivityMenuView(arcade.View):
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
+        if self.tutorial_guide.on_mouse_press(x, y, button):
+            return True
         if self.left_button is not None and self.left_button.hit_test(x, y):
             self.left_button.press()
             return True
@@ -2228,6 +2248,8 @@ class ActivityDetailView(arcade.View):
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
+        if self.tutorial_guide.on_mouse_press(x, y, button):
+            return True
         if self.back_button is not None and self.back_button.hit_test(x, y):
             self.back_button.press()
             return True
@@ -3626,6 +3648,9 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
+
+        if self.tutorial_guide.on_mouse_press(x, y, button):
+            return True
 
         close_left, close_right, close_bottom, close_top = self._close_bounds()
         if close_left <= x <= close_right and close_bottom <= y <= close_top:
