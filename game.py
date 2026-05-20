@@ -1845,6 +1845,8 @@ class HomeView(arcade.View):
     def _open_window(self, label: str) -> None:
         if self.active_window is not None and self.active_window.title == "Social Media" and label != "social media":
             self._set_button_active("social media", False)
+        if label == "settings":
+            self.tutorial_guide.set_message(_tutorial_message_for_screen("settings"))
         if label == "social media":
             self._set_button_active(label, True)
             if self.social_media_window is None:
@@ -1899,6 +1901,8 @@ class HomeView(arcade.View):
         self.active_window = None
         if label == "social media":
             self._set_button_active(label, False)
+        if label == "settings":
+            self.tutorial_guide.set_message(_tutorial_message_for_screen("home"))
         self._sync_cursor_mode()
 
     def _sync_cursor_mode(self) -> None:
