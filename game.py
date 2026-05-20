@@ -893,7 +893,7 @@ class TutorialGuide:
         bubble_height = min(layout.sy(170), max(layout.sy(120), layout.height * 0.22))
         bubble_center_x = layout.width - layout.sx(16) - bubble_width / 2 - layout.sx(52)
         bubble_center_y = layout.sy(42) + bubble_height / 2 + layout.sy(24)
-        sprite_size = min(layout.ss(136), max(layout.ss(88), min(layout.width, layout.height) * 0.16))
+        sprite_size = min(layout.ss(168), max(layout.ss(112), min(layout.width, layout.height) * 0.20))
         sprite_center_x = layout.width - layout.sx(56)
         sprite_center_y = layout.sy(58)
 
