@@ -796,6 +796,13 @@ def _tutorial_sprite_path_for_message(message: str) -> Path:
     return TUTORIAL_GUIDE_SPRITE_PATH
 
 
+def _visible_tutorial_sprite_path(message: str, sprite_path: Optional[Path] = None) -> Path:
+    """Pick the visible guide sprite for a message."""
+    if sprite_path in (TUTORIAL_GUIDE_SPRITE_PATH, TUTORIAL_GUIDE_SPRITE_MOUTHOPEN_PATH):
+        return sprite_path
+    return _tutorial_sprite_path_for_message(message)
+
+
 class DrawableSprite:
     """Small wrapper that renders a single sprite through a SpriteList."""
 
@@ -876,7 +883,7 @@ class TutorialGuide:
         self.bubble = DrawableSprite(
             _make_sprite(TUTORIAL_GUIDE_BUBBLE_PATH, 0, 0, 1, 1, (255, 255, 255))
         )
-        self._sprite_path = sprite_path if sprite_path is not None else _tutorial_sprite_path_for_message(message)
+        self._sprite_path = _visible_tutorial_sprite_path(message, sprite_path)
         self.sprite = DrawableSprite(
             _make_sprite(self._sprite_path, 0, 0, 1, 1, (255, 255, 255))
         )
@@ -902,7 +909,7 @@ class TutorialGuide:
         self._bubble_visible = True
         self._text_visible = True
         self.text.text = message
-        self._sprite_path = _tutorial_sprite_path_for_message(message)
+        self._sprite_path = _visible_tutorial_sprite_path(message)
         current_center_x = self.sprite.center_x
         current_center_y = self.sprite.center_y
         current_width = self.sprite.width
