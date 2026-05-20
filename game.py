@@ -905,16 +905,16 @@ class TutorialGuide:
         return False
 
     def update_layout(self, layout: GameLayout) -> None:
-        max_bubble_width = layout.width - layout.sx(44)
-        max_bubble_height = layout.height - layout.sy(96)
+        max_bubble_width = layout.width - layout.sx(24)
+        max_bubble_height = layout.height - layout.sy(56)
         if max_bubble_width / TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO <= max_bubble_height:
             bubble_width = max_bubble_width
             bubble_height = bubble_width / TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
         else:
             bubble_height = max_bubble_height
             bubble_width = bubble_height * TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
-        bubble_center_x = layout.width - layout.sx(12) - bubble_width / 2 - layout.sx(44)
-        bubble_center_y = layout.sy(24) + bubble_height / 2 + layout.sy(14)
+        bubble_center_x = layout.width - layout.sx(6) - bubble_width / 2 - layout.sx(28)
+        bubble_center_y = layout.sy(8) + bubble_height / 2 + layout.sy(4)
         sprite_size = min(layout.ss(360), max(layout.ss(230), min(layout.width, layout.height) * 0.42))
         sprite_center_x = layout.width - layout.sx(116)
         sprite_center_y = 0.0
