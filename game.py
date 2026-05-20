@@ -995,7 +995,7 @@ class TutorialGuide:
 def _tutorial_message_for_screen(label: str) -> str:
     normalized = label.strip().lower()
     messages = {
-        "home": "Use the sidebar to jump into Closet, Store, Social Media, or Activities.",
+        "home": "Welcome to Use the sidebar to jump into Closet, Store, Social Media, or Activities.",
         "settings": "Adjust the music controls if needed, then close the window when you're done.",
         "closet": "Preview outfits on the left, then switch tabs to compare looks and check what you own.",
         "clothing store": "Browse the catalog and buy clothing pieces with your money.",
