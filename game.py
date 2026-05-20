@@ -1892,6 +1892,14 @@ class HomeView(arcade.View):
             self.tutorial_guide.set_message(_tutorial_message_for_screen("home"))
         self._sync_cursor_mode()
 
+    def _hide_tutorial_guides(self) -> None:
+        self.tutorial_guide.hide_text()
+        if self.active_window is None:
+            return
+        hide_tutorial_guide = getattr(self.active_window, "hide_tutorial_guide", None)
+        if callable(hide_tutorial_guide):
+            hide_tutorial_guide()
+
     def _sync_cursor_mode(self) -> None:
         if self.window is not None:
             set_window_mouse_visible(self.window, True)
@@ -1933,6 +1941,7 @@ class HomeView(arcade.View):
             return
 
         if self.tutorial_guide.on_mouse_press(x, y, button):
+            self._hide_tutorial_guides()
             return
 
         now = _current_time()
@@ -2192,6 +2201,9 @@ class ActivityDetailView(arcade.View):
         self.tutorial_guide = TutorialGuide(self.layout, _tutorial_message_for_screen(title))
         self._apply_layout(self.layout)
 
+    def hide_tutorial_guide(self) -> None:
+        self.tutorial_guide.hide_text()
+
     def _go_back(self) -> None:
         if self.window is not None:
             self.window.show_view(self.activity_menu_view)
@@ -2429,6 +2441,9 @@ class ComputerWindowOverlay:
         )
         self._draw_tutorial_guide_last = True
         self.update_layout(layout)
+
+    def hide_tutorial_guide(self) -> None:
+        self.tutorial_guide.hide_text()
 
     def _bounds(self) -> tuple[float, float, float, float]:
         left = self.window_x - self.window_width / 2
