@@ -33,7 +33,7 @@ BASE_SCREEN_WIDTH = 800
 BASE_SCREEN_HEIGHT = 600
 DEFAULT_WINDOW_WIDTH = 1280
 DEFAULT_WINDOW_HEIGHT = 720
-SCREEN_TITLE = "Fashion Influencer Life"
+SCREEN_TITLE = "Sustainable Fashion Influencer Life"
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 BACKGROUND_IMAGE = ASSETS_DIR / "home_background.png"
@@ -991,15 +991,13 @@ def _tutorial_message_for_screen(label: str) -> str:
     normalized = label.strip().lower()
     messages = {
         "home": "Use the sidebar to jump into Closet, Store, Social Media, or Activities.",
-        "settings": "Adjust the music controls here, then close the window when you're done.",
+        "settings": "Adjust the music controls if needed, then close the window when you're done.",
         "closet": "Preview outfits on the left, then switch tabs to compare looks and check what you own.",
-        "clothing store": "Browse the catalog and buy pieces with your money.",
-        "social 503077media": "Pick a post type, publish it, and grow your follower count.",
-        "activities": "Choose Thrifting for shopping or Upcycling for the cutting challenge.",
-        "activity center": "Pick Thrifting for shopping or Upcycling for the cutting challenge.",
-        "thrifting": "Move through the rack, then press Space to buy the highlighted item.",
-        "upcycling station": "Drag the scissors along the highlighted path until the cut is complete.",
-        "upcycling": "Drag the scissors along the highlighted path until the cut is complete.",
+        "clothing store": "Browse the catalog and buy clothing pieces with your money.",
+        "social media": "Publish a variety of posts on your social media page, and grow your following.",
+        "activity center minigames": "Upcycle old clothes or thrift second-hand ones.",
+        "thrifting": "Move through the rack, and decide whether to buy clothing pieces based on their sustainability.",
+        "upcycling station": "Drag the scissors or needle along the highlighted path to repair the clothes.",
     }
     return messages.get(
         normalized,
