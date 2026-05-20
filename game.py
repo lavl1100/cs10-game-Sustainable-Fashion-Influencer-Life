@@ -917,7 +917,7 @@ class TutorialGuide:
         bubble_center_y = layout.sy(24) + bubble_height / 2 + layout.sy(14)
         sprite_size = min(layout.ss(360), max(layout.ss(230), min(layout.width, layout.height) * 0.42))
         sprite_center_x = layout.width - layout.sx(78)
-        sprite_center_y = layout.sy(58)
+        sprite_center_y = 0.0
 
         self.bubble.center_x = bubble_center_x
         self.bubble.center_y = bubble_center_y
@@ -934,6 +934,7 @@ class TutorialGuide:
         else:
             self.sprite.width = sprite_size
             self.sprite.height = sprite_size
+        self.sprite.center_y = max(self.sprite.height / 2, layout.sy(2))
 
         self.text.x = bubble_center_x
         self.text.y = bubble_center_y + layout.sy(24)
