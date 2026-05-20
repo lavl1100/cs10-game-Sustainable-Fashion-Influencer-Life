@@ -1938,14 +1938,13 @@ class HomeView(arcade.View):
             button.draw()
         if self.active_window is not None:
             self.active_window.draw()
-        if self.active_window is None:
-            self.tutorial_guide.draw()
+        self.tutorial_guide.draw()
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return
 
-        if self.active_window is None and self.tutorial_guide.on_mouse_press(x, y, button):
+        if self.tutorial_guide.on_mouse_press(x, y, button):
             return
 
         now = _current_time()
