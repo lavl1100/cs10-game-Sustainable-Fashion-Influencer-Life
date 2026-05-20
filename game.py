@@ -2843,6 +2843,9 @@ class ComputerWindowOverlay:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return False
 
+        if self.tutorial_guide.on_mouse_press(x, y, button):
+            return True
+
         close_left, close_right, close_bottom, close_top = self._close_bounds()
         if close_left <= x <= close_right and close_bottom <= y <= close_top:
             self._close()
