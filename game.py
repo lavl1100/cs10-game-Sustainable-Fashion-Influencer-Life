@@ -915,8 +915,8 @@ class TutorialGuide:
             bubble_width = bubble_height * TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
         bubble_center_x = layout.width - layout.sx(12) - bubble_width / 2 - layout.sx(44)
         bubble_center_y = layout.sy(24) + bubble_height / 2 + layout.sy(14)
-        sprite_size = min(layout.ss(320), max(layout.ss(200), min(layout.width, layout.height) * 0.36))
-        sprite_center_x = layout.width - layout.sx(56)
+        sprite_size = min(layout.ss(360), max(layout.ss(230), min(layout.width, layout.height) * 0.42))
+        sprite_center_x = layout.width - layout.sx(78)
         sprite_center_y = layout.sy(58)
 
         self.bubble.center_x = bubble_center_x
