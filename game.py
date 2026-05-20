@@ -3712,7 +3712,7 @@ class ClothingStoreOverlay(WardrobeCatalogOverlay):
         wallet: PlayerWallet,
         music: Optional[BackgroundMusicPlaylist] = None,
     ) -> None:
-        super().__init__(layout, "Clothing Store", on_close, wardrobe, wallet, "store", None, music)
+        super().__init__(layout, "Local Clothing Store", on_close, wardrobe, wallet, "store", None, music)
 
 
 class SocialMediaPostType(Enum):
