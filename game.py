@@ -208,7 +208,7 @@ THRIFTING_STARTING_MONEY = 100
 THRIFTING_XP_PER_LEVEL = 500
 THRIFTING_LEVEL_UP_REWARD = 100
 UPCYCLING_STAGE_HOLD_SECONDS = 3.0
-UPCYCLING_CUT_HIT_PADDING_PX = 5
+UPCYCLING_CUT_HIT_PADDING_PX = 14
 UPCYCLING_CUT_BAND_WIDTH_RATIO = 0.075
 UPCYCLING_NOTIFICATION_SECONDS = 2.5
 UPCYCLING_PALETTE_MINT = (192, 225, 210)
@@ -6459,7 +6459,8 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         # Screen coordinates count upward, while texture rows start at the top.
         pixel_y = min(image_height - 1, max(0, int((1.0 - y_ratio) * (image_height - 1))))
 
-        padding = UPCYCLING_CUT_HIT_PADDING_PX
+        # Expand the opaque pixels so the garment is easier to grab/cut.
+        padding = max(UPCYCLING_CUT_HIT_PADDING_PX, int(min(sprite.width, sprite.height) * 0.02))
         left_x = max(0, pixel_x - padding)
         right_x = min(image_width - 1, pixel_x + padding)
         top_y = max(0, pixel_y - padding)
