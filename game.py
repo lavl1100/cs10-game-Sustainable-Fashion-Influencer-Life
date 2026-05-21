@@ -1978,6 +1978,8 @@ class HomeView(arcade.View):
             on_close=lambda: self._close_window(label),
             music=self.music,
         )
+        if label == "settings":
+            TutorialGuide.reset_message(self.active_window.tutorial_guide.message)
         self.tutorial_guide.hide_text()
         show_tutorial_guide = getattr(self.active_window, "show_tutorial_guide", None)
         if callable(show_tutorial_guide):
@@ -2571,11 +2573,6 @@ class ComputerWindowOverlay:
 
     def show_tutorial_guide(self) -> None:
         self.tutorial_guide.show_text()
-
-    def on_show_view(self) -> None:
-        if self.title == "Settings":
-            TutorialGuide.reset_message(self.tutorial_guide.message)
-            self.tutorial_guide.show_text()
 
     def _bounds(self) -> tuple[float, float, float, float]:
         left = self.window_x - self.window_width / 2
