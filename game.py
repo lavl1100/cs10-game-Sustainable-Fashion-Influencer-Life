@@ -2220,9 +2220,6 @@ class ActivityMenuView(arcade.View):
         if self.window is not None:
             set_window_mouse_visible(self.window, True)
             self._apply_layout(GameLayout(self.window.width, self.window.height))
-        if self.title == "Settings":
-            TutorialGuide.reset_message(self.tutorial_guide.message)
-            self.tutorial_guide.show_text()
 
     def on_draw(self) -> None:
         self.clear()
@@ -2574,6 +2571,11 @@ class ComputerWindowOverlay:
 
     def show_tutorial_guide(self) -> None:
         self.tutorial_guide.show_text()
+
+    def on_show_view(self) -> None:
+        if self.title == "Settings":
+            TutorialGuide.reset_message(self.tutorial_guide.message)
+            self.tutorial_guide.show_text()
 
     def _bounds(self) -> tuple[float, float, float, float]:
         left = self.window_x - self.window_width / 2
