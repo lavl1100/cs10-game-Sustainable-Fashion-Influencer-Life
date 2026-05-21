@@ -950,6 +950,10 @@ class TutorialGuide:
     def _is_message_dismissed(cls, message: str) -> bool:
         return message in cls._dismissed_messages
 
+    @classmethod
+    def reset_message(cls, message: str) -> None:
+        cls._dismissed_messages.discard(message)
+
     def _sync_sprite_image(self, visible: bool) -> None:
         current_center_x = self.sprite.center_x
         current_center_y = self.sprite.center_y
@@ -2216,6 +2220,9 @@ class ActivityMenuView(arcade.View):
         if self.window is not None:
             set_window_mouse_visible(self.window, True)
             self._apply_layout(GameLayout(self.window.width, self.window.height))
+        if self.title == "Settings":
+            TutorialGuide.reset_message(self.tutorial_guide.message)
+            self.tutorial_guide.show_text()
 
     def on_draw(self) -> None:
         self.clear()
