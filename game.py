@@ -258,8 +258,9 @@ WARDROBE_CARD_BORDER = THEME_SOFT_LILAC
 WARDROBE_CARD_ACTIVE_BORDER = THEME_DEEP_PURPLE
 WARDROBE_CARD_OWNED_FILL = (235, 249, 241)
 WARDROBE_CARD_SELECTED_FILL = (247, 236, 248)
-WARDROBE_CARD_ICON_SCALE = 0.98
-WARDROBE_CARD_ICON_CENTER_Y_OFFSET_RATIO = 0.0
+WARDROBE_CARD_ICON_WIDTH_RATIO = 0.74
+WARDROBE_CARD_ICON_HEIGHT_RATIO = 0.46
+WARDROBE_CARD_ICON_CENTER_Y_OFFSET_RATIO = 0.05
 WARDROBE_STORE_EMPTY_FILL = (255, 248, 252)
 
 SOCIAL_MEDIA_WINDOW_FILL = THEME_PALE_PINK
@@ -698,6 +699,24 @@ def _make_sprite(
     sprite.center_x = center_x
     sprite.center_y = center_y
     return sprite
+
+
+def _trim_texture_to_opaque_bounds(texture: arcade.Texture) -> arcade.Texture:
+    """Trim transparent padding so the visible clothing fills more of the card."""
+    try:
+        image = texture.image.convert("RGBA")
+        alpha_box = image.getchannel("A").getbbox()
+    except Exception:
+        return texture
+
+    if alpha_box is None:
+        return texture
+
+    left, top, right, bottom = alpha_box
+    if left == 0 and top == 0 and right == image.width and bottom == image.height:
+        return texture
+
+    return texture.crop(left, top, right - left, bottom - top)
 
 
 def _scale_sprite_for_box(sprite: arcade.Sprite, max_width: float, max_height: float) -> float:
@@ -3275,16 +3294,19 @@ class WardrobeItemCard:
         return _make_panel(self.center_x, self.center_y, self.width, self.height, fill, 230)
 
     def _build_item_sprite(self) -> arcade.Sprite:
-        sprite_side_ratio = WARDROBE_CARD_ICON_SCALE if self.dense_layout else 0.92
-        sprite_side = min(self.width, self.height) * sprite_side_ratio
+        icon_width_ratio = WARDROBE_CARD_ICON_WIDTH_RATIO if self.dense_layout else 0.68
+        icon_height_ratio = WARDROBE_CARD_ICON_HEIGHT_RATIO if self.dense_layout else 0.42
+        icon_width = self.width * icon_width_ratio
+        icon_height = self.height * icon_height_ratio
         icon_center_y = self.center_y + self.height * WARDROBE_CARD_ICON_CENTER_Y_OFFSET_RATIO
         if _path_exists(self.item.image_path):
             texture = arcade.load_texture(str(self.item.image_path))
-            sprite = arcade.Sprite(str(self.item.image_path))
+            texture = _trim_texture_to_opaque_bounds(texture)
+            sprite = arcade.Sprite(texture)
             sprite.center_x = self.center_x
             sprite.center_y = icon_center_y
             if texture.width > 0 and texture.height > 0:
-                scale = min(sprite_side / texture.width, sprite_side / texture.height)
+                scale = min(icon_width / texture.width, icon_height / texture.height)
                 sprite.width = texture.width * scale
                 sprite.height = texture.height * scale
             return sprite
@@ -3292,8 +3314,8 @@ class WardrobeItemCard:
             self.item.image_path,
             self.center_x,
             icon_center_y,
-            sprite_side,
-            sprite_side,
+            icon_width,
+            icon_height,
             WARDROBE_STORE_EMPTY_FILL,
         )
 
