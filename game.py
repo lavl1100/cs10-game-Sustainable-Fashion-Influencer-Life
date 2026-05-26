@@ -199,7 +199,7 @@ WARDROBE_CLOSET_CATALOG = [
     ("patterned babydoll top", "shirts", ASSETS_DIR / "closet_patterned_babydoll_top.png", 66),
     ("bow blouse", "shirts", ASSETS_DIR / "closet_bow_blouse.png", 60),
     ("off-shoulder top", "shirts", ASSETS_DIR / "closet_off-shoulder_top.png", 64),
-    ("green vest", "jackets", ASSETS_DIR / "closet_green_vest.png", 64),
+    ("green vest", "shirts", ASSETS_DIR / "closet_green_vest.png", 64),
     ("black jacket", "jackets", ASSETS_DIR / "closet_black_jacket.png", 66),
     ("black windbreaker", "jackets", ASSETS_DIR / "closet_black_windbreaker.png", 63),
     ("white lace dress", "dresses", ASSETS_DIR / "closet_white_lace_dress.png", 68),
