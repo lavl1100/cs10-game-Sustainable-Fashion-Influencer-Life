@@ -28,7 +28,7 @@ class TutorialGuide:
         self.bubble = arcade.Sprite(str(TUTORIAL_BUBBLE_PATH))
         self.bubble.center_x = SCREEN_WIDTH - 230
         self.bubble.center_y = 130
-        self.bubble.width = 320
+        self.bubble.width = 380
         self.bubble.height = 160
         self.sprite = arcade.Sprite(str(TUTORIAL_SPRITE_PATH))
         self.sprite.center_x = SCREEN_WIDTH - 72
@@ -37,12 +37,12 @@ class TutorialGuide:
         self.sprite.height = 120
         self.text = arcade.Text(
             "Use the arrow keys to move through the rack, then press SPACE to buy the highlighted thrift find.",
-            self.bubble.center_x - 12,
+            self.bubble.center_x,
             self.bubble.center_y + 10,
             arcade.color.DARK_SLATE_GRAY,
             14,
             font_name=UI_FONT_NAME,
-            width=240,
+            width=300,
             align="center",
             anchor_x="center",
             anchor_y="center",

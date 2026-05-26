@@ -21,7 +21,7 @@ class TutorialGuide:
         self.bubble = arcade.Sprite(str(TUTORIAL_BUBBLE_PATH))
         self.bubble.center_x = SCREEN_WIDTH - 240
         self.bubble.center_y = 110
-        self.bubble.width = 320
+        self.bubble.width = 380
         self.bubble.height = 150
         self.sprite = arcade.Sprite(str(TUTORIAL_SPRITE_PATH))
         self.sprite.center_x = SCREEN_WIDTH - 72
@@ -30,12 +30,12 @@ class TutorialGuide:
         self.sprite.height = 110
         self.text = arcade.Text(
             "Click the photo to toggle the red square.",
-            self.bubble.center_x - 10,
+            self.bubble.center_x,
             self.bubble.center_y + 8,
             arcade.color.DARK_SLATE_GRAY,
             14,
             font_name=UI_FONT_NAME,
-            width=250,
+            width=290,
             align="center",
             anchor_x="center",
             anchor_y="center",

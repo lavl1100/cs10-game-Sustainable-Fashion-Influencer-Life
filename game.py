@@ -1037,7 +1037,7 @@ class TutorialGuide:
         return False
 
     def update_layout(self, layout: GameLayout) -> None:
-        max_bubble_width = layout.width - layout.sx(24)
+        max_bubble_width = layout.width - layout.sx(12)
         max_bubble_height = layout.height - layout.sy(56)
         bubble_height = min(
             float(TUTORIAL_GUIDE_BUBBLE_HEIGHT),
@@ -1045,7 +1045,7 @@ class TutorialGuide:
             max_bubble_width / TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO,
         )
         bubble_width = bubble_height * TUTORIAL_GUIDE_BUBBLE_ASPECT_RATIO
-        bubble_center_x = layout.width - layout.sx(6) - bubble_width / 2 + layout.sx(2)
+        bubble_center_x = layout.width - layout.sx(4) - bubble_width / 2
         bubble_center_y = layout.sy(-96) + bubble_height / 2
         sprite_size = min(layout.ss(360), max(layout.ss(230), min(layout.width, layout.height) * 0.42))
         sprite_center_x = layout.width - layout.sx(116)
@@ -1068,11 +1068,11 @@ class TutorialGuide:
             self.sprite.height = sprite_size
         self.sprite.center_y = max(self.sprite.height / 2, layout.sy(2))
 
-        self.text.x = bubble_center_x - layout.sx(24)
+        self.text.x = bubble_center_x
         text_top_padding = bubble_height * 0.54
         self.text.y = bubble_center_y + bubble_height / 2 - text_top_padding
         self.text.font_size = layout.ss(11)
-        self.text.width = bubble_width - layout.sx(48)
+        self.text.width = bubble_width - layout.sx(56)
         self.text.text = self.message if self._text_visible and not self._dismissed else ""
 
     def draw(self) -> None:

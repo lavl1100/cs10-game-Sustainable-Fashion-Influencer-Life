@@ -69,7 +69,7 @@ class TutorialGuide:
         self.bubble = arcade.Sprite(str(TUTORIAL_BUBBLE_PATH))
         self.bubble.center_x = W - 250
         self.bubble.center_y = 125
-        self.bubble.width = 360
+        self.bubble.width = 430
         self.bubble.height = 170
         self.sprite = arcade.Sprite(str(TUTORIAL_SPRITE_PATH))
         self.sprite.center_x = W - 78
@@ -78,12 +78,12 @@ class TutorialGuide:
         self.sprite.height = 120
         self.text = arcade.Text(
             "Choose a post type, then press the matching number key to create content and grow your audience.",
-            self.bubble.center_x - 14,
+            self.bubble.center_x,
             self.bubble.center_y + 10,
             TEXT_DARK,
             14,
             font_name=UI_FONT_NAME,
-            width=280,
+            width=340,
             align="center",
             anchor_x="center",
             anchor_y="center",
