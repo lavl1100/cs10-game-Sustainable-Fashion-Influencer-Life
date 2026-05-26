@@ -3429,6 +3429,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self._outfit_sprite_item_ids: dict[str, str] = {}
         self._store_preview_item_id: Optional[str] = None
         self._store_preview_equipped_snapshot: Optional[dict[str, str]] = None
+        self._store_preview_equipped_by_category: Optional[dict[str, str]] = None
         self.background_sprite: Optional[DrawableSprite] = None
         if self.background_image_path is not None:
             self.background_sprite = DrawableSprite(
@@ -3635,14 +3636,28 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
     def _begin_store_preview(self, item: WardrobeCatalogItem) -> None:
         if self._store_preview_equipped_snapshot is None:
             self._store_preview_equipped_snapshot = dict(self.wardrobe.equipped_by_category)
-        self.wardrobe.equip(item)
         self._store_preview_item_id = item.item_id
+        preview = dict(self._store_preview_equipped_snapshot)
+        conflict_categories = {
+            "shirts": {"dresses"},
+            "dresses": {"shirts", "skirts", "pants"},
+            "skirts": {"dresses", "pants"},
+            "pants": {"dresses", "skirts"},
+        }
+        for category in conflict_categories.get(item.category, set()):
+            preview.pop(category, None)
+        preview[item.category] = item.item_id
+        self._store_preview_equipped_by_category = preview
 
     def _restore_store_preview(self) -> None:
-        if self._store_preview_equipped_snapshot is not None:
-            self.wardrobe.equipped_by_category = dict(self._store_preview_equipped_snapshot)
         self._store_preview_item_id = None
         self._store_preview_equipped_snapshot = None
+        self._store_preview_equipped_by_category = None
+
+    def _active_equipped_by_category(self) -> dict[str, str]:
+        if self.mode == "store" and self._store_preview_equipped_by_category is not None:
+            return self._store_preview_equipped_by_category
+        return self.wardrobe.equipped_by_category
 
     def _buy_store_preview(self) -> bool:
         if self._store_preview_item_id is None:
@@ -3656,8 +3671,6 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         bought, message = self.wardrobe.buy(item, self.wallet)
         self._set_message(message)
         if bought:
-            self._store_preview_item_id = None
-            self._store_preview_equipped_snapshot = None
             self._sync_item_cards()
         return bought
 
@@ -3686,9 +3699,10 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self._sync_overlay_text()
 
     def _layer_order(self) -> list[str]:
+        equipped_by_category = self._active_equipped_by_category()
         equipped_categories = [
             category
-            for category, item_id in self.wardrobe.equipped_by_category.items()
+            for category, item_id in equipped_by_category.items()
             if item_id
         ]
         return sorted(equipped_categories, key=lambda category: WARDROBE_CATEGORY_LAYER_ORDER.get(category, 99))
@@ -3710,10 +3724,11 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self.girl_sprite.scale = girl_scale
 
         equipped_lookup = {item.item_id: item for item in self.wardrobe.catalog}
+        equipped_by_category = self._active_equipped_by_category()
         for category in WARDROBE_CATEGORY_ORDER:
             if category == "all":
                 continue
-            item_id = self.wardrobe.equipped_by_category.get(category)
+            item_id = equipped_by_category.get(category)
             item = equipped_lookup.get(item_id) if item_id else None
             sprite = self.outfit_sprites.get(category)
             if item is None:
@@ -3733,7 +3748,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             sprite.scale = girl_scale
 
         for category, sprite in self.outfit_sprites.items():
-            if category not in self.wardrobe.equipped_by_category:
+            if category not in equipped_by_category:
                 sprite.alpha = 0
 
     def _sync_overlay_text(self) -> None:
@@ -3884,16 +3899,6 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
 
     def _handle_item_activation(self, item: WardrobeCatalogItem) -> None:
         if self.mode == "store":
-            if self.wardrobe.is_owned(item):
-                if self._store_preview_item_id is not None:
-                    self._restore_store_preview()
-                changed = self.wardrobe.toggle_equip(item)
-                if changed:
-                    self._set_message(f"Wearing {item.name.title()}.")
-                else:
-                    self._set_message(f"Stopped wearing {item.name.title()}.")
-                self._sync_item_cards()
-                return
             if self._store_preview_item_id == item.item_id:
                 self._restore_store_preview()
                 self._set_message(f"Took off {item.name.title()}.")
