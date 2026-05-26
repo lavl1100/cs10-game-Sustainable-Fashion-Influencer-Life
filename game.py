@@ -1822,7 +1822,7 @@ class HomeView(arcade.View):
         self.side_bar = DrawableSprite(_make_panel(self.layout.side_bar_x, self.layout.side_bar_y, self.layout.side_bar_width, self.layout.side_bar_height, THEME_LAVENDER, 220))
         self.money_box = StatusBox(self.layout, "Money", f"${self.wallet.amount}", self.layout.top_hud_left, self.layout.top_bar_y, width=self.layout.ss(132), height=self.layout.ss(42), label_size=self.layout.status_label_font_size, value_size=self.layout.status_value_font_size)
         self.energy_box = StatusBox(self.layout, "Energy", self.energy.percentage_text(), self.layout.top_hud_left + self.layout.top_hud_gap, self.layout.top_bar_y, width=self.layout.ss(132), height=self.layout.ss(42), label_size=self.layout.status_label_font_size, value_size=self.layout.status_value_font_size)
-        self.level_box = StatusBox(self.layout, "Level", f"{self.progress.level} ({self.progress.experience}/{THRIFTING_XP_PER_LEVEL})", self.layout.top_hud_left + self.layout.top_hud_gap * 2, self.layout.top_bar_y, width=self.layout.ss(132), height=self.layout.ss(42), accent_color=THEME_DEEP_PURPLE, label_size=self.layout.status_label_font_size, value_size=self.layout.status_value_font_size)
+        self.level_box = StatusBox(self.layout, "Level", f"{self.progress.level} ({self.progress.experience}/{THRIFTING_XP_PER_LEVEL})", self.layout.top_hud_left + self.layout.top_hud_gap * 2, self.layout.top_bar_y, width=self.layout.ss(160), height=self.layout.ss(42), accent_color=THEME_DEEP_PURPLE, label_size=self.layout.status_label_font_size, value_size=self.layout.status_value_font_size)
         self.date_text = arcade.Text(
             "",
             self.layout.top_clock_right,
@@ -1957,7 +1957,7 @@ class HomeView(arcade.View):
             layout,
             layout.top_hud_left + layout.top_hud_gap * 2,
             layout.top_bar_y,
-            layout.ss(132),
+            layout.ss(160),
             layout.ss(42),
             layout.status_label_font_size,
             layout.status_value_font_size,
