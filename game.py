@@ -3391,8 +3391,7 @@ class WardrobeItemCard:
         icon_height = self.height * icon_height_ratio
         icon_center_y = self.center_y + self.height * WARDROBE_CARD_ICON_CENTER_Y_OFFSET_RATIO
         if _path_exists(self.item.image_path):
-            texture = arcade.load_texture(str(self.item.image_path))
-            texture = _trim_texture_to_opaque_bounds(texture)
+            texture = _load_trimmed_texture_cached(self.item.image_path)
             sprite = arcade.Sprite(texture)
             sprite.center_x = self.center_x
             sprite.center_y = icon_center_y
@@ -3437,6 +3436,18 @@ class WardrobeItemCard:
         self.detail_text.x = center_x
         self.detail_text.y = center_y - height * 0.42
         self.detail_text.font_size = layout.ss(9)
+
+    def move_to(self, center_x: float, center_y: float) -> None:
+        self.center_x = center_x
+        self.center_y = center_y
+        self.panel.center_x = center_x
+        self.panel.center_y = center_y
+        self.item_sprite.center_x = center_x
+        self.item_sprite.center_y = center_y + self.height * WARDROBE_CARD_ICON_CENTER_Y_OFFSET_RATIO
+        self.title_text.x = center_x
+        self.title_text.y = center_y - self.height * 0.27
+        self.detail_text.x = center_x
+        self.detail_text.y = center_y - self.height * 0.42
 
     def refresh(self, owned: bool, equipped: bool, detail: str) -> None:
         self.owned = owned
@@ -3504,6 +3515,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self.message = ""
         self.message_timer = 0.0
         self.scroll = 0.0
+        self._item_card_ids: tuple[str, ...] = ()
         self.tab_buttons: list[WardrobeTabButton] = []
         self.item_cards: list[WardrobeItemCard] = []
         self.outfit_sprites: dict[str, arcade.Sprite] = {}
@@ -3769,27 +3781,55 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
 
     def _sync_item_cards(self) -> None:
         items = self._display_items()
+        item_ids = tuple(item.item_id for item in items)
         card_width, card_height = self._card_geometry(len(items))
         gap = self.layout.sx(WARDROBE_ITEM_CARD_GAP)
         self._clamp_scroll()
-        self.item_cards = []
-        for index, item in enumerate(items):
-            center_x, center_y = self._card_position(index, card_width, card_height, gap)
-            card = WardrobeItemCard(
-                self.layout,
-                item,
-                center_x,
-                center_y,
-                card_width,
-                card_height,
-                self.mode,
-                self.mode == "store" and self.selected_category == "all",
-                self._handle_item_activation,
-            )
-            card.refresh(self.wardrobe.is_owned(item), self.wardrobe.is_equipped(item), self._card_detail(item))
-            self.item_cards.append(card)
+        rebuild_cards = len(self.item_cards) != len(items) or self._item_card_ids != item_ids
+        if rebuild_cards:
+            self.item_cards = []
+            for index, item in enumerate(items):
+                center_x, center_y = self._card_position(index, card_width, card_height, gap)
+                card = WardrobeItemCard(
+                    self.layout,
+                    item,
+                    center_x,
+                    center_y,
+                    card_width,
+                    card_height,
+                    self.mode,
+                    self.mode == "store" and self.selected_category == "all",
+                    self._handle_item_activation,
+                )
+                card.refresh(self.wardrobe.is_owned(item), self.wardrobe.is_equipped(item), self._card_detail(item))
+                self.item_cards.append(card)
+            self._item_card_ids = item_ids
+        else:
+            for index, (card, item) in enumerate(zip(self.item_cards, items)):
+                center_x, center_y = self._card_position(index, card_width, card_height, gap)
+                card.update_layout(
+                    self.layout,
+                    center_x,
+                    center_y,
+                    card_width,
+                    card_height,
+                )
+                card.refresh(self.wardrobe.is_owned(item), self.wardrobe.is_equipped(item), self._card_detail(item))
         self._sync_outfit_sprites()
         self._sync_overlay_text()
+
+    def _sync_item_card_positions(self) -> None:
+        items = self._display_items()
+        if len(items) != len(self.item_cards):
+            self._sync_item_cards()
+            return
+
+        card_width, card_height = self._card_geometry(len(items))
+        gap = self.layout.sx(WARDROBE_ITEM_CARD_GAP)
+        self._clamp_scroll()
+        for index, card in enumerate(self.item_cards):
+            center_x, center_y = self._card_position(index, card_width, card_height, gap)
+            card.move_to(center_x, center_y)
 
     def _layer_order(self) -> list[str]:
         equipped_by_category = self._active_equipped_by_category()
@@ -4019,7 +4059,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
     def on_mouse_scroll(self, x: float, y: float, scroll_x: float, scroll_y: float) -> bool:
         if self.mode == "store" and self.selected_category == "all":
             self.scroll = max(0.0, min(self._max_scroll(), self.scroll - scroll_y * 35))
-            self._sync_item_cards()
+            self._sync_item_card_positions()
             return True
         return False
 
@@ -4106,7 +4146,6 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             self.message_timer = max(0.0, self.message_timer - delta_time)
             if self.message_timer == 0.0:
                 self.message = ""
-        self._sync_overlay_text()
 
     def on_resize(self, width: float, height: float) -> None:
         self.update_layout(GameLayout(width, height))
@@ -5762,7 +5801,7 @@ class ThriftItem:
     @classmethod
     def create(cls) -> "ThriftItem":
         texture_path = random.choice(THRIFTING_CLOTHING_IMAGE_PATHS)
-        sprite = arcade.Sprite(texture_path)
+        sprite = arcade.Sprite(_load_texture_cached(texture_path))
         if random.random() < 0.5:
             fabric = random.choice(FAST_FASHION_FABRICS)
             eco = False
@@ -6074,8 +6113,11 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         contour from the opaque pixels so the game responds to the art instead
         of a hand-tuned guess.
         """
+        cached = _CUT_PATH_TEMPLATE_CACHE.get(image_path)
+        if cached is not None:
+            return cached
         try:
-            texture = arcade.load_texture(str(image_path))
+            texture = _load_texture_cached(image_path)
             image = texture.image.convert("RGBA")
         except Exception:
             return []
@@ -6107,6 +6149,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
                         best_right = end
 
         if best_left is None or best_right is None or best_right <= best_left:
+            _CUT_PATH_TEMPLATE_CACHE[image_path] = []
             return []
 
         sample_step = max(6, width // 240)
@@ -6121,6 +6164,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
                 raw_points.append((x / max(width - 1, 1), y / max(height - 1, 1)))
 
         if len(raw_points) < 2:
+            _CUT_PATH_TEMPLATE_CACHE[image_path] = []
             return []
 
         smoothed_points: list[tuple[float, float]] = []
@@ -6130,6 +6174,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             y = sum(point[1] for point in raw_points[start:end]) / (end - start)
             smoothed_points.append((x, y))
 
+        _CUT_PATH_TEMPLATE_CACHE[image_path] = smoothed_points
         return smoothed_points
 
     @staticmethod
@@ -6140,14 +6185,19 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
         not the transparent padding around it. We store the alpha channel as a
         compact byte buffer so hit tests stay fast.
         """
+        cached = _ALPHA_MASK_CACHE.get(image_path)
+        if cached is not None:
+            return cached
         try:
-            texture = arcade.load_texture(str(image_path))
+            texture = _load_texture_cached(image_path)
             image = texture.image.convert("RGBA")
         except Exception:
             return b"", 0, 0
 
         alpha = image.getchannel("A").tobytes()
-        return alpha, image.width, image.height
+        result = alpha, image.width, image.height
+        _ALPHA_MASK_CACHE[image_path] = result
+        return result
 
     def __init__(
         self,
