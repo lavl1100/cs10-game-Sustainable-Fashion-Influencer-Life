@@ -1093,7 +1093,7 @@ def _tutorial_message_for_screen(label: str) -> str:
         "home": "\nWelcome to life as a sustainable fashion influencer!\nPractice sustainability by using the sidebar to open the closet,\nlocal clothes store, social media, or other sustainable activities.",
         "settings": "Adjust the music controls if needed, then \nclose the window when you're done.",
         "closet": "Preview outfits on the left, then switch\ntabs to compare looks and check what you own.",
-        "clothing store": "Click an item to try it on. Click it again\nto take it off, or press SPACE to buy it.",
+        "clothing store": "Click an item to try it on. Click it again\nto take it off, or use Buy to purchase it.",
         "social media": "Publish a variety of posts on your\nsocial media page, and grow your following to spread sustainability.",
         "activity center minigames": "Upcycle old clothes or thrift\nsecond-hand ones.",
         "thrifting": "Move through the rack, and decide whether to buy clothing\npieces based on their sustainability.",
@@ -3430,6 +3430,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self._store_preview_item_id: Optional[str] = None
         self._store_preview_equipped_snapshot: Optional[dict[str, str]] = None
         self._store_preview_equipped_by_category: Optional[dict[str, str]] = None
+        self.purchase_button: Optional[SpriteButtonPanel] = None
         self.background_sprite: Optional[DrawableSprite] = None
         if self.background_image_path is not None:
             self.background_sprite = DrawableSprite(
@@ -3654,6 +3655,14 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self._store_preview_equipped_snapshot = None
         self._store_preview_equipped_by_category = None
 
+    def _purchase_button_geometry(self) -> tuple[float, float, float, float]:
+        girl_left, girl_right, girl_bottom, girl_top = self._girl_bounds()
+        button_width = min(self.layout.sx(96), (girl_right - girl_left) * 0.42)
+        button_height = self.layout.sy(30)
+        center_x = girl_right - button_width / 2 - self.layout.sx(12)
+        center_y = girl_bottom + self.layout.sy(20)
+        return center_x, center_y, button_width, button_height
+
     def _active_equipped_by_category(self) -> dict[str, str]:
         if self.mode == "store" and self._store_preview_equipped_by_category is not None:
             return self._store_preview_equipped_by_category
@@ -3671,6 +3680,9 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         bought, message = self.wardrobe.buy(item, self.wallet)
         self._set_message(message)
         if bought:
+            if self._store_preview_equipped_by_category is not None:
+                self.wardrobe.equipped_by_category = dict(self._store_preview_equipped_by_category)
+            self._restore_store_preview()
             self._sync_item_cards()
         return bought
 
@@ -3767,6 +3779,29 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self.empty_text.x = (grid_left + grid_right) / 2
         self.empty_text.y = (grid_bottom + grid_top) / 2
         self.empty_text.width = max(0.0, grid_right - grid_left - self.layout.sx(36))
+        if self.purchase_button is None:
+            self.purchase_button = SpriteButtonPanel(
+                self.layout,
+                "Buy",
+                0,
+                0,
+                self.layout.sx(96),
+                self.layout.sy(30),
+                THEME_DEEP_PURPLE,
+                self._activate_purchase_button,
+                text_color=(255, 255, 255),
+                text_size=self.layout.ss(14),
+            )
+        button_x, button_y, button_width, button_height = self._purchase_button_geometry()
+        self.purchase_button.fill_color = THEME_DEEP_PURPLE if self._store_preview_item_id is not None else THEME_SOFT_LILAC
+        self.purchase_button.update_layout(
+            self.layout,
+            button_x,
+            button_y,
+            button_width,
+            button_height,
+            self.layout.ss(14),
+        )
 
     def _wardrobe_window_size(self, layout: GameLayout) -> tuple[float, float]:
         """Give the wardrobe screens extra room for the tab stack and preview panel."""
@@ -3787,6 +3822,15 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self.wallet_text.font_size = layout.ss(14)
         self.message_text.font_size = layout.ss(14)
         self.empty_text.font_size = layout.ss(13)
+        if self.purchase_button is not None:
+            self.purchase_button.update_layout(
+                layout,
+                self.purchase_button.center_x,
+                self.purchase_button.center_y,
+                self.purchase_button.width,
+                self.purchase_button.height,
+                layout.ss(14),
+            )
 
     def update_layout(self, layout: GameLayout) -> None:
         super().update_layout(layout)
@@ -3877,6 +3921,8 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             button.draw()
         self.title_note_text.draw()
         self.wallet_text.draw()
+        if self.mode == "store" and self.purchase_button is not None:
+            self.purchase_button.draw()
         if self.message_timer > 0.0 and self.message:
             self.message_text.draw()
         if not self.item_cards:
@@ -3904,7 +3950,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
                 self._set_message(f"Took off {item.name.title()}.")
             else:
                 self._begin_store_preview(item)
-                self._set_message(f"Trying on {item.name.title()}. Press SPACE to buy it.")
+                self._set_message(f"Trying on {item.name.title()}.")
             self._sync_item_cards()
             return
         changed = self.wardrobe.toggle_equip(item)
@@ -3941,6 +3987,10 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
                 card.press()
                 return True
 
+        if self.mode == "store" and self.purchase_button is not None and self.purchase_button.hit_test(x, y):
+            self.purchase_button.press()
+            return True
+
         left, right, bottom, top = self._bounds()
         if left <= x <= right and bottom <= y <= top:
             return True
@@ -3962,12 +4012,14 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             return
         for card in self.item_cards:
             card.release()
+        if self.purchase_button is not None:
+            self.purchase_button.release()
 
-    def on_key_press(self, key: int, modifiers: int) -> None:
-        if self.mode == "store" and key == arcade.key.SPACE:
-            if self._buy_store_preview():
-                return
-        super().on_key_press(key, modifiers)
+    def _activate_purchase_button(self) -> None:
+        if self._store_preview_item_id is None:
+            self._set_message("Try on an item first.")
+            return
+        self._buy_store_preview()
 
     def on_update(self, delta_time: float) -> None:
         if self.message_timer > 0.0:
