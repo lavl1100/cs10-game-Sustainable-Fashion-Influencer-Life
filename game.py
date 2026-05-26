@@ -1329,6 +1329,7 @@ class PlayerEnergy:
     maximum: int = 10
     cooldown_ends_at: float = 0.0
     recharge_progress: float = 0.0
+    recharge_updated_at: float = 0.0
 
     def percentage_text(self) -> str:
         if self.maximum <= 0:
@@ -4423,6 +4424,11 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
     @energy.setter
     def energy(self, value: int) -> None:
         self.energy_state.current = max(0, min(value, self.max_energy))
+        self.energy_state.recharge_updated_at = _current_time()
+
+    def _set_energy(self, value: int, now: Optional[float] = None) -> None:
+        self.energy_state.current = max(0, min(value, self.max_energy))
+        self.energy_state.recharge_updated_at = _current_time() if now is None else now
 
     @property
     def max_energy(self) -> int:
@@ -4459,7 +4465,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
 
         if reason == "day":
             self._award_daily_experience()
-        self.energy = 0
+        self._set_energy(0, current_time)
         self.day_timer = self.day_length
         self.energy_state.cooldown_ends_at = current_time + SOCIAL_MEDIA_COOLDOWN_SECONDS
         self.composing = False
@@ -4475,12 +4481,13 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             SOCIAL_MEDIA_CARD_MUTED,
         )
 
-    def _finish_cooldown(self) -> None:
+    def _finish_cooldown(self, now: Optional[float] = None) -> None:
+        current_time = _current_time() if now is None else now
         self.energy_state.cooldown_ends_at = 0.0
         self.day += 1
         self.day_timer = 0.0
         self.energy_state.recharge_progress = 0.0
-        self.energy = self.max_energy
+        self._set_energy(self.max_energy, current_time)
         self._notify(f"Day {self.day} ♡ energy restored!", (255, 160, 198))
 
     def _window_size(self, layout: GameLayout) -> tuple[float, float]:
@@ -4811,6 +4818,17 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
     def _close_compose(self) -> None:
         self.composing = False
         self.hover_idx = -1
+
+    def _sync_time_based_state(self, now: Optional[float] = None) -> None:
+        if not self._social_ready:
+            return
+
+        current_time = _current_time() if now is None else now
+        if self.energy_state.cooldown_ends_at > 0.0:
+            if self._cooldown_remaining(current_time) <= 0.0:
+                self._finish_cooldown(current_time)
+            return
+        self._update_energy_recharge(current_time)
 
     def update_layout(self, layout: GameLayout) -> None:
         super().update_layout(layout)
@@ -5367,15 +5385,15 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
     def on_update(self, delta_time: float) -> None:
         if not self._social_ready:
             return
+        now = _current_time()
+        self._sync_time_based_state(now)
         if not self._social_started:
             return
 
         dt = min(delta_time, 0.1)
-        now = _current_time()
-        self._update_energy_recharge(dt)
         if self.energy_state.cooldown_ends_at > 0.0:
             if self._cooldown_remaining(now) <= 0.0:
-                self._finish_cooldown()
+                self._finish_cooldown(now)
             else:
                 return
         else:
@@ -5420,17 +5438,29 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
     def _update_energy_recharge(self, dt: float) -> None:
         if self.energy >= self.max_energy:
             self.energy_state.recharge_progress = 0.0
+            self.energy_state.recharge_updated_at = dt
             return
 
-        self.energy_state.recharge_progress += dt * (SOCIAL_MEDIA_ENERGY_RECHARGE_PER_MINUTE / 60.0)
+        last_updated = self.energy_state.recharge_updated_at
+        if last_updated <= 0.0:
+            self.energy_state.recharge_updated_at = dt
+            return
+
+        elapsed = max(0.0, dt - last_updated)
+        if elapsed <= 0.0:
+            return
+
+        self.energy_state.recharge_progress += elapsed * (SOCIAL_MEDIA_ENERGY_RECHARGE_PER_MINUTE / 60.0)
+        self.energy_state.recharge_updated_at = dt
         gained = int(self.energy_state.recharge_progress)
         if gained <= 0:
             return
 
-        self.energy = min(self.max_energy, self.energy + gained)
+        self._set_energy(min(self.max_energy, self.energy + gained), dt)
         self.energy_state.recharge_progress -= gained
         if self.energy >= self.max_energy:
             self.energy_state.recharge_progress = 0.0
+            self.energy_state.recharge_updated_at = dt
 
     def on_draw(self) -> None:
         super().on_draw()
