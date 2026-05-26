@@ -1150,7 +1150,7 @@ def _tutorial_message_for_screen(label: str) -> str:
         "settings": "Adjust the music controls if needed, then \nclose the window when you're done.",
         "closet": "Preview outfits on the left, then switch\ntabs to compare looks and check what you own.",
         "clothing store": "Click an item to try it on. Click it again\nto take it off, or use Buy to purchase it.",
-        "social media": "Publish a variety of posts on your\nsocial media page, and grow your following to spread sustainability.",
+        "social media": "Share posts to grow your following\nand spread sustainability ♡",
         "activity center minigames": "Upcycle old clothes or thrift\nsecond-hand ones.",
         "thrifting": "Move through the rack, and decide whether to buy clothing\npieces based on their sustainability.",
         "upcycling station": "Drag the scissors or needle along the highlighted\npath to repair the clothes.",
