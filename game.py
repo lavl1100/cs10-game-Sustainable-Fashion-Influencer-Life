@@ -3736,6 +3736,16 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
 
     def _card_geometry(self, item_count: int) -> tuple[float, float]:
         grid_left, grid_right, content_bottom, content_top = self._grid_bounds()
+        return self._card_geometry_for_bounds(item_count, grid_left, grid_right, content_bottom, content_top)
+
+    def _card_geometry_for_bounds(
+        self,
+        item_count: int,
+        grid_left: float,
+        grid_right: float,
+        content_bottom: float,
+        content_top: float,
+    ) -> tuple[float, float]:
         grid_width = max(1.0, grid_right - grid_left)
         grid_height = max(1.0, content_top - content_bottom)
         gap = self.layout.sx(WARDROBE_ITEM_CARD_GAP)
@@ -3766,9 +3776,15 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         if not items:
             return 0.0
 
-        grid_left, grid_right, content_bottom, content_top = self._grid_bounds()
+        grid_left, grid_right, content_bottom, content_top = self._grid_frame_bounds()
         grid_height = max(1.0, content_top - content_bottom)
-        card_width, card_height = self._card_geometry(len(items))
+        card_width, card_height = self._card_geometry_for_bounds(
+            len(items),
+            grid_left,
+            grid_right,
+            content_bottom,
+            content_top,
+        )
         gap = self.layout.sx(WARDROBE_ITEM_CARD_GAP)
         rows = max(1, math.ceil(len(items) / self._card_columns()))
         total_height = rows * card_height + (rows - 1) * gap
@@ -3783,8 +3799,8 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         if track_bounds is None or thumb_bounds is None:
             return
 
-        track_left, track_right, track_bottom, track_top = track_bounds
-        thumb_left, thumb_right, thumb_bottom, thumb_top = thumb_bounds
+        _, _, track_bottom, track_top = track_bounds
+        _, _, thumb_bottom, thumb_top = thumb_bounds
         thumb_height = thumb_top - thumb_bottom
         track_height = track_top - track_bottom
         max_scroll = self._max_scroll()
