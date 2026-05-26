@@ -3474,6 +3474,9 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             font_name=UI_FONT_NAME,
             anchor_x="center",
             anchor_y="center",
+            width=layout.sx(260),
+            align="center",
+            multiline=True,
         )
         super().__init__(layout, title, on_close, music, visible_sprite_path=TUTORIAL_GUIDE_SPRITE_PATH)
         self._wardrobe_ready = True
@@ -3687,6 +3690,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
     def _sync_overlay_text(self) -> None:
         content_left, content_right, content_bottom, content_top = self._content_bounds()
         girl_left, girl_right, girl_bottom, girl_top = self._girl_bounds()
+        grid_left, grid_right, grid_bottom, grid_top = self._grid_bounds()
         self.title_note_text.x = content_left + self.layout.sx(4)
         self.title_note_text.y = content_top - self.layout.sy(12)
         self.title_note_text.text = "build looks here" if self.mode == "closet" else "shop new pieces"
@@ -3696,8 +3700,9 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self.message_text.x = (girl_right + content_right) / 2
         self.message_text.y = content_bottom + self.layout.sy(42)
         self.message_text.text = self.message if self.message_timer > 0.0 else ""
-        self.empty_text.x = (content_left + content_right) / 2
-        self.empty_text.y = (girl_bottom + girl_top) / 2
+        self.empty_text.x = (grid_left + grid_right) / 2
+        self.empty_text.y = (grid_bottom + grid_top) / 2
+        self.empty_text.width = max(0.0, grid_right - grid_left - self.layout.sx(36))
 
     def _wardrobe_window_size(self, layout: GameLayout) -> tuple[float, float]:
         """Give the wardrobe screens extra room for the tab stack and preview panel."""
@@ -3717,7 +3722,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self.title_note_text.font_size = layout.ss(14)
         self.wallet_text.font_size = layout.ss(14)
         self.message_text.font_size = layout.ss(14)
-        self.empty_text.font_size = layout.ss(15)
+        self.empty_text.font_size = layout.ss(13)
 
     def update_layout(self, layout: GameLayout) -> None:
         super().update_layout(layout)
