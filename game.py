@@ -1111,9 +1111,9 @@ class TutorialGuide:
         self.sprite.center_y = max(self.sprite.height / 2, layout.sy(2))
 
         self.text.x = bubble_center_x
-        # Nudge the copy a bit lower so it sits visually inside the rounded part
-        # of the bubble instead of riding up toward the top edge.
-        self.text.y = bubble_center_y - layout.sy(18)
+        # Nudge the copy lower so the whole block sits visually centered inside
+        # the rounded part of the bubble.
+        self.text.y = bubble_center_y - layout.sy(28)
         self.text.align = "center"
         self.text.anchor_x = "center"
         self.text.anchor_y = "center"
