@@ -3654,7 +3654,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
     def _scrollbar_bounds(self) -> Optional[tuple[float, float, float, float]]:
         if not self._scrollbar_visible():
             return None
-        frame_left, frame_right, content_bottom, content_top = self._grid_frame_bounds()
+        _, frame_right, content_bottom, content_top = self._grid_frame_bounds()
         track_right = frame_right - self.layout.sx(WARDROBE_SCROLLBAR_GAP)
         track_left = track_right - self.layout.sx(WARDROBE_SCROLLBAR_WIDTH)
         track_bottom = content_bottom + self.layout.sy(WARDROBE_SCROLLBAR_INSET_Y)
@@ -3671,7 +3671,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         if track_height <= 0.0 or max_scroll <= 0.0:
             return None
 
-        grid_left, grid_right, content_bottom, content_top = self._grid_bounds()
+        _, _, content_bottom, content_top = self._grid_bounds()
         visible_height = max(1.0, content_top - content_bottom)
         total_height = visible_height + max_scroll
         thumb_height = max(
@@ -3778,7 +3778,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
 
         grid_left, grid_right, content_bottom, content_top = self._grid_frame_bounds()
         grid_height = max(1.0, content_top - content_bottom)
-        card_width, card_height = self._card_geometry_for_bounds(
+        _, card_height = self._card_geometry_for_bounds(
             len(items),
             grid_left,
             grid_right,
