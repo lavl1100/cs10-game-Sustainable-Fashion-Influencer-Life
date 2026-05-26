@@ -769,12 +769,16 @@ def _update_cached_text(
     return cached
 
 
-def _wrap_wardrobe_title(title: str) -> str:
-    """Wrap longer clothing names onto two lines so they stay inside the card."""
+def _wrap_wardrobe_title(title: str, max_width: float, font_size: float) -> str:
+    """Wrap clothing names so they stay inside the card."""
     words = title.title().split()
-    if len(words) <= 1:
+    if len(words) <= 1 or max_width <= 0.0:
         return title.title()
-    if len(words) == 2:
+
+    # Estimate the number of characters that fit on a line and prefer a split
+    # that keeps both lines within that budget.
+    max_chars = max(10, int(max_width / max(1.0, font_size * 0.58)))
+    if len(" ".join(words)) <= max_chars:
         return title.title()
 
     best_split = 1
@@ -3262,17 +3266,23 @@ class WardrobeItemCard:
         self.owned = False
         self.equipped = False
         self.message = ""
+        self.title_text_value = item.name
+        title_width = max(0.0, width - layout.sx(16))
+        title_font_size = layout.ss(10)
         self.panel = DrawableSprite(self._build_panel())
         self.item_sprite = DrawableSprite(self._build_item_sprite())
         self.title_text = arcade.Text(
-            _wrap_wardrobe_title(item.name),
+            _wrap_wardrobe_title(self.title_text_value, title_width, title_font_size),
             center_x,
             center_y - height * 0.27,
             THEME_TEXT_PURPLE,
-            layout.ss(10),
+            title_font_size,
             font_name=UI_FONT_NAME,
             anchor_x="center",
             anchor_y="center",
+            width=title_width,
+            align="center",
+            multiline=True,
         )
         self.detail_text = arcade.Text(
             "",
@@ -3334,9 +3344,15 @@ class WardrobeItemCard:
         self.height = height
         self.panel.replace(self._build_panel())
         self.item_sprite.replace(self._build_item_sprite())
+        title_width = max(0.0, width - layout.sx(16))
+        title_font_size = layout.ss(10)
+        self.title_text.text = _wrap_wardrobe_title(self.title_text_value, title_width, title_font_size)
         self.title_text.x = center_x
         self.title_text.y = center_y - height * 0.27
-        self.title_text.font_size = layout.ss(10)
+        self.title_text.font_size = title_font_size
+        self.title_text.width = title_width
+        self.title_text.align = "center"
+        self.title_text.multiline = True
         self.detail_text.x = center_x
         self.detail_text.y = center_y - height * 0.42
         self.detail_text.font_size = layout.ss(9)
