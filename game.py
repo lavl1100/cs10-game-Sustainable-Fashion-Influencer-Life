@@ -1110,7 +1110,7 @@ class TutorialGuide:
             self.sprite.height = sprite_size
         self.sprite.center_y = max(self.sprite.height / 2, layout.sy(2))
 
-        self.text.x = bubble_center_x
+        self.text.x = bubble_center_x - layout.sx(28)
         # Nudge the copy lower so the whole block sits visually centered inside
         # the rounded part of the bubble.
         self.text.y = bubble_center_y - layout.sy(28)
