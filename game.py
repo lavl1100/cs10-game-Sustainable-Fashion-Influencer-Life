@@ -3787,13 +3787,12 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
                 0,
                 self.layout.sx(96),
                 self.layout.sy(30),
-                THEME_DEEP_PURPLE,
+                WARDROBE_CARD_FILL,
                 self._activate_purchase_button,
-                text_color=(255, 255, 255),
+                text_color=THEME_TEXT_PURPLE,
                 text_size=self.layout.ss(14),
             )
         button_x, button_y, button_width, button_height = self._purchase_button_geometry()
-        self.purchase_button.fill_color = THEME_DEEP_PURPLE if self._store_preview_item_id is not None else THEME_SOFT_LILAC
         self.purchase_button.update_layout(
             self.layout,
             button_x,
@@ -4700,7 +4699,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
                 button_height,
                 (255, 160, 198),
                 self._open_compose,
-                text_color=(255, 255, 255),
+                text_color=THEME_TEXT_PURPLE,
                 text_size=self.layout.ss(16),
             )
         else:
