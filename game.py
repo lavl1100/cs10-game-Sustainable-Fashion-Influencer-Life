@@ -661,6 +661,28 @@ def _path_exists(path: Path) -> bool:
     return path.is_file()
 
 
+_TEXTURE_CACHE: dict[Path, arcade.Texture] = {}
+_TRIMMED_TEXTURE_CACHE: dict[Path, arcade.Texture] = {}
+_CUT_PATH_TEMPLATE_CACHE: dict[Path, list[tuple[float, float]]] = {}
+_ALPHA_MASK_CACHE: dict[Path, tuple[bytes, int, int]] = {}
+
+
+def _load_texture_cached(path: Path) -> arcade.Texture:
+    texture = _TEXTURE_CACHE.get(path)
+    if texture is None:
+        texture = arcade.load_texture(str(path))
+        _TEXTURE_CACHE[path] = texture
+    return texture
+
+
+def _load_trimmed_texture_cached(path: Path) -> arcade.Texture:
+    texture = _TRIMMED_TEXTURE_CACHE.get(path)
+    if texture is None:
+        texture = _trim_texture_to_opaque_bounds(_load_texture_cached(path))
+        _TRIMMED_TEXTURE_CACHE[path] = texture
+    return texture
+
+
 def _make_sprite(
     image_path: Path,
     center_x: float,
@@ -673,7 +695,7 @@ def _make_sprite(
     """Load a sprite from disk when available, otherwise use a solid block."""
     if _path_exists(image_path):
         if crop_to_fit:
-            texture = arcade.load_texture(str(image_path))
+            texture = _load_texture_cached(image_path)
             target_aspect = width / height if height else 1.0
             source_aspect = texture.width / texture.height if texture.height else target_aspect
             if source_aspect > target_aspect:
@@ -688,7 +710,7 @@ def _make_sprite(
                 crop_y = max(0, (texture.height - crop_height) // 2)
             sprite = arcade.Sprite(texture.crop(crop_x, crop_y, crop_width, crop_height))
         else:
-            sprite = arcade.Sprite(str(image_path))
+            sprite = arcade.Sprite(_load_texture_cached(image_path))
         sprite.center_x = center_x
         sprite.center_y = center_y
         sprite.width = width
