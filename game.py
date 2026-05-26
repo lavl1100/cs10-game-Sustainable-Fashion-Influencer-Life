@@ -1093,7 +1093,7 @@ def _tutorial_message_for_screen(label: str) -> str:
         "home": "\nWelcome to life as a sustainable fashion influencer!\nPractice sustainability by using the sidebar to open the closet,\nlocal clothes store, social media, or other sustainable activities.",
         "settings": "Adjust the music controls if needed, then \nclose the window when you're done.",
         "closet": "Preview outfits on the left, then switch\ntabs to compare looks and check what you own.",
-        "clothing store": "Browse the catalog and buy clothing\npieces with your money.",
+        "clothing store": "Click an item to try it on. Click it again\nto take it off, or press SPACE to buy it.",
         "social media": "Publish a variety of posts on your\nsocial media page, and grow your following to spread sustainability.",
         "activity center minigames": "Upcycle old clothes or thrift\nsecond-hand ones.",
         "thrifting": "Move through the rack, and decide whether to buy clothing\npieces based on their sustainability.",
@@ -3427,6 +3427,8 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self.item_cards: list[WardrobeItemCard] = []
         self.outfit_sprites: dict[str, arcade.Sprite] = {}
         self._outfit_sprite_item_ids: dict[str, str] = {}
+        self._store_preview_item_id: Optional[str] = None
+        self._store_preview_equipped_snapshot: Optional[dict[str, str]] = None
         self.background_sprite: Optional[DrawableSprite] = None
         if self.background_image_path is not None:
             self.background_sprite = DrawableSprite(
@@ -3621,12 +3623,43 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         owned = self.wardrobe.is_owned(item)
         equipped = self.wardrobe.is_equipped(item)
         if self.mode == "store":
+            if self._store_preview_item_id == item.item_id:
+                return "Trying on"
             if owned:
                 return "Owned"
             return f"${item.price}"
         if equipped:
             return "Wearing"
         return "Owned" if owned else "Locked"
+
+    def _begin_store_preview(self, item: WardrobeCatalogItem) -> None:
+        if self._store_preview_equipped_snapshot is None:
+            self._store_preview_equipped_snapshot = dict(self.wardrobe.equipped_by_category)
+        self.wardrobe.equip(item)
+        self._store_preview_item_id = item.item_id
+
+    def _restore_store_preview(self) -> None:
+        if self._store_preview_equipped_snapshot is not None:
+            self.wardrobe.equipped_by_category = dict(self._store_preview_equipped_snapshot)
+        self._store_preview_item_id = None
+        self._store_preview_equipped_snapshot = None
+
+    def _buy_store_preview(self) -> bool:
+        if self._store_preview_item_id is None:
+            return False
+        item = next(
+            (catalog_item for catalog_item in self.wardrobe.catalog if catalog_item.item_id == self._store_preview_item_id),
+            None,
+        )
+        if item is None:
+            return False
+        bought, message = self.wardrobe.buy(item, self.wallet)
+        self._set_message(message)
+        if bought:
+            self._store_preview_item_id = None
+            self._store_preview_equipped_snapshot = None
+            self._sync_item_cards()
+        return bought
 
     def _sync_item_cards(self) -> None:
         items = self._display_items()
@@ -3851,10 +3884,23 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
 
     def _handle_item_activation(self, item: WardrobeCatalogItem) -> None:
         if self.mode == "store":
-            bought, message = self.wardrobe.buy(item, self.wallet)
-            self._set_message(message)
-            if bought:
+            if self.wardrobe.is_owned(item):
+                if self._store_preview_item_id is not None:
+                    self._restore_store_preview()
+                changed = self.wardrobe.toggle_equip(item)
+                if changed:
+                    self._set_message(f"Wearing {item.name.title()}.")
+                else:
+                    self._set_message(f"Stopped wearing {item.name.title()}.")
                 self._sync_item_cards()
+                return
+            if self._store_preview_item_id == item.item_id:
+                self._restore_store_preview()
+                self._set_message(f"Took off {item.name.title()}.")
+            else:
+                self._begin_store_preview(item)
+                self._set_message(f"Trying on {item.name.title()}. Press SPACE to buy it.")
+            self._sync_item_cards()
             return
         changed = self.wardrobe.toggle_equip(item)
         if changed:
@@ -3862,6 +3908,11 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         else:
             self._set_message(f"Stopped wearing {item.name.title()}.")
         self._sync_item_cards()
+
+    def _close(self) -> None:
+        if self.mode == "store" and self._store_preview_item_id is not None:
+            self._restore_store_preview()
+        self.on_close()
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> bool:
         if button != arcade.MOUSE_BUTTON_LEFT:
@@ -3906,6 +3957,12 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             return
         for card in self.item_cards:
             card.release()
+
+    def on_key_press(self, key: int, modifiers: int) -> None:
+        if self.mode == "store" and key == arcade.key.SPACE:
+            if self._buy_store_preview():
+                return
+        super().on_key_press(key, modifiers)
 
     def on_update(self, delta_time: float) -> None:
         if self.message_timer > 0.0:
