@@ -3807,13 +3807,16 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         else:
             for index, (card, item) in enumerate(zip(self.item_cards, items)):
                 center_x, center_y = self._card_position(index, card_width, card_height, gap)
-                card.update_layout(
-                    self.layout,
-                    center_x,
-                    center_y,
-                    card_width,
-                    card_height,
-                )
+                if math.isclose(card.width, card_width) and math.isclose(card.height, card_height):
+                    card.move_to(center_x, center_y)
+                else:
+                    card.update_layout(
+                        self.layout,
+                        center_x,
+                        center_y,
+                        card_width,
+                        card_height,
+                    )
                 card.refresh(self.wardrobe.is_owned(item), self.wardrobe.is_equipped(item), self._card_detail(item))
         self._sync_outfit_sprites()
         self._sync_overlay_text()
@@ -3871,7 +3874,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
                 continue
 
             if sprite is None or self._outfit_sprite_item_ids.get(category) != item.item_id:
-                sprite = arcade.Sprite(item.image_path)
+                sprite = arcade.Sprite(_load_texture_cached(item.image_path))
                 self.outfit_sprites[category] = sprite
                 self._outfit_sprite_item_ids[category] = item.item_id
 
@@ -6073,7 +6076,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
     def on_update(self, delta_time: float) -> None:
         if not self._game_ready:
             return
-        return
+        pass
 
     def on_draw(self) -> None:
         super().on_draw()
@@ -6120,6 +6123,7 @@ class UpcyclingGameOverlay(ComputerWindowOverlay):
             texture = _load_texture_cached(image_path)
             image = texture.image.convert("RGBA")
         except Exception:
+            _CUT_PATH_TEMPLATE_CACHE[image_path] = []
             return []
 
         width, height = image.size
