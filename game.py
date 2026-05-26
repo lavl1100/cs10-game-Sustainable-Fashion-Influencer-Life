@@ -1111,15 +1111,17 @@ class TutorialGuide:
         self.sprite.center_y = max(self.sprite.height / 2, layout.sy(2))
 
         self.text.x = bubble_center_x
-        self.text.y = bubble_center_y
+        # Nudge the copy a bit lower so it sits visually inside the rounded part
+        # of the bubble instead of riding up toward the top edge.
+        self.text.y = bubble_center_y - layout.sy(18)
         self.text.align = "center"
         self.text.anchor_x = "center"
         self.text.anchor_y = "center"
         visible_text = self.message if self._text_visible and not self._dismissed else ""
         if visible_text:
-            max_text_width = bubble_width - layout.sx(160)
+            max_text_width = bubble_width - layout.sx(184)
             self.text.width = max_text_width
-            max_text_height = bubble_height - layout.sy(88)
+            max_text_height = bubble_height - layout.sy(104)
             for font_size in (11, 10, 9, 8, 7):
                 wrapped_text = self._wrap_message(layout, visible_text, max_text_width, font_size)
                 self.text.font_size = layout.ss(font_size)
@@ -1144,7 +1146,7 @@ class TutorialGuide:
 def _tutorial_message_for_screen(label: str) -> str:
     normalized = label.strip().lower()
     messages = {
-        "home": "Welcome to life as a sustainable fashion influencer!\nPractice sustainability by using the sidebar to open the closet,\nlocal clothes store, social media, or other sustainable activities.",
+        "home": "Welcome to life as a sustainable fashion influencer!\nUse the sidebar to open the closet, local clothes store,\nsocial media, or activity center.",
         "settings": "Adjust the music controls if needed, then \nclose the window when you're done.",
         "closet": "Preview outfits on the left, then switch\ntabs to compare looks and check what you own.",
         "clothing store": "Click an item to try it on. Click it again\nto take it off, or use Buy to purchase it.",
