@@ -999,6 +999,44 @@ class TutorialGuide:
         self.sprite.height = current_height
         self.sprite.alpha = 255
 
+    def _measure_text_width(self, layout: GameLayout, text: str, font_size: int) -> float:
+        if not text:
+            return 0.0
+        trial_text = arcade.Text(
+            text,
+            0,
+            0,
+            TUTORIAL_GUIDE_TEXT_COLOR,
+            layout.ss(font_size),
+            font_name=UI_FONT_NAME,
+            anchor_x="left",
+            anchor_y="baseline",
+        )
+        try:
+            return float(trial_text.content_width)
+        except RuntimeError:
+            return len(text) * layout.ss(font_size) * 0.58
+
+    def _wrap_message(self, layout: GameLayout, text: str, max_width: float, font_size: int) -> str:
+        wrapped_lines: list[str] = []
+        for paragraph in text.splitlines():
+            words = paragraph.split()
+            if not words:
+                wrapped_lines.append("")
+                continue
+
+            current_line = words[0]
+            for word in words[1:]:
+                candidate = f"{current_line} {word}"
+                if self._measure_text_width(layout, candidate, font_size) <= max_width:
+                    current_line = candidate
+                else:
+                    wrapped_lines.append(current_line)
+                    current_line = word
+            wrapped_lines.append(current_line)
+
+        return "\n".join(wrapped_lines)
+
     def set_message(self, message: str) -> None:
         self.message = message.strip()
         self._dismissed = self._is_message_dismissed(self.message)
@@ -1074,20 +1112,26 @@ class TutorialGuide:
 
         self.text.x = bubble_center_x
         self.text.y = bubble_center_y
-        self.text.width = bubble_width - layout.sx(72)
         self.text.align = "center"
         self.text.anchor_x = "center"
         self.text.anchor_y = "center"
-        self.text.text = self.message if self._text_visible and not self._dismissed else ""
-        if self.text.text:
-            max_text_height = bubble_height - layout.sy(72)
-            for font_size in (11, 10, 9, 8):
+        visible_text = self.message if self._text_visible and not self._dismissed else ""
+        if visible_text:
+            max_text_width = bubble_width - layout.sx(160)
+            self.text.width = max_text_width
+            max_text_height = bubble_height - layout.sy(88)
+            for font_size in (11, 10, 9, 8, 7):
+                wrapped_text = self._wrap_message(layout, visible_text, max_text_width, font_size)
                 self.text.font_size = layout.ss(font_size)
+                self.text.text = wrapped_text
                 try:
-                    if self.text.content_width <= self.text.width and self.text.content_height <= max_text_height:
+                    if self.text.content_width <= max_text_width and self.text.content_height <= max_text_height:
                         break
                 except RuntimeError:
                     break
+        else:
+            self.text.width = bubble_width - layout.sx(160)
+            self.text.text = ""
 
     def draw(self) -> None:
         if self._bubble_visible:
