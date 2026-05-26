@@ -6073,7 +6073,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
     def on_update(self, delta_time: float) -> None:
         if not self._game_ready:
             return
-        self._update_positions()
+        return
 
     def on_draw(self) -> None:
         super().on_draw()
