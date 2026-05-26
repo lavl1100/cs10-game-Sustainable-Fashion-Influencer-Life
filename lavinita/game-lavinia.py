@@ -323,7 +323,7 @@ class ThriftGame(arcade.Window):
 
             # 🌍 IMPACT-BASED SCORING SYSTEM
             if item.eco:
-                profit = 80
+                profit = min(120, 100 + item.price)
                 self.score += profit
                 self.message = f"Eco buy +{profit} 🌱"
             else:
