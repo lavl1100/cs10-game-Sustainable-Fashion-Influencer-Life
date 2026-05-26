@@ -937,7 +937,7 @@ class TutorialGuide:
     _dismissed_messages: set[str] = set()
 
     def __init__(self, layout: GameLayout, message: str, sprite_path: Optional[Path] = None, visible_sprite_path: Optional[Path] = None) -> None:
-        self.message = message
+        self.message = message.strip()
         self._visible_sprite_path = visible_sprite_path
         self.bubble = DrawableSprite(
             _make_sprite(TUTORIAL_GUIDE_BUBBLE_PATH, 0, 0, 1, 1, (255, 255, 255))
@@ -953,7 +953,7 @@ class TutorialGuide:
             _make_sprite(self._sprite_path, 0, 0, 1, 1, (255, 255, 255))
         )
         self.text = arcade.Text(
-            message,
+            self.message,
             0,
             0,
             TUTORIAL_GUIDE_TEXT_COLOR,
@@ -965,7 +965,7 @@ class TutorialGuide:
             anchor_y="center",
             multiline=True,
         )
-        self._dismissed = self._is_message_dismissed(message)
+        self._dismissed = self._is_message_dismissed(self.message)
         self._bubble_visible = not self._dismissed
         self._text_visible = not self._dismissed
         self._sync_sprite_image(visible=not self._dismissed)
@@ -1000,8 +1000,8 @@ class TutorialGuide:
         self.sprite.alpha = 255
 
     def set_message(self, message: str) -> None:
-        self.message = message
-        self._dismissed = self._is_message_dismissed(message)
+        self.message = message.strip()
+        self._dismissed = self._is_message_dismissed(self.message)
         if not self._dismissed:
             self.show_text()
         else:
@@ -1073,11 +1073,21 @@ class TutorialGuide:
         self.sprite.center_y = max(self.sprite.height / 2, layout.sy(2))
 
         self.text.x = bubble_center_x
-        text_top_padding = bubble_height * 0.54
-        self.text.y = bubble_center_y + bubble_height / 2 - text_top_padding
-        self.text.font_size = layout.ss(11)
-        self.text.width = bubble_width - layout.sx(56)
+        self.text.y = bubble_center_y
+        self.text.width = bubble_width - layout.sx(72)
+        self.text.align = "center"
+        self.text.anchor_x = "center"
+        self.text.anchor_y = "center"
         self.text.text = self.message if self._text_visible and not self._dismissed else ""
+        if self.text.text:
+            max_text_height = bubble_height - layout.sy(72)
+            for font_size in (11, 10, 9, 8):
+                self.text.font_size = layout.ss(font_size)
+                try:
+                    if self.text.content_width <= self.text.width and self.text.content_height <= max_text_height:
+                        break
+                except RuntimeError:
+                    break
 
     def draw(self) -> None:
         if self._bubble_visible:
@@ -1090,7 +1100,7 @@ class TutorialGuide:
 def _tutorial_message_for_screen(label: str) -> str:
     normalized = label.strip().lower()
     messages = {
-        "home": "\nWelcome to life as a sustainable fashion influencer!\nPractice sustainability by using the sidebar to open the closet,\nlocal clothes store, social media, or other sustainable activities.",
+        "home": "Welcome to life as a sustainable fashion influencer!\nPractice sustainability by using the sidebar to open the closet,\nlocal clothes store, social media, or other sustainable activities.",
         "settings": "Adjust the music controls if needed, then \nclose the window when you're done.",
         "closet": "Preview outfits on the left, then switch\ntabs to compare looks and check what you own.",
         "clothing store": "Click an item to try it on. Click it again\nto take it off, or use Buy to purchase it.",
