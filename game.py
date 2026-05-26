@@ -2107,6 +2107,8 @@ class HomeView(arcade.View):
             self._apply_layout(GameLayout(self.window.width, self.window.height))
         if self.social_media_window is not None:
             self.social_media_window.update_layout(self.layout)
+            if self.social_media_window is not self.active_window:
+                self.social_media_window._sync_time_based_state()
         self._sync_money_box()
         self._sync_energy_box()
         self._sync_level_box()
@@ -2153,7 +2155,7 @@ class HomeView(arcade.View):
         if self.active_window is not None:
             self.active_window.on_update(delta_time)
         if self.social_media_window is not None and self.social_media_window is not self.active_window:
-            self.social_media_window.on_update(delta_time)
+            self.social_media_window._sync_time_based_state(now)
         self._sync_clock_text()
         self._sync_money_box()
         self._sync_energy_box()
@@ -5435,32 +5437,32 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         self.notifications = [notif for notif in self.notifications if notif.timer > 0]
         self._clamp_scroll()
 
-    def _update_energy_recharge(self, dt: float) -> None:
+    def _update_energy_recharge(self, now: float) -> None:
         if self.energy >= self.max_energy:
             self.energy_state.recharge_progress = 0.0
-            self.energy_state.recharge_updated_at = dt
+            self.energy_state.recharge_updated_at = now
             return
 
         last_updated = self.energy_state.recharge_updated_at
         if last_updated <= 0.0:
-            self.energy_state.recharge_updated_at = dt
+            self.energy_state.recharge_updated_at = now
             return
 
-        elapsed = max(0.0, dt - last_updated)
+        elapsed = max(0.0, now - last_updated)
         if elapsed <= 0.0:
             return
 
         self.energy_state.recharge_progress += elapsed * (SOCIAL_MEDIA_ENERGY_RECHARGE_PER_MINUTE / 60.0)
-        self.energy_state.recharge_updated_at = dt
+        self.energy_state.recharge_updated_at = now
         gained = int(self.energy_state.recharge_progress)
         if gained <= 0:
             return
 
-        self._set_energy(min(self.max_energy, self.energy + gained), dt)
+        self._set_energy(min(self.max_energy, self.energy + gained), now)
         self.energy_state.recharge_progress -= gained
         if self.energy >= self.max_energy:
             self.energy_state.recharge_progress = 0.0
-            self.energy_state.recharge_updated_at = dt
+            self.energy_state.recharge_updated_at = now
 
     def on_draw(self) -> None:
         super().on_draw()
