@@ -179,6 +179,14 @@ WARDROBE_TABS_HEIGHT = 42
 WARDROBE_TABS_GAP = 10
 WARDROBE_GIRL_PANEL_WIDTH = 232
 WARDROBE_GIRL_PANEL_MARGIN = 16
+WARDROBE_SCROLLBAR_WIDTH = 12
+WARDROBE_SCROLLBAR_GAP = 8
+WARDROBE_SCROLLBAR_INSET_Y = 10
+WARDROBE_SCROLLBAR_MIN_THUMB_HEIGHT = 44
+WARDROBE_SCROLLBAR_TRACK_FILL = (248, 240, 246)
+WARDROBE_SCROLLBAR_TRACK_BORDER = THEME_SOFT_LILAC
+WARDROBE_SCROLLBAR_THUMB_FILL = THEME_LAVENDER
+WARDROBE_SCROLLBAR_THUMB_BORDER = THEME_DEEP_PURPLE
 WARDROBE_SHIRT_SCALE = 0.34
 WARDROBE_DRESS_SCALE = 0.36
 WARDROBE_JACKET_SCALE = 0.35
@@ -3530,6 +3538,8 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         self._store_preview_item_id: Optional[str] = None
         self._store_preview_equipped_snapshot: Optional[dict[str, str]] = None
         self._store_preview_equipped_by_category: Optional[dict[str, str]] = None
+        self._scrollbar_dragging = False
+        self._scrollbar_drag_offset_y = 0.0
         self.purchase_button: Optional[SpriteButtonPanel] = None
         self.background_sprite: Optional[DrawableSprite] = None
         if self.background_image_path is not None:
@@ -3625,12 +3635,57 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         tab_width = self.layout.sx(WARDROBE_TABS_WIDTH)
         return content_right - tab_width, content_right
 
-    def _grid_bounds(self) -> tuple[float, float, float, float]:
+    def _grid_frame_bounds(self) -> tuple[float, float, float, float]:
         _, girl_right, content_bottom, content_top = self._girl_bounds()
         tabs_left, _ = self._tabs_bounds()
         left = girl_right + self.layout.sx(14)
         right = tabs_left - self.layout.sx(14)
         return left, right, content_bottom, content_top
+
+    def _scrollbar_visible(self) -> bool:
+        return self.mode == "store" and self.selected_category == "all" and self._max_scroll() > 0.0
+
+    def _grid_bounds(self) -> tuple[float, float, float, float]:
+        left, right, content_bottom, content_top = self._grid_frame_bounds()
+        if self._scrollbar_visible():
+            right -= self.layout.sx(WARDROBE_SCROLLBAR_WIDTH + WARDROBE_SCROLLBAR_GAP)
+        return left, right, content_bottom, content_top
+
+    def _scrollbar_bounds(self) -> Optional[tuple[float, float, float, float]]:
+        if not self._scrollbar_visible():
+            return None
+        frame_left, frame_right, content_bottom, content_top = self._grid_frame_bounds()
+        track_right = frame_right - self.layout.sx(WARDROBE_SCROLLBAR_GAP)
+        track_left = track_right - self.layout.sx(WARDROBE_SCROLLBAR_WIDTH)
+        track_bottom = content_bottom + self.layout.sy(WARDROBE_SCROLLBAR_INSET_Y)
+        track_top = content_top - self.layout.sy(WARDROBE_SCROLLBAR_INSET_Y)
+        return track_left, track_right, track_bottom, track_top
+
+    def _scrollbar_thumb_bounds(self) -> Optional[tuple[float, float, float, float]]:
+        track_bounds = self._scrollbar_bounds()
+        if track_bounds is None:
+            return None
+        track_left, track_right, track_bottom, track_top = track_bounds
+        track_height = track_top - track_bottom
+        max_scroll = self._max_scroll()
+        if track_height <= 0.0 or max_scroll <= 0.0:
+            return None
+
+        grid_left, grid_right, content_bottom, content_top = self._grid_bounds()
+        visible_height = max(1.0, content_top - content_bottom)
+        total_height = visible_height + max_scroll
+        thumb_height = max(
+            self.layout.sy(WARDROBE_SCROLLBAR_MIN_THUMB_HEIGHT),
+            track_height * visible_height / total_height,
+        )
+        thumb_height = min(track_height, thumb_height)
+        thumb_range = max(0.0, track_height - thumb_height)
+        if thumb_range <= 0.0:
+            thumb_top = track_top
+        else:
+            thumb_top = track_top - thumb_range * (self.scroll / max_scroll)
+        thumb_bottom = thumb_top - thumb_height
+        return track_left, track_right, thumb_bottom, thumb_top
 
     def _display_items(self) -> list[WardrobeCatalogItem]:
         owned_only = self.mode == "closet"
@@ -3671,6 +3726,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
     def _select_category(self, category: str) -> None:
         self.selected_category = category
         self.scroll = 0.0
+        self._scrollbar_dragging = False
         for button in self.tab_buttons:
             button.set_selected(button.category == category)
         self._sync_item_cards()
@@ -3720,6 +3776,41 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
 
     def _clamp_scroll(self) -> None:
         self.scroll = max(0.0, min(self.scroll, self._max_scroll()))
+
+    def _set_scroll_from_scrollbar_y(self, center_y: float) -> None:
+        track_bounds = self._scrollbar_bounds()
+        thumb_bounds = self._scrollbar_thumb_bounds()
+        if track_bounds is None or thumb_bounds is None:
+            return
+
+        track_left, track_right, track_bottom, track_top = track_bounds
+        thumb_left, thumb_right, thumb_bottom, thumb_top = thumb_bounds
+        thumb_height = thumb_top - thumb_bottom
+        track_height = track_top - track_bottom
+        max_scroll = self._max_scroll()
+        if max_scroll <= 0.0:
+            self.scroll = 0.0
+            return
+
+        min_center_y = track_bottom + thumb_height / 2
+        max_center_y = track_top - thumb_height / 2
+        clamped_center_y = max(min_center_y, min(center_y, max_center_y))
+        thumb_top = clamped_center_y + thumb_height / 2
+        thumb_range = max(0.0, track_height - thumb_height)
+        if thumb_range <= 0.0:
+            self.scroll = 0.0
+        else:
+            progress = (track_top - thumb_top) / thumb_range
+            self.scroll = progress * max_scroll
+        self._clamp_scroll()
+        self._sync_item_card_positions()
+
+    def _scrollbar_hit_test(self, x: float, y: float) -> bool:
+        track_bounds = self._scrollbar_bounds()
+        if track_bounds is None:
+            return False
+        left, right, bottom, top = track_bounds
+        return left <= x <= right and bottom <= y <= top
 
     def _card_detail(self, item: WardrobeCatalogItem) -> str:
         owned = self.wardrobe.is_owned(item)
@@ -3974,6 +4065,7 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
     def on_draw(self) -> None:
         super().on_draw()
         girl_left, girl_right, girl_bottom, girl_top = self._girl_bounds()
+        grid_frame_left, grid_frame_right, grid_frame_bottom, grid_frame_top = self._grid_frame_bounds()
         grid_left, grid_right, grid_bottom, grid_top = self._grid_bounds()
         tabs_left, tabs_right = self._tabs_bounds()
 
@@ -3993,17 +4085,17 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
             2,
         )
         arcade.draw_lrbt_rectangle_filled(
-            grid_left,
-            grid_right,
-            grid_bottom,
-            grid_top,
+            grid_frame_left,
+            grid_frame_right,
+            grid_frame_bottom,
+            grid_frame_top,
             (255, 253, 255),
         )
         arcade.draw_lrbt_rectangle_outline(
-            grid_left,
-            grid_right,
-            grid_bottom,
-            grid_top,
+            grid_frame_left,
+            grid_frame_right,
+            grid_frame_bottom,
+            grid_frame_top,
             WARDROBE_CARD_BORDER,
             2,
         )
@@ -4047,6 +4139,41 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         finally:
             if window is not None:
                 window.ctx.scissor = previous_scissor
+        scrollbar_bounds = self._scrollbar_bounds()
+        thumb_bounds = self._scrollbar_thumb_bounds()
+        if scrollbar_bounds is not None and thumb_bounds is not None:
+            track_left, track_right, track_bottom, track_top = scrollbar_bounds
+            thumb_left, thumb_right, thumb_bottom, thumb_top = thumb_bounds
+            arcade.draw_lrbt_rectangle_filled(
+                track_left,
+                track_right,
+                track_bottom,
+                track_top,
+                WARDROBE_SCROLLBAR_TRACK_FILL,
+            )
+            arcade.draw_lrbt_rectangle_outline(
+                track_left,
+                track_right,
+                track_bottom,
+                track_top,
+                WARDROBE_SCROLLBAR_TRACK_BORDER,
+                1,
+            )
+            arcade.draw_lrbt_rectangle_filled(
+                thumb_left,
+                thumb_right,
+                thumb_bottom,
+                thumb_top,
+                WARDROBE_SCROLLBAR_THUMB_FILL,
+            )
+            arcade.draw_lrbt_rectangle_outline(
+                thumb_left,
+                thumb_right,
+                thumb_bottom,
+                thumb_top,
+                WARDROBE_SCROLLBAR_THUMB_BORDER,
+                1,
+            )
         for button in self.tab_buttons:
             button.draw()
         self.title_note_text.draw()
@@ -4112,6 +4239,19 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
                 button_panel.press()
                 return True
 
+        if self._scrollbar_hit_test(x, y):
+            thumb_bounds = self._scrollbar_thumb_bounds()
+            if thumb_bounds is not None:
+                thumb_left, thumb_right, thumb_bottom, thumb_top = thumb_bounds
+                if thumb_left <= x <= thumb_right and thumb_bottom <= y <= thumb_top:
+                    self._scrollbar_dragging = True
+                    self._scrollbar_drag_offset_y = y - (thumb_bottom + thumb_top) / 2
+                else:
+                    self._scrollbar_dragging = True
+                    self._scrollbar_drag_offset_y = 0.0
+                    self._set_scroll_from_scrollbar_y(y)
+                return True
+
         for card in self.item_cards:
             if card.hit_test(x, y):
                 card.press()
@@ -4135,11 +4275,13 @@ class WardrobeCatalogOverlay(ComputerWindowOverlay):
         buttons: int,
         modifiers: int,
     ) -> None:
-        pass
+        if self._scrollbar_dragging and buttons & arcade.MOUSE_BUTTON_LEFT:
+            self._set_scroll_from_scrollbar_y(y - self._scrollbar_drag_offset_y)
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button != arcade.MOUSE_BUTTON_LEFT:
             return
+        self._scrollbar_dragging = False
         for card in self.item_cards:
             card.release()
         if self.purchase_button is not None:
