@@ -4105,6 +4105,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         music: Optional[BackgroundMusicPlaylist] = None,
     ) -> None:
         self._social_ready = False
+        self._social_started = False
         self.progress = progress
         self.wallet = wallet
         self.energy_state = energy if energy is not None else PlayerEnergy(10, 10)
@@ -4384,6 +4385,16 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             self.milestone_index += 1
             self.max_energy = min(20, self.max_energy + 2)
 
+    def _start_social_game(self) -> None:
+        if self._social_started:
+            return
+
+        self._social_started = True
+        self._day_followers_start = self.followers
+        self._day_likes_start = self.total_likes
+        self._day_eco_start = self.eco_impact
+        self.day_timer = 0.0
+
     def _max_scroll(self) -> float:
         feed_left, feed_right, feed_bottom, feed_top = self._feed_bounds()
         content_top = feed_top - self.layout.sy(44)
@@ -4505,6 +4516,7 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             else SOCIAL_MEDIA_CARD_BORDER
         )
         self._notify(f"Posted  |  {quality_label}  ({quality:.0%})", accent)
+        self._start_social_game()
         self.composing = False
         self.hover_idx = -1
         if self.energy <= 0:
@@ -4684,7 +4696,19 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
         progress_x = sidebar_left + self.layout.sx(14)
         progress_y = day_label_y - self.layout.sy(20)
         progress_width = max(0.0, sidebar_right - sidebar_left - self.layout.sx(28))
-        if cooldown_active:
+        if not self._social_started:
+            _update_cached_text(
+                self._text_cache,
+                ("sidebar", "day_status"),
+                "share a post to start ♡",
+                sidebar_left + (sidebar_right - sidebar_left) / 2,
+                day_label_y,
+                SOCIAL_MEDIA_CARD_MUTED,
+                self.layout.ss(10),
+                anchor_x="center",
+                anchor_y="center",
+            ).draw()
+        elif cooldown_active:
             _update_cached_text(
                 self._text_cache,
                 ("sidebar", "day_status"),
@@ -4716,7 +4740,9 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
             SOCIAL_MEDIA_CARD_LIFE_TRACK,
             SOCIAL_MEDIA_CARD_BORDER,
         )
-        if cooldown_active:
+        if not self._social_started:
+            fill_width = 0.0
+        elif cooldown_active:
             fill_width = min(
                 progress_width,
                 max(0.0, progress_width * min(1.0, self._cooldown_remaining(now) / SOCIAL_MEDIA_COOLDOWN_SECONDS)),
@@ -5126,6 +5152,8 @@ class SocialMediaGameOverlay(ComputerWindowOverlay):
 
     def on_update(self, delta_time: float) -> None:
         if not self._social_ready:
+            return
+        if not self._social_started:
             return
 
         dt = min(delta_time, 0.1)
