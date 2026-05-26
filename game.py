@@ -6027,7 +6027,7 @@ class ThriftingGameOverlay(ComputerWindowOverlay):
         self.money -= item.price
         levels_gained = 0
         if item.eco:
-            delta = (item.value - item.price) * 2
+            delta = 80
             self.score += delta
             self.message = f"Eco buy +{delta}"
             self.message_text.color = THRIFTING_SUCCESS_COLOR
