@@ -18,7 +18,10 @@ Although the game is supposed to be more story-oriented, as stated in our design
 
 ## How to Install & Play
 
-Simply download the game executable for your operating system and double-click it to play. No installation required!
+Simply download the release file for your operating system and double-click it to play. No installation required!
 
-Download the `v.1.0.0` release page here:
+- macOS: download the `.app`
+- Windows: download the `.exe`
+
+Download the `v.1.0.0` release assets here:
 [Release v1.0.0](https://github.com/lavl1100/cs10-game-Sustainable-Fashion-Influencer-Life/releases/tag/v1.0.0)

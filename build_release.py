@@ -23,10 +23,6 @@ def _bundle_name(target: str) -> str:
     return f"SustainableFashionInfluencerLife-{target}"
 
 
-def _archive_name(target: str) -> str:
-    return f"{_bundle_name(target)}.zip"
-
-
 def _run_pyinstaller(target: str) -> None:
     if shutil.which("pyinstaller") is None:
         raise SystemExit(
@@ -62,25 +58,6 @@ def _bundle_path(target: str) -> Path:
     return DIST_DIR / bundle_name
 
 
-def _make_zip(target: str) -> Path:
-    bundle_path = _bundle_path(target)
-    if not bundle_path.exists():
-        raise SystemExit(f"Expected build output at {bundle_path}, but it was not found.")
-
-    archive_path = DIST_DIR / _archive_name(target)
-    if archive_path.exists():
-        archive_path.unlink()
-
-    shutil.make_archive(
-        str(archive_path.with_suffix("")),
-        "zip",
-        root_dir=bundle_path.parent,
-        base_dir=bundle_path.name,
-    )
-
-    return archive_path
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Build a release bundle for Sustainable Fashion Influencer Life."
@@ -98,8 +75,10 @@ def main() -> None:
         raise SystemExit("The Windows bundle can only be built on Windows.")
 
     _run_pyinstaller(args.target)
-    archive_path = _make_zip(args.target)
-    print(f"Created {archive_path}")
+    bundle_path = _bundle_path(args.target)
+    if not bundle_path.exists():
+        raise SystemExit(f"Expected build output at {bundle_path}, but it was not found.")
+    print(f"Created {bundle_path}")
 
 
 if __name__ == "__main__":
