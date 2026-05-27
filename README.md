@@ -20,7 +20,7 @@ Although the game is supposed to be more story-oriented, as stated in our design
 
 Simply download the release file for your operating system and double-click it to play. No installation required!
 
-- macOS: download the `.app`
+- macOS: download the `.dmg`
 - Windows: download the `.exe`
 
 Download the `v.1.0.0` release assets here:

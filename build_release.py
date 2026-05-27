@@ -49,13 +49,39 @@ def _run_pyinstaller(target: str) -> None:
     )
 
 
+def _create_dmg(app_path: Path, dmg_path: Path) -> None:
+    if shutil.which("hdiutil") is None:
+        raise SystemExit("hdiutil is not available. This build must run on macOS.")
+
+    if dmg_path.exists():
+        dmg_path.unlink()
+
+    subprocess.run(
+        [
+            "hdiutil",
+            "create",
+            "-volname",
+            app_path.stem,
+            "-srcfolder",
+            str(app_path),
+            "-ov",
+            "-format",
+            "UDZO",
+            str(dmg_path),
+        ],
+        check=True,
+        cwd=PROJECT_ROOT,
+    )
+
+
 def _bundle_path(target: str) -> Path:
-    bundle_name = _bundle_name(target)
     if target == "mac":
-        return DIST_DIR / f"{bundle_name}.app"
+        return DIST_DIR / f"{_bundle_name(target)}.app"
+    if target == "mac-dmg":
+        return DIST_DIR / f"{_bundle_name('mac')}.dmg"
     if target == "windows":
-        return DIST_DIR / f"{bundle_name}.exe"
-    return DIST_DIR / bundle_name
+        return DIST_DIR / f"{_bundle_name(target)}.exe"
+    return DIST_DIR / _bundle_name(target)
 
 
 def main() -> None:
@@ -64,18 +90,26 @@ def main() -> None:
     )
     parser.add_argument(
         "target",
-        choices=("mac", "windows"),
+        choices=("mac", "mac-dmg", "windows"),
         help="The release bundle name to create.",
     )
     args = parser.parse_args()
 
-    if args.target == "mac" and not sys.platform.startswith("darwin"):
+    if args.target in {"mac", "mac-dmg"} and not sys.platform.startswith("darwin"):
         raise SystemExit("The mac bundle can only be built on macOS.")
     if args.target == "windows" and not sys.platform.startswith("win"):
         raise SystemExit("The Windows bundle can only be built on Windows.")
 
-    _run_pyinstaller(args.target)
-    bundle_path = _bundle_path(args.target)
+    if args.target == "mac-dmg":
+        _run_pyinstaller("mac")
+        app_path = _bundle_path("mac")
+        bundle_path = _bundle_path("mac-dmg")
+        if not app_path.exists():
+            raise SystemExit(f"Expected build output at {app_path}, but it was not found.")
+        _create_dmg(app_path, bundle_path)
+    else:
+        _run_pyinstaller(args.target)
+        bundle_path = _bundle_path(args.target)
     if not bundle_path.exists():
         raise SystemExit(f"Expected build output at {bundle_path}, but it was not found.")
     print(f"Created {bundle_path}")
