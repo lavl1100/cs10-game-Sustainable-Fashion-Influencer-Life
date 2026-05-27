@@ -12,8 +12,7 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 
 ## Screenshots
 
-[Add 2-3 screenshots of your game in action here. You can embed images using:
-`![Screenshot description](path/to/screenshot.png)`]
+`![Screenshot description](path/to/screenshot.png)`
 
 ## Justifications
 
