@@ -20,8 +20,5 @@ Although the game is supposed to be more story-oriented, as stated in our design
 
 Simply download the game executable for your operating system and double-click it to play. No installation required!
 
-Mac:
-[Download for Mac](https://github.com/lavl1100/cs10-game-Sustainable-Fashion-Influencer-Life/releases/latest/download/SustainableFashionInfluencerLife-mac.zip)
-
-Windows:
-[Download for Windows](https://github.com/lavl1100/cs10-game-Sustainable-Fashion-Influencer-Life/releases/latest/download/SustainableFashionInfluencerLife-windows.zip)
+Download the `v.1.0.0` release page here:
+[Release v1.0.0](https://github.com/lavl1100/cs10-game-Sustainable-Fashion-Influencer-Life/releases/tag/v1.0.0)
