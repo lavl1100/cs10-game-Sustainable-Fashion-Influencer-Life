@@ -5,6 +5,7 @@ from datetime import datetime
 import math
 from pathlib import Path
 import random
+import sys
 import time
 import warnings
 from enum import Enum
@@ -29,13 +30,22 @@ def set_window_mouse_visible(window, visible: bool) -> None:
         set_visible(visible)
 
 
+def _resource_root() -> Path:
+    """Return the directory that contains bundled assets in every runtime."""
+    if getattr(sys, "frozen", False):
+        bundled_root = getattr(sys, "_MEIPASS", None)
+        if bundled_root is not None:
+            return Path(bundled_root)
+    return Path(__file__).resolve().parent
+
+
 BASE_SCREEN_WIDTH = 800
 BASE_SCREEN_HEIGHT = 600
 DEFAULT_WINDOW_WIDTH = 1280
 DEFAULT_WINDOW_HEIGHT = 720
 SCREEN_TITLE = "Sustainable Fashion Influencer Life"
 
-ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+ASSETS_DIR = _resource_root() / "assets"
 BACKGROUND_IMAGE = ASSETS_DIR / "home_background.png"
 BUTTON_SOUND_PATHS = (
     ASSETS_DIR / "button_clicking.mp3",

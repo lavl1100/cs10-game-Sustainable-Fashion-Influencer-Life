@@ -10,6 +10,9 @@ env/
 # Tool caches
 .pytest_cache/
 .mypy_cache/
+build/
+dist/
+*.spec
 
 # OS/editor files
 .DS_Store
