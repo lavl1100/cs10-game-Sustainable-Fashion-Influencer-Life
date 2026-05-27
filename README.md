@@ -12,10 +12,6 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 ![Social Media Game](./assets/screenshot1.png)
 ![Clothing Store](./assets/screenshot2.png)
 
-## Justifications
-
-In game, the player enters already knowing the impact of promoting sustainable fashion on their platform, omitting the story which would show the player learning from their actions and shifting away from fast fashion before this point.
-
 ## How to Install & Play
 
 Simply download the release file for your operating system and double-click it to play. No installation required!
