@@ -13,6 +13,8 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 ## Screenshots
 
 ![Game Homescreen](./assets/screenshot.png)
+![Social Media Game](./assets/screenshot1.png)
+![Clothing Store](./assets/screenshot2.png)
 
 ## Justifications
 
