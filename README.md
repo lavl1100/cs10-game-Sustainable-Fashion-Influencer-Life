@@ -1,7 +1,3 @@
-**Note:** Delete the template README.md file and rename this file to README.md before submitting.
-
----
-
 # Sustainable Fashion Influencer Life
 
 **Group Members:** Lavinia Lin, Alexandra Ma, Greyson Wrobel
