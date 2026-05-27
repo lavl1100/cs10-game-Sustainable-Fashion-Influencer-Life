@@ -12,7 +12,7 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 
 ## Screenshots
 
-'![Game Homescreen](path/to/screenshot.png)'
+![Game Homescreen](./assets/screenshot.png)
 
 ## Justifications
 
