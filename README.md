@@ -29,19 +29,3 @@ Mac:
 
 Windows:
 [Download for Windows](https://github.com/lavl1100/cs10-game-Sustainable-Fashion-Influencer-Life/releases/latest/download/SustainableFashionInfluencerLife-windows.zip)
-
-## Building Release Files
-
-If you are packaging the game for release, install `pyinstaller` and run:
-
-```bash
-python build_release.py mac
-python build_release.py windows
-```
-
-Each command creates a zip file in `dist/` with the exact names used by the download links above:
-
-- `SustainableFashionInfluencerLife-mac.zip`
-- `SustainableFashionInfluencerLife-windows.zip`
-
-Upload those zip files as GitHub Release assets, and the README links will work automatically with the `latest/download` URL pattern.
