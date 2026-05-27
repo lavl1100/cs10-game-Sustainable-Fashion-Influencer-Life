@@ -4,7 +4,7 @@
 
 # Sustainable Fashion Influencer Life
 
-**Group Members:** Lavinia, Alexandra, Greyson
+**Group Members:** Lavinia Lin, Alexandra Ma, Greyson Wrobel
 
 ## Description
 
