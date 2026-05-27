@@ -1,6 +1,10 @@
+**Note:** Delete the template README.md file and rename this file to README.md before submitting.
+
+---
+
 # Sustainable Fashion Influencer Life
 
-**Group Members:** Lavinia Lin, Alexandra Ma, Greyson Wrobel
+**Group Members:** Lavinia, Alexandra, Greyson
 
 ## Description
 
@@ -8,16 +12,19 @@ In "Sustainable Fashion Influencer Life," the player enters a world where they a
 
 ## Screenshots
 
-![Game Homescreen](./assets/screenshot.png)
-![Social Media Game](./assets/screenshot1.png)
-![Clothing Store](./assets/screenshot2.png)
+[Add 2-3 screenshots of your game in action here. You can embed images using:
+`![Screenshot description](path/to/screenshot.png)`]
+
+## Justifications
+
+Although the game is supposed to be more story-oriented, as stated in our design doc, we decided that it would be better to create a simulation/minigame-based game due to time constraints. In the revised game, the player enters already knowing the impact of promoting sustainable fashion on their platform, omitting the story which would show the player learning from their actions and shifting away from fast fashion before this point.
 
 ## How to Install & Play
 
-Simply download the release file for your operating system and double-click it to play. No installation required!
+Simply download the game executable for your operating system and double-click it to play. No installation required!
 
-- macOS: download the `.dmg`
-- Windows: download the `.exe`
+Mac:
+Your link here
 
-Download the `v.1.0.0` release assets here:
-[Release v1.0.0](https://github.com/lavl1100/cs10-game-Sustainable-Fashion-Influencer-Life/releases/tag/v1.0.0)
+Windows:
+Your link here
