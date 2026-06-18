@@ -50,6 +50,10 @@ BACKGROUND_IMAGE = ASSETS_DIR / "home_background.png"
 BUTTON_SOUND_PATHS = (
     ASSETS_DIR / "button_clicking.mp3",
 )
+EXCLUDED_MUSIC_TRACK_FILENAMES = {
+    "button_clicking.mp3",
+    "sparkle.mp3",
+}
 
 BUTTON_IMAGE_PATHS = {
     "settings": ASSETS_DIR / "settings_button.png",
@@ -323,7 +327,9 @@ class BackgroundMusicPlaylist:
 
     def __init__(self, music_dir: Path) -> None:
         self.track_paths = sorted(
-            path for path in music_dir.glob("*.mp3") if path.is_file()
+            path
+            for path in music_dir.glob("*.mp3")
+            if path.is_file() and path.name not in EXCLUDED_MUSIC_TRACK_FILENAMES
         )
         self._loaded_track_paths: list[Path] = []
         self._sounds: list[pygame.mixer.Sound] = []
